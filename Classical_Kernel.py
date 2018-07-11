@@ -6,7 +6,7 @@ from numpy import linalg as LA
 
 def gaussian_kernel(sample1, sample2, sigma):
 	#sigma[i] are bandwidth parameters
-	
+
 	c = len(sigma)
 	N_samples1  = sample1.shape[0]
 	N_samples2  = sample2.shape[0]
@@ -20,11 +20,8 @@ def gaussian_kernel(sample1, sample2, sigma):
 			l2norm[i , j] = LA.norm(sample1[i,:] - sample2[j, :], 2)
 
 			for k in range(0, c):
-
 				gauss_kernel[i,j,k] = (1/c)*np.exp(-1/(2*sigma[k])*(l2norm[i,j]**2))
+
 	gausssum = gauss_kernel.sum(2)
 	#print(gausssum)
 	return gauss_kernel.sum(2)
-
-
-

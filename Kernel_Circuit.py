@@ -28,9 +28,8 @@ def kernel_circuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 	for qubit_index in range(0, N_v):
 		prog.inst(H(qubit_index))
 
-
 	for j in range(0,N_v):
-		#Apply local Z rotations (b) to each qubit	
+		#Apply local Z rotations (b) to each qubit
 		if (int(phi_Z_1[j]) != 0):
 			prog.inst(PHASE(phi_Z_1[j],j))
 
@@ -42,12 +41,12 @@ def kernel_circuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 			i = i+1
 
 	'''Second layer, sample from both distributions with parameters, phi_ZZ_1 - phi_ZZ_2, phi_Z_1 - phi_Z_2'''
- 
+
 	for qubit_index in range(0, N_v):
 			prog.inst(H(qubit_index))
 
 	for j in range(0,N_v):
-		
+
 		#Apply local Z rotations (b) to each qubit
 		if (int(phi_Z_1[j]-phi_Z_2[j]) != 0):
 			prog.inst(PHASE(phi_Z_1[j]-phi_Z_2[j],j))
@@ -64,24 +63,21 @@ def kernel_circuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 	for qubit_index in range(0, N_v):
 			prog.inst(H(qubit_index))
 
-	
+
 	for j in range(0,N_v):
 		#Apply local Z rotations (b) to each qubit
 		if (int(phi_Z_2[j]) != 0):
 			prog.inst(PHASE(-phi_Z_2[j],j))
 
 		i = 0
-		#Apply Control-Phase(J) gates to each qubit	
+		#Apply Control-Phase(J) gates to each qubit
 		while (i < j):
 			if (int(phi_ZZ_2[i, j]) != 0):
 				prog.inst(CPHASE(-phi_ZZ_2[i,j],i,j))
-			i = i+1		
+			i = i+1
 
 	for qubit_index in range(0, N_v):
 			prog.inst(H(qubit_index))
 
 
 	return prog
-
-
-

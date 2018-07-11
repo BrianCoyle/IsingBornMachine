@@ -12,13 +12,13 @@ from numpy import pi,log2
 
 
 '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma set to constant = pi/4'''
-'''It also computes the state produced after the QAOA circuit. ''' 
+'''It also computes the state produced after the QAOA circuit. '''
 
 #Initialise weights and biases as random
 def network_params(N, J, b, gamma_x, gamma_y):
-	for j in range(0,N):	
+	for j in range(0, N):
 			b[j] = uniform(0,pi/4)
-			
+
 			#If gamma_y to be trained also and variable for each qubit
 			#gamma_x[j] = uniform(0,pi/4)
 
@@ -42,60 +42,60 @@ def network_params(N, J, b, gamma_x, gamma_y):
 
 #Initialise Quantum State created after application of gate sequence
 def state_init(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, control, sign):
-		
-		#sign = 0 for the positive probability version, sign =1 for the negative version of the probability (only used to compute the gradients)
-		#final_layer is either 0, 1 or 2, for IQP (Final Hadamard), QAOA (Final X rotation) or [INSERT COOL NAME] (Final Y rotation)
-		#control = 0 for updating biases, = 1 for updating weights, =2 for neither
+
+		#sign = 'POSITIVE' for the positive probability version, sign = 'NEGATIVE' for the negative version of the probability (only used to compute the gradients)
+		#final_layer is either 'IQP', 'QAOA', 'IQPy' for IQP (Final Hadamard), QAOA (Final X rotation) or IQPy (Final Y rotation)
+		#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, = 'NEITHER' for neither
 		prog = Program()
 		qvm = QVMConnection()
 
 		for qubit_index in range(0,N):
-			prog.inst(H(qubit_index)) 
+			prog.inst(H(qubit_index))
 
 		#Apply Control-Phase(J) gates to each qubit
 		for j in range(0,N):
 			i = 0
 			while (i < j):
-				if (control == 1 and i == p and j == q and sign == 0):
+				if (control == 'WEIGHTS' and i == p and j == q and sign == 'POSITIVE'):
 					prog.inst(CPHASE(J[i, j] + pi/2,i,j))
-				elif (control == 1 and i == p and j == q and sign == 1):
+				elif (control == 'WEIGHTS' and i == p and j == q and sign == 'NEGATIVE'):
 					prog.inst(CPHASE(J[i, j] - pi/2,i,j))
-				elif (control==2 and sign == 2):
+				elif (control== 'NEITHER' and sign == 'NEITHER'):
 					prog.inst(CPHASE(J[i, j],i,j))
 				i = i+1
-	
-		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated		
+
+		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated
 		for j in range(0,N):
-			if (control == 0 and j == r and sign == 0):
+			if (control == 'BIAS' and j == r and sign == 'POSITIVE'):
 				prog.inst(PHASE(b[j] + pi/2,j))
-			elif (control == 0 and j == r and sign == 1):
+			elif (control == 'BIAS' and j == r and sign == 'NEGATIVE'):
 				prog.inst(PHASE(b[j] - pi/2,j))
-			elif (control==2 and sign == 2):
+			elif (control== 'NEITHER' and sign == 'NEITHER'):
 				prog.inst(PHASE(b[j],j))
 
-		#Apply final layer to all qubits, either all Hadamard, or X or Y rotations
+		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
 
-		if final_layer == 0:
+		if (final_layer == 'IQP'):
+			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)
 			for k in range(0,N):
 				prog.inst(H(k))
 
-		elif final_layer == 1:
-			#Apply e^(-i(pi/4)X_i) to each qubit
+		elif (final_layer =='QAOA'):
+			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)X_i)on all qubits)
 			for k in range(0,N):
 				H_temp = (-float(gamma_x[k]))*sX(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
-		elif final_layer == 2:
-			#Apply e^(-i(pi/4)Y_i) to each qubit
+		elif (final_layer == 'IQPy' ):
+			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)Y_i)on all qubits)
 			for k in range(0,N):
 				H_temp = (-float(gamma_y[k]))*sY(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
-		else: print("final_layer must be either 0, 1 or 2, for IQP (Final Hadamard), QAOA (Final X rotation) or [INSERT COOL NAME] (Final Y rotation)")
+		else: print("final_layer must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
+					QAOA (Final X rotation) or IQPy (Final Y rotation)")
 
 		wavefunction = qvm.wavefunction(prog)
 		probs = qvm.wavefunction(prog).get_outcome_probs()
-		
-		return prog, wavefunction, probs
 
-	
+		return prog, wavefunction, probs
