@@ -14,7 +14,7 @@ p = Program()
 
 '''This Program generates samples from the output distribution of the IQP/QAOA circuit according to the Born Rule:
 	P(z) = |<z|U|s>|^2, where |s> is the uniform superposition'''
-def born_sampler(N, N_v, N_h,
+def BornSampler(N, N_v, N_h,
  				N_born_samples,
 				J, b, gamma_x, gamma_y):
 	#final_layer = ('IQP'for IQP), = ('QAOA' for QAOA), = ('IQPy' for Y-Rot)

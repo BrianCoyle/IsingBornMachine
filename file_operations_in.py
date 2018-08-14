@@ -1,12 +1,13 @@
-TrainingData
-from train_Generation import TrainingData, DataSampler
-from classical_kernel import gaussian_kernel, gaussian_kernel_exact
+
+from train_generation import TrainingData, DataSampler
+from classical_kernel import GaussianKernel, GaussianKernelExact
 from mmd import MMDKernelforGradExact
 import ast
 import sys
 import json
+import numpy as np
 
-Max_qubits = 11
+Max_qubits = 8
 def KernelDictToFile(N_v, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
 	if (N_kernel_samples == 'infinite'):
@@ -35,17 +36,17 @@ def PrintKernel():
 				bin_visible[v_string][v] = float(s_temp[v])
 
 		N_kernel_samples = 1
-		#kernel_choice1 = 'Quantum'
-		kernel_choice2 = 'Gaussian'
+		kernel_choice1 = 'Quantum'
+		#kernel_choice2 = 'Gaussian'
 
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
-		#kernel1, kernel_exact1, kernel_dict1, kernel_exact_dict1 = mmd_grad_kernel_comp_exact(N_v, bin_visible,  N_kernel_samples, kernel_choice1)
-		#dict_to_file(N_v, 'infinite', kernel_exact_dict1, kernel_choice1)
-		kernel2, kernel_exact2, kernel_dict2, kernel_exact_dict2 =MMDKernelforGradExact(N_v, bin_visible,  N_kernel_samples, kernel_choice2)
-		kernel_dict_to_file(N_v, 'infinite', kernel_dict2, kernel_choice2)
+		kernel1, kernel_exact1, kernel_dict1, kernel_exact_dict1 = MMDKernelforGradExact(N_v, bin_visible,  N_kernel_samples, kernel_choice1)
+		KernelDictToFile(N_v, 'infinite', kernel_exact_dict1, kernel_choice1)
+		#kernel2, kernel_exact2, kernel_dict2, kernel_exact_dict2 = MMDKernelforGradExact(N_v, bin_visible,  N_kernel_samples, kernel_choice2)
+		#KernelDictToFile(N_v, 'infinite', kernel_dict2, kernel_choice2)
 
 	return
-print_kernel()
+PrintKernel()
 
 np.set_printoptions(threshold=np.nan)
 ### This function prepares data samples according to a a specified number of samples
@@ -56,6 +57,7 @@ def DataDictToFile(N_v, data_dict):
 	with open('Data_Dict_Exact_%iNv' % N_v, 'w') as f:
 		json.dump(json.dumps(data_dict, sort_keys=True),f)
 	return
+	
 def PrintDataToFiles():
 	for i in range(1, Max_qubits):
 		#N_v is the number of visible units
@@ -87,4 +89,7 @@ def PrintDataToFiles():
 		exact_data, bin_visible, bin_hidden, data_dist_dict = TrainingData(N_v, N_h, M_h)
 		#Output exact training data (not sampled)
 		np.savetxt('Data_Exact_%iNv' % (N_v), np.asarray(exact_data), fmt='%.10f')
-		data_dict_to_file(N_v, data_dist_dict)
+		DataDictToFile(N_v, data_dist_dict)
+
+		
+#PrintDataToFiles()

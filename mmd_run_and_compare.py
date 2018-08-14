@@ -12,7 +12,7 @@ import sys
 #N_epoch is the total number of training epochs
 N_epochs = 200
 #N is the total number of qubits.
-N1 = 4
+N1 = 3
 
 #N_v is the number of visible units
 #N_h is the number of hidden units
@@ -38,7 +38,7 @@ gamma_y = np.zeros((N1))
 J_i, b_i, g_x_i, g_y_i = NetworkParams(N1, J, b, gamma_x, gamma_y)
 
 #Set learning rate for parameter updates
-learning_rate1 = 0.001
+learning_rate1 = 0.005
 #learning_rate2 = 0.001
 #learning_rate3 = 0.0001
 N_data_samples = 1

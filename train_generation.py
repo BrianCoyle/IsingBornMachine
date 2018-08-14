@@ -69,8 +69,8 @@ def TrainingData(N_v, N_h, M_h):
 
 		return dist
 
-	centre_modes = centremodes(N_v, M_h)
-	bin_visible, bin_hidden, bin_modes = perms(N_v, N_h, M_h)
+	centre_modes = CentreModes(N_v, M_h)
+	bin_visible, bin_hidden, bin_modes = Perms(N_v, N_h, M_h)
 	hamweight = HamWeightModes(bin_visible, centre_modes, N_v, M_h)
 	jointdist = ProbDist(N_v, M_h, 0.9, hamweight)
 	data_dist = (1/M_h)*jointdist.sum(axis=1)

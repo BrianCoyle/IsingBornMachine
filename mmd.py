@@ -177,7 +177,7 @@ def MMDKernelforGradExact(N_v, bin_visible, N_k_samples, k_choice):
 	#If the input corresponding to the kernel choice is either the gaussian kernel or the quantum kernel
 	if (k_choice == 'Gaussian'):
 		sigma = np.array([0.25, 10, 1000])
-		k, k_exact_dict = GaussianKernel_exact(N_v, bin_visible, sigma)
+		k, k_exact_dict = GaussianKernelExact(N_v, bin_visible, sigma)
 		#Gaussian approx kernel is equal to exct kernel
 		k_exact = k
 		k_dict = k_exact_dict
