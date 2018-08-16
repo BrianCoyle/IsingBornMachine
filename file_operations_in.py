@@ -7,7 +7,7 @@ import sys
 import json
 import numpy as np
 
-Max_qubits = 8
+Max_qubits = 5
 def KernelDictToFile(N_v, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
 	if (N_kernel_samples == 'infinite'):
@@ -24,7 +24,7 @@ def KernelDictToFile(N_v, N_kernel_samples, kernel_dict, kernel_choice):
 			json.dump(json.dumps(dict(zip(*[k1,v])), sort_keys=True),f)
 	return
 
-def PrintKernel():
+def PrintKernel(N_kernel_samples):
 	#print the kernel for the Gaussian and Quantum kernels out to a file
 	for N_v in range(1, Max_qubits):
 		print("This is qubit, ", N_v)
@@ -35,19 +35,21 @@ def PrintKernel():
 			for v in range(0, N_v):
 				bin_visible[v_string][v] = float(s_temp[v])
 
-		N_kernel_samples = 1
+		#N_kernel_samples = 1
 		kernel_choice1 = 'Quantum'
 		#kernel_choice2 = 'Gaussian'
 
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
 		kernel1, kernel_exact1, kernel_dict1, kernel_exact_dict1 = MMDKernelforGradExact(N_v, bin_visible,  N_kernel_samples, kernel_choice1)
-		KernelDictToFile(N_v, 'infinite', kernel_exact_dict1, kernel_choice1)
+		KernelDictToFile(N_v, 'infinite', kernel_dict1, kernel_choice1)
 		#kernel2, kernel_exact2, kernel_dict2, kernel_exact_dict2 = MMDKernelforGradExact(N_v, bin_visible,  N_kernel_samples, kernel_choice2)
 		#KernelDictToFile(N_v, 'infinite', kernel_dict2, kernel_choice2)
 
 	return
-PrintKernel()
-
+print("Kernel is printing for 10 samples")
+PrintKernel(10)
+print("Kernel is printing for 100 samples")
+PrintKernel(100)
 np.set_printoptions(threshold=np.nan)
 ### This function prepares data samples according to a a specified number of samples
 ### for all number of visible qubits up to Max_qubits, and saves them to files
@@ -57,7 +59,7 @@ def DataDictToFile(N_v, data_dict):
 	with open('Data_Dict_Exact_%iNv' % N_v, 'w') as f:
 		json.dump(json.dumps(data_dict, sort_keys=True),f)
 	return
-	
+
 def PrintDataToFiles():
 	for i in range(1, Max_qubits):
 		#N_v is the number of visible units
@@ -91,5 +93,5 @@ def PrintDataToFiles():
 		np.savetxt('Data_Exact_%iNv' % (N_v), np.asarray(exact_data), fmt='%.10f')
 		DataDictToFile(N_v, data_dist_dict)
 
-		
+
 #PrintDataToFiles()

@@ -12,6 +12,7 @@ from sample_gen import BornSampler, PlusMinusSampleGen
 from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_out import KernelDictFromFile
+from kernel_circuit import KernelCircuit
 import ast
 import sys
 import json
@@ -45,7 +46,6 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 
 	for sample2 in range(0, N_samples2):
 		for sample1 in range(0, sample2+1):
-
 			#convert integer in elements to binary string and store in list binary_string_list
 			s_temp1 = ConvertToString(sample1, N_v)
 			s_temp2 = ConvertToString(sample2, N_v)
@@ -98,17 +98,17 @@ def MMDKernelforGradSampler(N_v, data, born_samples,
 		k_bornminus_born = GaussianKernel(born_samples_minus, born_samples, sigma)
 		k_bornplus_data = GaussianKernel(born_samples_plus, data, sigma)
 		k_bornminus_data = GaussianKernel(born_samples_minus, data, sigma)
-
 	elif (k_choice == 'Quantum'):
 		ZZ_b, Z_b = EncodingFunc(N_v, born_samples, N_b)
 		ZZ_b_plus, Z_b_plus = EncodingFunc(N_v, born_samples_plus, N_b_plus)
 		ZZ_b_minus, Z_b_minus = EncodingFunc(N_v, born_samples_minus, N_b_minus)
 		ZZ_d, Z_d = EncodingFunc(N_v, data, N_d)
-
 		k_bornplus_born, k_exact_bornplus_born, k_dict_bornplus_born, k_exact_dict_bornplus_born \
 								= KernelComputation(N_v, N_b_plus, N_b, N_k_samples, ZZ_b_plus, Z_b_plus, ZZ_b, Z_b)
+
 		k_bornminus_born, k_exact_bornminus_born, k_dict_bornminus_born, k_exact_dict_bornminus_born\
 		 						= KernelComputation(N_v, N_b_minus, N_b, N_k_samples, ZZ_b_minus, Z_b_minus, ZZ_b, Z_b)
+
 		k_bornplus_data, k_exact_bornplus_data, k_dict_bornplus_data, k_exact_dict_bornplus_data\
 		  						= KernelComputation(N_v, N_b_plus, N_d, N_k_samples, ZZ_b_plus, Z_b_plus, ZZ_d, Z_d)
 		k_bornminus_data, k_exact_bornminus_data, k_dict_bornminus_data, k_exact_dict_bornminus_data \
@@ -127,9 +127,8 @@ def MMDGradSampler(N_v,
 	N_b_minus	= born_samples_minus.shape[0]
 
 	#Compute the kernel function with inputs required for MMD, [(x,x), (x, y), (y, y)], x samples from Born, y samples from data
-	kbplusb, kbminusb, kbplusd , kbminusd  = MMDKernelforGrad(N_v, data, born_samples, born_samples_plus,\
+	kbplusb, kbminusb, kbplusd , kbminusd  = MMDKernelforGradSampler(N_v, data, born_samples, born_samples_plus,\
 																 born_samples_minus, N_k_samples, k_choice)
-
 	#return the gradient of the loss function (L = MMD^2) for a given parameter
 	return (2/N_b_minus*N_b)*(kbminusb.sum()) - (2/N_b_plus*N_b)*(kbplusb.sum()) \
 			- (2/N_b_minus*N_d)*(kbminusd.sum()) + (2/N_b_plus*N_d)*(kbplusd.sum())
@@ -224,9 +223,8 @@ def MMDGradExact(N_v,
 				data_exact_dict, born_probs_dict, born_probs_plus_dict, born_probs_minus_dict,
 				N_k_samples, k_choice):
 	#We have dictionaries of 5 files, the kernel, the data, the born probs, the born probs plus/minus
-	k_exact_dict = kernel_dict_from_file(N_v, N_k_samples, k_choice)
+	k_exact_dict = KernelDictFromFile(N_v, N_k_samples, k_choice)
 
-	#print("born_probs_dict is:", born_probs_dict)
 	N_born_probs = len(born_probs_dict)
 	N_born_plus_probs = len(born_probs_plus_dict)
 	N_born_minus_probs = len(born_probs_minus_dict)
@@ -239,26 +237,26 @@ def MMDGradExact(N_v,
 
 	#compute the term kp_1p_2 to add to expectation value for each pair, from bornplus/bornminus, with born machine and data
 	for sampleborn1 in range(0, N_born_probs):
-		sampleborn1_string = convert_to_string(sampleborn1, N_v)
+		sampleborn1_string = ConvertToString(sampleborn1, N_v)
 		for samplebornplus in range(0, N_born_plus_probs):
-			samplebornplus_string = convert_to_string(samplebornplus, N_v)
+			samplebornplus_string = ConvertToString(samplebornplus, N_v)
 			born_plus[sampleborn1, samplebornplus] = born_probs_dict[sampleborn1_string]\
 								*born_probs_plus_dict[samplebornplus_string]*k_exact_dict[(sampleborn1_string, samplebornplus_string)]
 
 		for samplebornminus in range(0, N_born_plus_probs):
-			samplebornminus_string = convert_to_string(samplebornminus, N_v)
+			samplebornminus_string = ConvertToString(samplebornminus, N_v)
 			born_minus[sampleborn1, samplebornminus] = born_probs_dict[sampleborn1_string]\
 					*born_probs_minus_dict[samplebornminus_string]*k_exact_dict[(sampleborn1_string, samplebornminus_string)]
 
 	for sampledata1 in range(0, N_data):
-		sampledata1_string = convert_to_string(sampledata1, N_v)
+		sampledata1_string = ConvertToString(sampledata1, N_v)
 		for samplebornplus in range(0, N_born_plus_probs):
-			samplebornplus_string = convert_to_string(samplebornplus, N_v)
+			samplebornplus_string = ConvertToString(samplebornplus, N_v)
 			data_plus[sampledata1, samplebornplus] = data_exact_dict[sampledata1_string]\
 						*born_probs_plus_dict[samplebornplus_string]*k_exact_dict[(sampleborn1_string, samplebornplus_string)]
 
 		for samplebornminus in range(0, N_born_plus_probs):
-			samplebornminus_string = convert_to_string(samplebornminus, N_v)
+			samplebornminus_string = ConvertToString(samplebornminus, N_v)
 			data_minus[sampledata1, samplebornminus] = data_exact_dict[sampledata1_string]\
 						*born_probs_minus_dict[samplebornminus_string]*k_exact_dict[sampleborn1_string, samplebornminus_string]
 
@@ -303,19 +301,19 @@ def MMDTrain(N, N_h, N_v,
 		gyt = gamma_y[:,epoch]
 
 		#generate samples, and exact probabilities for current set of parameters
-		born_samples, born_probs_dict = born_sampler(N, N_v, N_h, N_b, Jt, bt, gxt, gyt)
+		born_samples, born_probs_dict = BornSampler(N, N_v, N_h, N_b, Jt, bt, gxt, gyt)
 
 		'''Updating bias b[r], control set to 'BIAS' '''
 		for bias_index in range(0,N):
-			born_samples_plus, born_samples_minus, born_probs_dict_plus, born_probs_dict_minus \
-			 				= PlusMinusSampleGen(N, N_v, N_h, \
+			born_samples_plus, born_samples_minus, born_probs_dict_plus, born_probs_dict_minus = PlusMinusSampleGen(N, N_v, N_h, \
 												Jt, bt, gxt, gyt, \
 												0,0, bias_index, \
 												'QAOA', 'BIAS',\
 												 N_b_plus, N_b_minus)
 			##If the exact MMD is to be computed approx == 'Exact', if only approximate version using samples, approx == 'Sampler'
+			print(approx)
 			if approx == 'Sampler':
-				bias_grad[bias_index] = MMDGradCompSampler(N_v,\
+				bias_grad[bias_index] = MMDGradSampler(N_v,\
 				 											data, born_samples, born_samples_plus, born_samples_minus,\
 															N_k_samples, k_choice)
 			elif approx == 'Exact':
@@ -330,6 +328,7 @@ def MMDTrain(N, N_h, N_v,
 		for j in range(0, N):
 			i = 0
 			while(i < j):
+
 				born_samples_plus, born_samples_minus, born_probs_dict_plus, born_probs_dict_minus \
 								= PlusMinusSampleGen(N, N_v, N_h,\
 								 					Jt, bt, gxt, gyt, \
@@ -338,7 +337,7 @@ def MMDTrain(N, N_h, N_v,
 													 N_b_plus, N_b_minus)
 				##If the exact MMD is to be computed approx == 'Exact', if only approximate version using samples, approx == 'Sampler'
 				if approx == 'Sampler':
-					weight_grad[i,j] = MMDGradCompSampler(N_v, data, born_samples, born_samples_plus, born_samples_minus, N_k_samples, k_choice)
+					weight_grad[i,j] = MMDGradSampler(N_v, data, born_samples, born_samples_plus, born_samples_minus, N_k_samples, k_choice)
 				elif approx == 'Exact':
 					#N_kernel_samples = 'infinite' since exact gradient is being computed
 					weight_grad[i,j] = MMDGradExact(N_v, \
@@ -352,7 +351,7 @@ def MMDTrain(N, N_h, N_v,
 		if approx == 'Sampler':
 			L[epoch], kbb, kdd, kbd = MMDCost(N_v, data, born_samples, N_k_samples, k_choice)
 		elif approx == 'Exact':
-			k_exact_dict = kernel_dict_from_file(N_v, 'infinite', k_choice)
-			L[epoch] = mmd_cost_exact(N_v, data_exact_dict, born_probs_dict, k_exact_dict)
+			k_exact_dict = KernelDictFromFile(N_v, 'infinite', k_choice)
+			L[epoch] = MMDCostExact(N_v, data_exact_dict, born_probs_dict, k_exact_dict)
 		print("The MMD Loss for epoch ", epoch, "is", L[epoch])
 	return L, J, b, gamma_x, gamma_y

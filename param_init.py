@@ -22,7 +22,6 @@ def HadamardToAll(prog, N_qubits):
 def NetworkParams(N, J, b, gamma_x, gamma_y):
 	for j in range(0, N):
 			b[j] = uniform(0,pi/4)
-
 			#If gamma_y to be trained also and variable for each qubit
 			#gamma_x[j] = uniform(0,pi/4)
 			#If gamma_y to be trained also and variable for each qubit
@@ -57,6 +56,7 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 		for j in range(0, N):
 			i = 0
 			while (i < j):
+
 				if (control == 'WEIGHTS' and i == p and j == q and sign == 'POSITIVE'):
 					prog.inst(CPHASE(4*J[i, j] + pi/2,i,j))
 				elif (control == 'WEIGHTS' and i == p and j == q and sign == 'NEGATIVE'):

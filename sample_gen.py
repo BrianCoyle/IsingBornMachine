@@ -49,10 +49,10 @@ def PlusMinusSampleGen(N, N_v, N_h,
 	prog_minus, wavefunction_minus, born_probs_dict_minus = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y,\
 	 														p, q, r, final_layer, control, 'NEGATIVE')
 
+
 	for qubit_index in range(0, N_v):
 		prog_plus.measure(qubit_index, qubit_index)
 		prog_minus.measure(qubit_index, qubit_index)
-
 	#Index list for classical registers we want to put measurement outcomes into.
 	classical_regs_plus = list(range(0, N_v))
 	classical_regs_minus = list(range(0, N_v))
