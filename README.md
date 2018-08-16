@@ -37,7 +37,7 @@ param_init.py initialises the Born Machine circuit, with optional parameters to 
               IQPy. It also can run the parameter shifted versions of the circuits required to compute the MMD cost gradient.
               Finally, it initialises the Born Machine parameters at random, which ae to be trained.
               
-run_and_compare.py calls mmd_train_plot a number of times to compare the output with various parameters
+run_and_compare.py calls mmd_train_plot a number of times to compare the output with various parameters which can be chosen.
 ---------------------------------------------------------------------------
 KULLBACK LEIBLER DIVERGENCE
 ---------------------------------------------------------------------------
