@@ -27,7 +27,9 @@ mmd_train_plot.py contains functions to print output data to a file, including t
 sample_gen.py contains functions to produce a specified number of samples from the Born Machine, and the parameter shifted circuits   
               involved in computing the gradient.
               
-kernel_circuit.py runs the  quantum circuit used for the hard-to-compute kernel, with two samples given as input. 
+kernel_circuit.py runs the  quantum circuit used for the hard-to-compute kernel, with two samples given as input. this is run as 
+                  part of mmd.py when computing the gradient, for each of the samples required for the expectation value of the
+                  MMD cost function gradient.
 
 train_generation.py produces the training data, in a number of ways. It has functions to compute it exactly for the specified 
                     of qubits, and also a sampler to generate random samples according to the exact distribution. This is used 
