@@ -12,7 +12,7 @@ import sys
 qvm = QVMConnection()
 p = Program()
 
-'''This Program generates samples from the output distribution of the IQP/QAOA circuit according to the Born Rule:
+'''This Program generates samples from the output distribution of the IQP/QAOA/IQPy circuit according to the Born Rule:
 	P(z) = |<z|U|s>|^2, where |s> is the uniform superposition'''
 def BornSampler(N, N_v, N_h,
  				N_born_samples,
@@ -20,7 +20,6 @@ def BornSampler(N, N_v, N_h,
 	#final_layer = ('IQP'for IQP), = ('QAOA' for QAOA), = ('IQPy' for Y-Rot)
 	#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, ='NEITHER' for neither
 	#sign = 'POSITIVE' to run the positive circuit, = 'NEGATIVE' for the negative circuit, ='NEITHER' for neither
-	##(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, control, sign)
 
 	prog, wavefunction, born_probs_dict = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, 0, 0, 0, 'QAOA', 'NEITHER', 'NEITHER')
 
@@ -40,13 +39,13 @@ def PlusMinusSampleGen(N, N_v, N_h,
 						p, q, r, final_layer, control,
 						N_born_samples_plus, N_born_samples_minus):
 	''' This function computes the samples required in the estimator, in the +/- terms of the MMD loss function gradient
-	 with respect to parameter, J_{p, q} (control = 'WEIGHT')  or b_{r} (control = 'BIAS')
+	 with respect to parameter, J_{p, q} (control = 'WEIGHT')  or b_r (control = 'BIAS')
 	'''
 
 	#probs_minus, probs_plus are the exact probabilites outputted from the circuit
-	prog_plus, wavefunction_plus, born_probs_dict_plus = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y,\
+	prog_plus, wavefunc_plus, born_probs_dict_plus = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y,\
 	 												p, q, r, final_layer, control, 'POSITIVE')
-	prog_minus, wavefunction_minus, born_probs_dict_minus = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y,\
+	prog_minus, wavefunc_minus, born_probs_dict_minus = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y,\
 	 														p, q, r, final_layer, control, 'NEGATIVE')
 
 
@@ -56,7 +55,7 @@ def PlusMinusSampleGen(N, N_v, N_h,
 	#Index list for classical registers we want to put measurement outcomes into.
 	classical_regs_plus = list(range(0, N_v))
 	classical_regs_minus = list(range(0, N_v))
-
+	#generate samples from measurements of shifted circuits
 	born_samples_plus = np.asarray(qvm.run(prog_plus, classical_regs_plus, N_born_samples_plus))
 	born_samples_minus = np.asarray(qvm.run(prog_minus, classical_regs_minus, N_born_samples_minus))
 

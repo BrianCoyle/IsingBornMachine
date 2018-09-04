@@ -1,5 +1,7 @@
 import numpy as np
 
+def ConvertToString(index, N_qubits):
+	return "0" * (N_qubits-len(format(index,'b'))) + format(index,'b')
 
 def TrainingData(N_v, N_h, M_h):
 	"""This function constructs example training data"""
@@ -20,32 +22,27 @@ def TrainingData(N_v, N_h, M_h):
 
 	"""Generate all bit strings between 0 and N_v and N_v to N_h"""
 	def Perms(n_v, n_h, m_h):
-
 		#Visible units all permutations
-		for v_string in range(0,2**n_v):
-			s_temp = format(v_string,'b')
-			s_temp = "0" * (n_v-len(s_temp)) + s_temp
+		for v_index in range(0,2**n_v):
+			v_string = ConvertToString(v_index, N_h)
 			for v in range(0,n_v):
-				s_visible[v_string][v] = float(s_temp[v])
+				s_visible[v_string][v] = float(v_string[v])
 		#Hidden units all permutations
-		for h_string in range(0,2**n_h):
-			s_temp = format(h_string,'b')
-			s_temp = "0" * (n_h-len(s_temp)) + s_temp
+		for h_index in range(0,2**n_h):
+			h_string = ConvertToString(h_index, n_h)
 			for h in range(0,n_h):
-				s_hidden[h_string][h] = float(s_temp[h])
+				s_hidden[h_index][h] = float(h_string[h])
 
 		#Hidden Modes all permutations, only used to compute training data - doesn't need to be outputted
-		for hidden_mode in range(0,2**m_h):
-			s_temp = format(hidden_mode,'b')
-			s_temp = "0" * (m_h-len(s_temp)) + s_temp
+		for hidden_mode_index in range(0,2**m_h):
+			hidden_mode_string = ConvertToString(hidden_mode_index, m_h)
 			for h in range(0,m_h):
-				s_modes[hidden_mode][h] = float(s_temp[h])
-
+				s_modes[hidden_mode_index][h] = float(hidden_mode_string[h])
 		return s_visible, s_hidden, s_modes
 
 	"""Generates Random centre modes """
 	def CentreModes(n_v, m_h):
-		for h in range(0,m_h):
+		for h in range(0, m_h):
 			stemp = np.random.binomial(1, 0.5, n_v)
 			for v in range(0,n_v):
 				s_cent[h][v] = stemp[v]
@@ -77,10 +74,8 @@ def TrainingData(N_v, N_h, M_h):
 	#put data in dictionary
 	data_dist_dict = {}
 	for v_string in range(0,2**N_v):
-		bin_string_visible = format(v_string,'b')
-		bin_string_visible = "0" * (N_v-len(bin_string_visible)) + bin_string_visible
+		bin_string_visible =ConvertToString(v_string, N_v)
 		data_dist_dict[bin_string_visible] = data_dist[v_string]
-
 	return data_dist, bin_visible, bin_hidden, data_dist_dict
 
 
@@ -102,17 +97,3 @@ def DataSampler(N_v, N_h, M_h, N_samples):
 			sample_string_array[i][v] = float(s_temp[v])
 
 	return sample_string_array, data_dist_dict
-
-
-def BinaryStringCreator(N_v):
-
-	elements = np.array([i for i in range(0, 2**N_v)])
-	binary_string_list = []
-
-	for integer in elements:
-		#convert integer in elements to binary string and store in list binary_string_list
-		s_temp = format(integer,'b')
-		s_temp = "0" * (N_v-len(s_temp)) + s_temp
-		binary_string_list.append(s_temp)
-
-	return binary_string_list

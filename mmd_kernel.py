@@ -6,9 +6,27 @@ from pyquil.api import QVMConnection
 from random import *
 import matplotlib.pyplot as plt
 
-from train_generation import TrainingData, DataSampler
+from train_generation import TrainingData, DataSampler, ConvertToString
 from param_init import NetworkParams, StateInit, HadamardToAll
 from sample_gen import BornSampler
+
+'''Define Non-Linear function to encode samples in graph weights/biases'''
+#Fill graph weight and bias arrays according to one single sample
+def EncodingFunc(N_v, samples):
+	N_samples = samples.shape[0]
+	ZZ = np.zeros((N_v, N_v, N_samples))
+	Z = np.zeros((N_v, N_samples))
+	for sample_number in range(0, N_samples):
+		for i in range(0, N_v):
+			if int(samples[sample_number, i]) == 1:
+				Z[i, sample_number] = (np.pi)/4
+			j = 0
+			while (j < i):
+				if int(samples[sample_number, i]) == 1 and int(samples[sample_number, j]) == 1:
+					ZZ[i,j, sample_number] = (np.pi)/4
+					ZZ[j,i, sample_number] = ZZ[i,j, sample_number]
+				j = j+1
+	return ZZ, Z
 
 def TwoQubitGate(prog, two_q_arg, qubit_1, qubit_2):
 	return prog.inst(CPHASE(4*two_q_arg,qubit_1, qubit_2)).inst(PHASE(-2*two_q_arg, qubit_1)).inst(PHASE(-2*two_q_arg, qubit_2))
@@ -97,20 +115,26 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 
 			#Index list for classical registers we want to put measurement outcomes into.
 			#Measure the kernel circuit to compute the kernel approximately, the kernel is the probability of getting (00...000) outcome.
-			classical_regs = list(range(0, N_v))
+			if (N_kernel_samples == 'infinite'):
+						kernel[sample1,sample2] = kernel_exact[sample1, sample2]
+						kernel[sample2,sample1] = kernel[sample1,sample2]
+						kernel_dict[s_temp1, s_temp2] = kernel_exact_dict[s_temp1, s_temp2]
+						kernel_dict[s_temp2, s_temp1] = kernel_dict[s_temp1, s_temp2]
+			else:
+				classical_regs = list(range(0, N_v))
 
-			for qubit_index in range(0, N_v):
-				prog.measure(qubit_index, qubit_index)
+				for qubit_index in range(0, N_v):
+					prog.measure(qubit_index, qubit_index)
 
-			kernel_measurements = np.asarray(qvm.run(prog, classical_regs, N_kernel_samples))
-			(m,n) = kernel_measurements.shape
+				kernel_measurements = np.asarray(qvm.run(prog, classical_regs, N_kernel_samples))
+				(m,n) = kernel_measurements.shape
 
-			N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements, 1))
-			#The kernel is given by = [Number of times outcome (00...000) occurred]/[Total number of measurement runs]
+				N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements, 1))
+				#The kernel is given by = [Number of times outcome (00...000) occurred]/[Total number of measurement runs]
 
-			kernel[sample1,sample2] = N_zero_strings/N_kernel_samples
-			kernel[sample2,sample1] = kernel[sample1,sample2]
-			kernel_dict[s_temp1, s_temp2] = kernel[sample1, sample2]
-			kernel_dict[s_temp2, s_temp1] = kernel_dict[s_temp1, s_temp2]
+				kernel[sample1,sample2] = N_zero_strings/N_kernel_samples
+				kernel[sample2,sample1] = kernel[sample1,sample2]
+				kernel_dict[s_temp1, s_temp2] = kernel[sample1, sample2]
+				kernel_dict[s_temp2, s_temp1] = kernel_dict[s_temp1, s_temp2]
 
 	return kernel, kernel_exact, kernel_dict, kernel_exact_dict
