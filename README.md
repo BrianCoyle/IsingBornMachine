@@ -3,7 +3,8 @@ Implementation of Quantum Ising Born Machine using Rigetti Forest Platform, with
 1. Computing the KL Divergence, 
 2. MMD as a cost function with hard-to-compute kernel.
 
-To run the, PyQuil is needed, plus a user code which can be gotten by siging up to use the Rigetti simulator online:
+To run the, PyQuil is needed, plus a user code which can be gotten by signing up to use the Rigetti simulator online:
+
 pip install pyquil
 Also the standard packages, numpy, matplotlip, etc.
 ---------------------------------------------------------------------------------------------
