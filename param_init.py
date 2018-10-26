@@ -4,24 +4,25 @@ import pyquil.paulis as pl
 from pyquil.gates import *
 from pyquil.quilbase import DefGate
 from pyquil.parameters import Parameter, quil_exp, quil_cos, quil_sin
-from pyquil.api import QVMConnection
+from pyquil.api import get_qc, WavefunctionSimulator
 
 import numpy as np
-from random import *
+import random as rand
 from numpy import pi,log2
 
 def HadamardToAll(prog, N_qubits):
 	for qubit_index in range(0, N_qubits):
 		prog.inst(H(qubit_index))
 	return prog
-
+#Set numpy random seed to be fixed for reproducibility
 '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma set to constant = pi/4'''
 '''It also computes the state produced after the QAOA circuit. '''
 
 #Initialise weights and biases as random
 def NetworkParams(N, J, b, gamma_x, gamma_y):
+	rand.seed(0)
 	for j in range(0, N):
-			b[j] = uniform(0,pi/4)
+			b[j] = rand.uniform(0, pi/4)
 			#If gamma_y to be trained also and variable for each qubit
 			#gamma_x[j] = uniform(0,pi/4)
 			#If gamma_y to be trained also and variable for each qubit
@@ -34,7 +35,7 @@ def NetworkParams(N, J, b, gamma_x, gamma_y):
 
 			i = 0
 			while (i < j):
-				J[i][j] = uniform(0, pi/4)
+				J[i][j] = rand.uniform(0, pi/4)
 				J[j][i] = J[i][j]
 				i = i+1
 
@@ -48,10 +49,9 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 		#final_layer is either 'IQP', 'QAOA', 'IQPy' for IQP (Final Hadamard), QAOA (Final X rotation) or IQPy (Final Y rotation)
 		#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, = 'NEITHER' for neither
 		prog = Program()
-		qvm = QVMConnection()
-
+		qc = get_qc("9q-generic-qvm")
 		prog = HadamardToAll(prog, N)
-
+		make_wf = WavefunctionSimulator()
 		#Apply Control-Phase(4J) gates to each qubit, the factor of 4 comes from the decomposition of the Ising gate
 		for j in range(0, N):
 			i = 0
@@ -69,6 +69,7 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 
 		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated
 		for j in range(0,N):
+
 			if (control == 'BIAS' and j == r and sign == 'POSITIVE'):
 				prog.inst(PHASE(-2*b[j] + pi/2,j))
 			elif (control == 'BIAS' and j == r and sign == 'NEGATIVE'):
@@ -80,7 +81,7 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 
 		if (final_layer == 'IQP'):
 			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)
-			prog = HadamardToAll(prog, N_qubits)
+			prog = HadamardToAll(prog, N)
 		elif (final_layer =='QAOA'):
 			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)X_i)on all qubits)
 			for k in range(0,N):
@@ -95,7 +96,7 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 		else: print("final_layer must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
 					QAOA (Final X rotation) or IQPy (Final Y rotation)")
 
-		wavefunction = qvm.wavefunction(prog)
-		outcome_dict = qvm.wavefunction(prog).get_outcome_probs()
-
+		wavefunction = make_wf.wavefunction(prog)
+		outcome_dict = make_wf.wavefunction(prog).get_outcome_probs()
+		#print(wavefunction)
 		return prog, wavefunction, outcome_dict

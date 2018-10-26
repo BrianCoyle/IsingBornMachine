@@ -1,3 +1,4 @@
+import numpy as np
 import ast
 import sys
 import json
@@ -21,9 +22,26 @@ def KernelDictFromFile(N_v, N_kernel_samples, kernel_choice):
 
 	return dict(zip(*[k1,v]))
 
-def DataDictFromFile(N_v):
+def DataDictFromFile(N_v, N_data_samples):
 	#reads data dictionary from file
-	with open('Data_Dict_Exact_%iNv' % N_v, 'r') as f:
-		raw_from_file = json.load(f)
-		data_dict = json.loads(raw_from_file)
+	if (N_data_samples == 'infinite'):
+		with open('Data_Dict_Exact_%iNv' % N_v, 'r') as f:
+			raw_from_file = json.load(f)
+			data_dict = json.loads(raw_from_file)
+	else: 
+		with open('Data_Dict_%iSamples_%iNv' % (N_data_samples, N_v), 'r') as g:
+			raw_from_file = json.load(g)
+			data_dict = json.loads(raw_from_file)
 	return data_dict
+
+def ParamsFromFile(N_qubits):
+	Params = np.load('Parameters_%iQubits.npz' % (N_qubits))
+	J_i = Params['J_init']
+	b_i = Params['b_init']
+	g_x_i = Params['gamma_x_init']
+	g_y_i = Params['gamma_y_init']
+	
+	return J_i, b_i, g_x_i, g_y_i
+
+#J_i, b_i, g_x_i, g_y_i =  ParamsFromFile(8)
+#print('b is', J_i, '\n gamma is', g_x_i,'\n gamma is', g_y_i)

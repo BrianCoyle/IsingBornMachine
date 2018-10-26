@@ -2,7 +2,7 @@ from pyquil.quil import Program
 from pyquil.paulis import *
 from pyquil.gates import *
 import numpy as np
-from pyquil.api import QVMConnection
+from pyquil.api import get_qc
 from random import *
 import matplotlib.pyplot as plt
 
@@ -35,7 +35,7 @@ def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 	'''Compute Quantum kernel given samples from the Born Machine (born_samples) and the Data Distribution (data_samples)
 		This must be done for every sample from each distribution (batch gradient descent), (x, y)'''
 	'''First layer, sample from first distribution (1), parameters phi_ZZ_1, phi_Z_1'''
-	qvm = QVMConnection()
+	qc = get_qc("9q-generic-qvm")
 	prog = Program()
 
 	prog = HadamardToAll(prog, N_v)
@@ -102,9 +102,9 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 
 			s_temp1 = ConvertToString(sample1, N_v)
 			s_temp2 = ConvertToString(sample2, N_v)
-			qvm = QVMConnection()
+			qc = get_qc("9q-generic-qvm")
 			prog = KernelCircuit(ZZ_1[:,:,sample1], Z_1[:,sample1], ZZ_2[:,:,sample2], Z_2[:,sample2], N_v)
-			kernel_outcomes = qvm.wavefunction(prog).get_outcome_probs()
+			kernel_outcomes = qc.wavefunction(prog).get_outcome_probs()
 
 			#Create zero string
 			zero_string = '0'*N_v
@@ -126,7 +126,7 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 				for qubit_index in range(0, N_v):
 					prog.measure(qubit_index, qubit_index)
 
-				kernel_measurements = np.asarray(qvm.run(prog, classical_regs, N_kernel_samples))
+				kernel_measurements = np.asarray(qc.run(prog, classical_regs, N_kernel_samples))
 				(m,n) = kernel_measurements.shape
 
 				N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements, 1))

@@ -20,7 +20,6 @@ def BornSampler(N, N_v, N_h,
 	#final_layer = ('IQP'for IQP), = ('QAOA' for QAOA), = ('IQPy' for Y-Rot)
 	#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, ='NEITHER' for neither
 	#sign = 'POSITIVE' to run the positive circuit, = 'NEGATIVE' for the negative circuit, ='NEITHER' for neither
-
 	prog, wavefunction, born_probs_dict = StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, 0, 0, 0, 'QAOA', 'NEITHER', 'NEITHER')
 
 	'''Generate (N_samples) samples from output distribution on (N_v) visible qubits'''
@@ -31,7 +30,6 @@ def BornSampler(N, N_v, N_h,
 		prog.measure(qubit_index, qubit_index)
 
 	born_samples = np.asarray(qvm.run(prog, classical_regs, N_born_samples))
-
 	return born_samples, born_probs_dict
 
 def PlusMinusSampleGen(N, N_v, N_h,
