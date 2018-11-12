@@ -1,8 +1,6 @@
 import numpy as np
-from collections import Counter
+from auxiliary_functions import ConvertToString
 
-def ConvertToString(index, N_qubits):
-	return "0" * (N_qubits-len(format(index,'b'))) + format(index,'b')
 
 """Calculate the Hamming distance between two bit strings"""
 def HammingWeight(s1, s2):
@@ -38,7 +36,10 @@ def Perms(n_v, n_h, m_h):
 def CentreModes(n_v, m_h):
 	s_cent = np.zeros((m_h, n_v))
 	for h in range(0, m_h):
+		#Fix random seed for reproducibility, for each centre mode, h
+		np.random.seed(h)
 		stemp = np.random.binomial(1, 0.5, n_v)
+		#print(stemp)
 		for v in range(0,n_v):
 			s_cent[h][v] = stemp[v]
 
@@ -80,44 +81,6 @@ def TrainingData(N_v, N_h, M_h):
 		data_dist_dict[bin_string_visible] = data_dist[v_string]
 	return data_dist, bin_visible, bin_hidden, data_dist_dict
 
-
-def EmpiricalDist(samples, N_v, *arg):
-	'''This method outputs the empirical probability distribution given samples in a numpy array
-		as a dictionary, with keys as outcomes, and values as probabilities'''
-		
-	if type(samples) is not np.ndarray and type(samples) is not list:
-		raise TypeError('The samples must be either a numpy array, or list')
-
-	if type(samples) is np.ndarray:
-		N_samples = samples.shape[0]
-		string_list = []
-		for sample in range(0, N_samples):
-			'''Convert numpy array of samples, to a list of strings of the samples to put in dict'''
-			string_list.append(''.join(map(str, samples[sample, :].tolist())))
-
-	elif type(samples) is list:
-		N_samples = len(samples)
-		string_list = samples
-
-	counts = Counter(string_list)
-
-	for element in counts:
-		'''Convert occurances to relative frequencies of binary string'''
-		counts[element] = counts[element]/(N_samples)
-
-	for index in range(0, 2**N_v):
-		'''If a binary string has not been seen in samples, set its value to zero'''
-		if ConvertToString(index, N_v) not in counts:
-			counts[ConvertToString(index, N_v)] = 0
-
-	sorted_samples_dict = {}
-
-	keylist = sorted(counts)
-	for key in keylist:
-		sorted_samples_dict[key] = counts[key]
-
-	return sorted_samples_dict
-
 def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
 	'''This functions generates (N_samples) samples according to the given probability distribution
 		data_probs'''
@@ -131,9 +94,6 @@ def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
 		elements.append((ConvertToString(i, N_v)))
 
 	data_samples = np.random.choice(elements, N_samples, True, data_probs)
-
-	#compute empirical distirbution of the samples
-	dist_dict = EmpiricalDist(data_samples.tolist(), N_v)
 
 	return data_samples
 

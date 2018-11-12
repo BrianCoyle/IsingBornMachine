@@ -14,21 +14,24 @@ def HadamardToAll(prog, N_qubits):
 	for qubit_index in range(0, N_qubits):
 		prog.inst(H(qubit_index))
 	return prog
-#Set numpy random seed to be fixed for reproducibility
 '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma set to constant = pi/4'''
 '''It also computes the state produced after the QAOA circuit. '''
 
 #Initialise weights and biases as random
 def NetworkParams(N, J, b, gamma_x, gamma_y):
+	#Set random seed to be fixed for reproducibility
+
 	rand.seed(0)
 	for j in range(0, N):
+			# rand.seed(j)
 			b[j] = rand.uniform(0, pi/4)
-			#If gamma_y to be trained also and variable for each qubit
-			#gamma_x[j] = uniform(0,pi/4)
+			# If gamma_y to be trained also and variable for each qubit
+			# rand.seed(j+N)
+			# gamma_x[j] = rand.uniform(0,pi/4)
 			#If gamma_y to be trained also and variable for each qubit
 			#gamma_y[j] = uniform(0,pi/4)
 
-			#If gamma_x constant for all qubits
+			# #If gamma_x constant for all qubits
 			gamma_x[j] = pi/4
 			#If gamma_y constant for all qubits
 			gamma_y[j] = pi/4
@@ -43,8 +46,7 @@ def NetworkParams(N, J, b, gamma_x, gamma_y):
 
 
 #Initialise Quantum State created after application of gate sequence
-def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, control, sign):
-
+def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, control, sign):
 		#sign = 'POSITIVE' for the positive probability version, sign = 'NEGATIVE' for the negative version of the probability (only used to compute the gradients)
 		#final_layer is either 'IQP', 'QAOA', 'IQPy' for IQP (Final Hadamard), QAOA (Final X rotation) or IQPy (Final Y rotation)
 		#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, = 'NEITHER' for neither
@@ -59,44 +61,57 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, final_layer, contro
 
 				if (control == 'WEIGHTS' and i == p and j == q and sign == 'POSITIVE'):
 					prog.inst(CPHASE(4*J[i, j] + pi/2,i,j))
+					prog.inst(PHASE(-2*J[i, j] + pi/2, i))
+					prog.inst(PHASE(-2*J[i, j] + pi/2, j))
 				elif (control == 'WEIGHTS' and i == p and j == q and sign == 'NEGATIVE'):
 					prog.inst(CPHASE(4*J[i, j] - pi/2,i,j))
-				elif (control== 'NEITHER' and sign == 'NEITHER'):
+					prog.inst(PHASE(-2*J[i, j] - pi/2, i))
+					prog.inst(PHASE(-2*J[i, j] - pi/2, j))
+				elif (control== 'NEITHER' or 'BIAS' or 'GAMMA' and sign == 'NEITHER'):
 					prog.inst(CPHASE(4*J[i, j],i,j))
 					prog.inst(PHASE(-2*J[i,j], i))
-					prog.inst(PHASE(-2*J[i,j], j))
+					prog.inst(PHASE(-2*J[i,j], j))					
 				i = i+1
 
 		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated
-		for j in range(0,N):
+		for j in range(0, N):
 
 			if (control == 'BIAS' and j == r and sign == 'POSITIVE'):
 				prog.inst(PHASE(-2*b[j] + pi/2,j))
 			elif (control == 'BIAS' and j == r and sign == 'NEGATIVE'):
 				prog.inst(PHASE(-2*b[j] - pi/2,j))
-			elif (control== 'NEITHER' and sign == 'NEITHER'):
+			elif (control== 'NEITHER' or 'WEIGHTS' or 'GAMMA' and sign == 'NEITHER'):
 				prog.inst(PHASE(-2*b[j],j))
 
+			# print('B IS:', b[j])
 		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
-
-		if (final_layer == 'IQP'):
+		if (circuit_choice == 'IQP'):
 			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)
 			prog = HadamardToAll(prog, N)
-		elif (final_layer =='QAOA'):
+		elif (circuit_choice =='QAOA'):
 			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)X_i)on all qubits)
-			for k in range(0,N):
+			for k in range(0, N):
+				# if (control == 'GAMMA' and k == s and sign == 'POSITIVE'):
+				# 	prog.inst(pl.exponential_map(sX(k))(-float(gamma_x[k])+ pi/2))
+				# elif (control == 'GAMMA' and k == s and sign == 'NEGATIVE'):
+				# 	prog.inst(pl.exponential_map(sX(k))(-float(gamma_x[k])- pi/2))
+				# elif (control == 'NEITHER' or 'WEIGHTS' or 'BIAS' and sign == 'NEITHER'):
 				H_temp = (-float(gamma_x[k]))*sX(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
-		elif (final_layer == 'IQPy' ):
+				# print('GAMMA IS:',-float(gamma_x[k]))
+		elif (circuit_choice == 'IQPy' ):
 			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)Y_i)on all qubits)
 			for k in range(0,N):
 				H_temp = (-float(gamma_y[k]))*sY(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
-		else: print("final_layer must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
+		else: raise IOError("circuit_choice must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
 					QAOA (Final X rotation) or IQPy (Final Y rotation)")
+		# print('J = ', J)
+		# print('b = ', b)
 
 		wavefunction = make_wf.wavefunction(prog)
 		outcome_dict = make_wf.wavefunction(prog).get_outcome_probs()
-		#print(wavefunction)
+		# print(control, sign, outcome_dict, prog)
+
 		return prog, wavefunction, outcome_dict

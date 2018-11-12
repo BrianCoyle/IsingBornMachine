@@ -2,6 +2,7 @@ import numpy as np
 import ast
 import sys
 import json
+from auxiliary_functions import SampleListToArray
 
 def FileLoad(file):
 	kernel = json.load(file)
@@ -10,17 +11,6 @@ def FileLoad(file):
 	dict_values = kernel_dict.values()
 	k1 = [eval(key) for key in dict_keys]
 	return kernel_dict, k1, dict_values
-
-def KernelDictFromFile(N_v, N_kernel_samples, kernel_choice):
-	#reads kernel dictionary from file
-	if (N_kernel_samples == 'infinite'):
-		with open('%sKernel_Exact_Dict_%iNv' % (kernel_choice[0], N_v), 'r') as f:
-			kernel_dict, k1, v = FileLoad(f)
-	else:
-		with open('%sKernel_Dict_%iNv_%iKernelSamples' % (kernel_choice[0], N_v, N_kernel_samples), 'r') as f:
-			kernel_dict, k1, v = FileLoad(f)
-
-	return dict(zip(*[k1,v]))
 
 def DataDictFromFile(N_v, N_data_samples):
 	#reads data dictionary from file
@@ -34,6 +24,32 @@ def DataDictFromFile(N_v, N_data_samples):
 			data_dict = json.loads(raw_from_file)
 	return data_dict
 
+def DataImport(approx, N_qubits, N_data_samples, stein_approx):
+	data_exact_dict = DataDictFromFile(N_qubits, 'infinite')
+
+	if (approx == 'Sampler'):
+		data_samples_orig = np.loadtxt('Data_%iNv_%iSamples' % (N_qubits, N_data_samples), dtype = str)
+		data_samples = SampleListToArray(data_samples_orig, N_qubits)
+
+	elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
+		data_samples = []
+
+	else: raise IOError('Please enter either \'Sampler\' or \'Exact\' for \'approx\' ')
+		
+	return data_samples, data_exact_dict 
+
+def KernelDictFromFile(N_v, N_kernel_samples, kernel_choice):
+	#reads kernel dictionary from file
+	if (N_kernel_samples == 'infinite'):
+		with open('%sKernel_Exact_Dict_%iNv' % (kernel_choice[0], N_v), 'r') as f:
+			kernel_dict, k1, v = FileLoad(f)
+	else:
+		with open('%sKernel_Dict_%iNv_%iKernelSamples' % (kernel_choice[0], N_v, N_kernel_samples), 'r') as f:
+			kernel_dict, k1, v = FileLoad(f)
+
+	return dict(zip(*[k1,v]))
+
+
 def ParamsFromFile(N_qubits):
 	Params = np.load('Parameters_%iQubits.npz' % (N_qubits))
 	J_i = Params['J_init']
@@ -42,6 +58,3 @@ def ParamsFromFile(N_qubits):
 	g_y_i = Params['gamma_y_init']
 	
 	return J_i, b_i, g_x_i, g_y_i
-
-#J_i, b_i, g_x_i, g_y_i =  ParamsFromFile(8)
-#print('b is', J_i, '\n gamma is', g_x_i,'\n gamma is', g_y_i)

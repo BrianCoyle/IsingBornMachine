@@ -2,13 +2,14 @@ from pyquil.quil import Program
 from pyquil.paulis import *
 from pyquil.gates import *
 import numpy as np
-from pyquil.api import get_qc
+from pyquil.api import get_qc, WavefunctionSimulator
 from random import *
 import matplotlib.pyplot as plt
 
-from train_generation import TrainingData, DataSampler, ConvertToString
+from train_generation import TrainingData, DataSampler
 from param_init import NetworkParams, StateInit, HadamardToAll
 from sample_gen import BornSampler
+from auxiliary_functions import ConvertToString
 
 '''Define Non-Linear function to encode samples in graph weights/biases'''
 #Fill graph weight and bias arrays according to one single sample
@@ -36,7 +37,10 @@ def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 		This must be done for every sample from each distribution (batch gradient descent), (x, y)'''
 	'''First layer, sample from first distribution (1), parameters phi_ZZ_1, phi_Z_1'''
 	qc = get_qc("9q-generic-qvm")
+
 	prog = Program()
+	#Declare memory allocation for the quantum circuit measurements
+	ro = prog.declare('classical_register', 'BIT', N_v)
 
 	prog = HadamardToAll(prog, N_v)
 
@@ -96,15 +100,16 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 	#define a dictionary for both approximate and exact kernel
 	kernel_dict = {}
 	kernel_exact_dict = {}
-
+	qc = get_qc("9q-generic-qvm")
+	make_wf = WavefunctionSimulator()
 	for sample2 in range(0, N_samples2):
 		for sample1 in range(0, sample2+1):
 
 			s_temp1 = ConvertToString(sample1, N_v)
 			s_temp2 = ConvertToString(sample2, N_v)
-			qc = get_qc("9q-generic-qvm")
+			
 			prog = KernelCircuit(ZZ_1[:,:,sample1], Z_1[:,sample1], ZZ_2[:,:,sample2], Z_2[:,sample2], N_v)
-			kernel_outcomes = qc.wavefunction(prog).get_outcome_probs()
+			kernel_outcomes = make_wf.wavefunction(prog).get_outcome_probs()
 
 			#Create zero string
 			zero_string = '0'*N_v
@@ -121,15 +126,14 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 						kernel_dict[s_temp1, s_temp2] = kernel_exact_dict[s_temp1, s_temp2]
 						kernel_dict[s_temp2, s_temp1] = kernel_dict[s_temp1, s_temp2]
 			else:
-				classical_regs = list(range(0, N_v))
+			
+				kernel_measurements_all_qubits = np.asarray(qc.run_and_measure(prog, N_kernel_samples))
+				#qc.run_and_measure measures ALL 9 qubits, remove measurements which are not needed on qubits (N_v, 9]
+				kernel_measurements_used_qubits = np.flip(np.delete(kernel_measurements_all_qubits, range(N_v, 9), axis=1), 1)
+				#m is total number of samples, n is the number of used qubits (out of 9)
+				(m,n) = kernel_measurements_used_qubits.shape
 
-				for qubit_index in range(0, N_v):
-					prog.measure(qubit_index, qubit_index)
-
-				kernel_measurements = np.asarray(qc.run(prog, classical_regs, N_kernel_samples))
-				(m,n) = kernel_measurements.shape
-
-				N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements, 1))
+				N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements_used_qubits, 1))
 				#The kernel is given by = [Number of times outcome (00...000) occurred]/[Total number of measurement runs]
 
 				kernel[sample1,sample2] = N_zero_strings/N_kernel_samples

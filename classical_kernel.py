@@ -1,6 +1,5 @@
 import numpy as np
-from numpy import linalg as LA
-from train_generation import ConvertToString
+from auxiliary_functions import ConvertToString
 
 
 '''This function computes the classical mixture of Gaussian's kernel function between two sets of samples'''
@@ -16,7 +15,7 @@ def GaussianKernel(samples1, samples2, sigma):
 
 	for i in range(0, N_samples1):
 		for j in range(0, N_samples2):
-			l2norm[i , j] = LA.norm(samples1[i,:] - samples2[j, :], 2)
+			l2norm[i , j] = np.linalg.norm(samples1[i,:] - samples2[j, :], 2)
 			for k in range(0, c):
 				gauss_kernel[i,j,k] = (1/c)*np.exp(-1/(2*sigma[k])*(l2norm[i,j]**2))
 	return gauss_kernel.sum(2)
@@ -34,7 +33,7 @@ def GaussianKernelExact(N_v, bin_visible, sigma):
 		for sample2 in range(0, sample1+1):
 			string2 = ConvertToString(sample2, N_v)
 
-			l2norm[sample1 , sample2] = LA.norm(bin_visible[sample1,:] - bin_visible[sample2, :], 2)
+			l2norm[sample1 , sample2] = np.linalg.norm(bin_visible[sample1,:] - bin_visible[sample2, :], 2)
 			l2norm[sample2, sample1] = l2norm[sample1,sample2]
 			
 			for k in range(0, c):

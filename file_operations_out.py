@@ -1,4 +1,5 @@
-from train_generation import TrainingData, DataSampler, ConvertToString, EmpiricalDist
+from train_generation import TrainingData, DataSampler
+from auxiliary_functions import  ConvertToString, EmpiricalDist
 from mmd_train_plot import SampleListToArray
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from mmd_sampler2 import MMDKernel
@@ -59,7 +60,7 @@ def PrintKernel(N_kernel_samples, kernel_choice):
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
 		kernel, kernel_exact, kernel_dict, kernel_exact_dict = MMDKernel(N_qubits, bin_visible,  N_kernel_samples, kernel_choice)
 		KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice)
-	return
+# 	return
 
 # print("Kernel is printing for 10 samples")
 # PrintKernel(10, 'Gaussian')
@@ -69,11 +70,13 @@ def PrintKernel(N_kernel_samples, kernel_choice):
 # PrintKernel(200, 'Gaussian')
 # print("Kernel is printing for 500 samples")
 # PrintKernel(500, 'Gaussian')
+# print("Kernel is printing for 1000 samples")
+# PrintKernel(1000, 'Gaussian')
 # print("Kernel is printing for 2000 samples")
 # PrintKernel(2000, 'Gaussian')
 
-print("Exact Kernel is Printing")
-PrintKernel('infinite', 'Gaussian')
+# print("Exact Kernel is Printing")
+# PrintKernel('infinite', 'Gaussian')
 np.set_printoptions(threshold=np.nan)
 
 ### This function prepares data samples according to a a specified number of samples
@@ -100,6 +103,8 @@ def PrintDataToFiles():
 	
 		data_samples10_orig 	= DataSampler(N_v, N_h, M_h, 10, data_probs, exact_data_dict)
 		data_samples100_orig 	= DataSampler(N_v, N_h, M_h, 100, data_probs, exact_data_dict)
+		data_samples200_orig 	= DataSampler(N_v, N_h, M_h, 200, data_probs, exact_data_dict)
+		data_samples500_orig 	= DataSampler(N_v, N_h, M_h, 500, data_probs, exact_data_dict)
 		data_samples1000_orig	= DataSampler(N_v, N_h, M_h, 1000, data_probs, exact_data_dict)
 		data_samples2000_orig 	= DataSampler(N_v, N_h, M_h, 2000, data_probs, exact_data_dict)
 		data_samples3000_orig	= DataSampler(N_v, N_h, M_h, 3000, data_probs, exact_data_dict)
@@ -110,6 +115,8 @@ def PrintDataToFiles():
 		data_samples10000_orig 	= DataSampler(N_v, N_h, M_h, 10000, data_probs, exact_data_dict)		
 		np.savetxt('Data_%iNv_%iSamples' % (N_v, 10),data_samples10_orig, fmt='%s')
 		np.savetxt('Data_%iNv_%iSamples' % (N_v, 100),data_samples100_orig, fmt='%s')
+		np.savetxt('Data_%iNv_%iSamples' % (N_v, 200),data_samples100_orig, fmt='%s')
+		np.savetxt('Data_%iNv_%iSamples' % (N_v, 500),data_samples100_orig, fmt='%s')
 		np.savetxt('Data_%iNv_%iSamples' % (N_v, 1000),data_samples1000_orig, fmt='%s')
 		np.savetxt('Data_%iNv_%iSamples' % (N_v, 2000),data_samples2000_orig, fmt='%s')
 		np.savetxt('Data_%iNv_%iSamples' % (N_v, 3000),data_samples3000_orig, fmt='%s')
@@ -121,6 +128,8 @@ def PrintDataToFiles():
 
 		data_samples10 = SampleListToArray(data_samples10_orig, N_qubits)
 		data_samples100 = SampleListToArray(data_samples100_orig,  N_qubits)
+		data_samples200 = SampleListToArray(data_samples200_orig,  N_qubits)
+		data_samples500 = SampleListToArray(data_samples500_orig,  N_qubits)
 		data_samples1000 = SampleListToArray(data_samples1000_orig, N_qubits)
 		data_samples2000 = SampleListToArray(data_samples2000_orig, N_qubits)
 		data_samples3000 = SampleListToArray(data_samples3000_orig, N_qubits)
@@ -132,6 +141,9 @@ def PrintDataToFiles():
 		
 		emp_dist10 = EmpiricalDist(data_samples10, N_v)
 		emp_dist100 = EmpiricalDist(data_samples100, N_v)
+		emp_dist200 = EmpiricalDist(data_samples200, N_v)
+		emp_dist500 = EmpiricalDist(data_samples500, N_v)
+
 		emp_dist1000 = EmpiricalDist(data_samples1000, N_v)
 		emp_dist2000 = EmpiricalDist(data_samples2000, N_v)
 		emp_dist3000 = EmpiricalDist(data_samples3000, N_v)
@@ -143,6 +155,8 @@ def PrintDataToFiles():
 
 		DataDictToFile(N_v, emp_dist10, 10)
 		DataDictToFile(N_v, emp_dist100, 100)
+		DataDictToFile(N_v, emp_dist200, 200)
+		DataDictToFile(N_v, emp_dist500, 500)
 		DataDictToFile(N_v, emp_dist1000, 1000)
 		DataDictToFile(N_v, emp_dist2000, 2000)
 		DataDictToFile(N_v, emp_dist3000, 3000)
@@ -157,5 +171,16 @@ def PrintDataToFiles():
 		DataDictToFile(N_v, exact_data_dict, 'infinite')
 	return
 
-#PrintDataToFiles()
+PrintDataToFiles()
 
+
+def PrintFinalParamsToFile(J, b, L, N_v, kernel_type, N_born_samples, N_epochs, N_data_samples, learning_rate):
+    print("THIS IS THE DATA FOR MMD WITH %i VISIBLE QUBITS, WITH %s KERNEL, %i SAMPLES FROM THE BORN MACHINE,\
+                %i DATA SAMPLES, %i NUMBER OF EPOCHS AND LEARNING RATE = %.3f" \
+                        %(N_v, kernel_type[0], N_born_samples, N_epochs, N_data_samples, learning_rate))
+    for epoch in range(0, N_epochs-1):
+        print('The weights for Epoch', epoch ,'are :', J[:,:,epoch], '\n')
+        print('The biases for Epoch', epoch ,'are :', b[:,epoch], '\n')
+        print('MMD Loss for Epoch', epoch ,'is:', L[epoch], '\n')
+
+    return
