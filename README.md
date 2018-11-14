@@ -12,6 +12,10 @@ http://docs.rigetti.com/en/stable/start.html
 This will allow you to download the Rigetti SDK which includes a compiler and a Quantum Virtual Machine
 
 Also the standard packages, numpy, matplotlib, etc.
+
+In the current form of the above codes, it is necessary to run some functions in
+file_operations_out.py to generate the data and pre-compute the quantum kernel etc.
+
 ---------------------------------------------------------------------------------------------
 MAXIMUM MEAN DISCREPANCY
 ----------------------------------------------------------------------------------------------
