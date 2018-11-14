@@ -7,7 +7,6 @@ from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel
 from file_operations_in import KernelDictFromFile, DataImport
 
-from mmd_sampler2 import SampleArrayToList
 from auxiliary_functions import SampleArrayToList, StringToList,  ConvertToString
 
 
@@ -205,7 +204,7 @@ def ComputeWeightedKernel(N_v, kernel_dict, data_samples_list, data_probs,  samp
     stein_score_dict2, stein_score_dict_samples2 = SteinMatrixtoDict(stein_score_matrix_2, sample_list_2)
 
     weighted_kernel = {}
-    # print('Hello =',stein_score_dict_samples)
+
     for sample1 in sample_list_1:
         for sample2 in sample_list_2:
         

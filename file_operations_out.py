@@ -1,6 +1,5 @@
 from train_generation import TrainingData, DataSampler
-from auxiliary_functions import  ConvertToString, EmpiricalDist
-from mmd_train_plot import SampleListToArray
+from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from mmd_sampler2 import MMDKernel
 from param_init import NetworkParams

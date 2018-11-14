@@ -43,38 +43,58 @@ def SampleArrayToList(sample_array):
 	return sample_list
     
 def EmpiricalDist(samples, N_v, *arg):
-	'''This method outputs the empirical probability distribution given samples in a numpy array
-		as a dictionary, with keys as outcomes, and values as probabilities'''
+    '''This method outputs the empirical probability distribution given samples in a numpy array
+    as a dictionary, with keys as outcomes, and values as probabilities'''
 
-	if type(samples) is not np.ndarray and type(samples) is not list:
-		raise TypeError('The samples must be either a numpy array, or list')
+    if type(samples) is not np.ndarray and type(samples) is not list:
+        raise TypeError('The samples must be either a numpy array, or list')
 
-	if type(samples) is np.ndarray:
-		N_samples = samples.shape[0]
-		string_list = []
-		for sample in range(0, N_samples):
-			'''Convert numpy array of samples, to a list of strings of the samples to put in dict'''
-			string_list.append(''.join(map(str, samples[sample, :].tolist())))
+    if type(samples) is np.ndarray:
+        N_samples = samples.shape[0]
+        string_list = []
+        for sample in range(0, N_samples):
+            '''Convert numpy array of samples, to a list of strings of the samples to put in dict'''
+            string_list.append(''.join(map(str, samples[sample, :].tolist())))
 
-	elif type(samples) is list:
-		N_samples = len(samples)
-		string_list = samples
+    elif type(samples) is list:
+        print(samples[0])
+        if type(samples[0]) is not str:
+            samples_new = [] 
+            for sample in samples:
+                samples_new.append(str(samples[sample]))
+            samples = samples_new
+        N_samples = len(samples)
+        string_list = samples
+        print(type(string_list))
 
-	counts = Counter(string_list)
+    counts = Counter(string_list)
 
-	for element in counts:
-		'''Convert occurances to relative frequencies of binary string'''
-		counts[element] = counts[element]/(N_samples)
+    for element in counts:
+        '''Convert occurances to relative frequencies of binary string'''
+        counts[element] = counts[element]/(N_samples)
 
-	for index in range(0, 2**N_v):
-		'''If a binary string has not been seen in samples, set its value to zero'''
-		if ConvertToString(index, N_v) not in counts:
-			counts[ConvertToString(index, N_v)] = 0
+    for index in range(0, 2**N_v):
+        '''If a binary string has not been seen in samples, set its value to zero'''
+        if ConvertToString(index, N_v) not in counts:
+            counts[ConvertToString(index, N_v)] = 0
 
-	sorted_samples_dict = {}
+    sorted_samples_dict = {}
 
-	keylist = sorted(counts)
-	for key in keylist:
-		sorted_samples_dict[key] = counts[key]
+    keylist = sorted(counts)
+    for key in keylist:
+        sorted_samples_dict[key] = counts[key]
 
-	return sorted_samples_dict
+    return sorted_samples_dict
+
+
+def TotalVariationCost(dict_one, dict_two):
+    '''This Function computes the variation distace between two distributions'''
+    if dict_one.keys() != dict_two.keys():
+        raise ValueError('Keys are not the same')
+    dict_abs_diff = {}
+    for variable in dict_one.keys():
+        dict_abs_diff[variable] = abs(dict_one[variable] - dict_two[variable])
+
+    variation_distance = (1/4)*sum(dict_abs_diff.values())**2
+
+    return variation_distance

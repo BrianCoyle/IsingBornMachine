@@ -83,7 +83,7 @@ def KernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, 
 
 			s_temp1 = ConvertToString(sample1, N_v)
 			s_temp2 = ConvertToString(sample2, N_v)
-			qc = get_qc("9q-generic-qvm")
+			qc = get_qc("5q-qvm")
 			make_wf = WavefunctionSimulator()
 			prog = KernelCircuit(ZZ_1[:,:,sample1], Z_1[:,sample1], ZZ_2[:,:,sample2], Z_2[:,sample2], N_v)
 			kernel_outcomes = make_wf.wavefunction(prog).get_outcome_probs()

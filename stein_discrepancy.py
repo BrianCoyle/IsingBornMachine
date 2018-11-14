@@ -9,7 +9,7 @@ from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_in import KernelDictFromFile
 from mmd_kernel import KernelCircuit, KernelComputation, EncodingFunc
 from mmd_sampler2 import MMDGrad, MMDCost, MMDKernel
-from stein_sampler import SteinGrad, SteinCost
+from stein_functions import SteinGrad, SteinCost
 from auxiliary_functions import ConvertToString, EmpiricalDist
 
 ################################################################################################################
@@ -168,10 +168,10 @@ def SteinTrain(N, N_h, N_v,
 
 		'''Check Stein Discrepancy of model distribution'''
 
-		L[epoch] = SteinCost(N_v, data, data_exact_dict, born_samples,\
+		L_stein[epoch] = SteinCost(N_v, data, data_exact_dict, born_samples,\
 									born_probs_dict, N_k_samples, k_choice, approx, score_approx, chi, stein_kernel_choice)
 
-		print("The Stein Discrepancy for epoch ", epoch, "is", L[epoch])
+		print("The Stein Discrepancy for epoch ", epoch, "is", L_stein[epoch])
 		
 
 

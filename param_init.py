@@ -14,13 +14,12 @@ def HadamardToAll(prog, N_qubits):
 	for qubit_index in range(0, N_qubits):
 		prog.inst(H(qubit_index))
 	return prog
-'''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma set to constant = pi/4'''
-'''It also computes the state produced after the QAOA circuit. '''
+
 
 #Initialise weights and biases as random
 def NetworkParams(N, J, b, gamma_x, gamma_y):
+	'''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
 	#Set random seed to be fixed for reproducibility
-
 	rand.seed(0)
 	for j in range(0, N):
 			# rand.seed(j)
@@ -46,15 +45,26 @@ def NetworkParams(N, J, b, gamma_x, gamma_y):
 
 
 #Initialise Quantum State created after application of gate sequence
-def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, control, sign):
+def StateInit(N, N_v, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, control, sign):
+		'''This function computes the state produced after the given circuit, either QAOA, IQP, or IQPy,
+		depending on the value of circuit_choice.'''
+
 		#sign = 'POSITIVE' for the positive probability version, sign = 'NEGATIVE' for the negative version of the probability (only used to compute the gradients)
 		#final_layer is either 'IQP', 'QAOA', 'IQPy' for IQP (Final Hadamard), QAOA (Final X rotation) or IQPy (Final Y rotation)
 		#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, = 'NEITHER' for neither
+
+		N_h  = N - N_v
+		#Initialise empty quantum program, with QuantumComputer Object, and Wavefunction Simulator
 		prog = Program()
-		qc = get_qc("9q-generic-qvm")
+		qc = get_qc("5q-qvm")
+		make_wf = WavefunctionSimulator()
+
+		#Apply
 		prog = HadamardToAll(prog, N)
 		make_wf = WavefunctionSimulator()
 		#Apply Control-Phase(4J) gates to each qubit, the factor of 4 comes from the decomposition of the Ising gate
+		#with local Z corrections to neighbouring qubits, coming from the decomposition of the Ising gate
+		#If weight J_{p,q} is updated, add a +/- pi/2 rotation
 		for j in range(0, N):
 			i = 0
 			while (i < j):
@@ -83,7 +93,6 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, 
 			elif (control== 'NEITHER' or 'WEIGHTS' or 'GAMMA' and sign == 'NEITHER'):
 				prog.inst(PHASE(-2*b[j],j))
 
-			# print('B IS:', b[j])
 		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
 		if (circuit_choice == 'IQP'):
 			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)
@@ -100,16 +109,14 @@ def StateInit(N, N_v, N_h, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, 
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 				# print('GAMMA IS:',-float(gamma_x[k]))
 		elif (circuit_choice == 'IQPy' ):
-			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)Y_i)on all qubits)
+			#If the final 'measurement' layer is to be a IQPy measurement (i.e. e^(-i(pi/4)Y_i) on all qubits)
 			for k in range(0,N):
 				H_temp = (-float(gamma_y[k]))*sY(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
 		else: raise IOError("circuit_choice must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
 					QAOA (Final X rotation) or IQPy (Final Y rotation)")
-		# print('J = ', J)
-		# print('b = ', b)
-
+	
 		wavefunction = make_wf.wavefunction(prog)
 		outcome_dict = make_wf.wavefunction(prog).get_outcome_probs()
 		# print(control, sign, outcome_dict, prog)
