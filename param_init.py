@@ -17,11 +17,18 @@ def HadamardToAll(prog, N_qubits):
 
 
 #Initialise weights and biases as random
-def NetworkParams(N, J, b, gamma_x, gamma_y):
+def NetworkParams(N_qubits):
 	'''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
+	#Initialise arrays for parameters
+
+	J = np.zeros((N_qubits, N_qubits))
+	b = np.zeros((N_qubits))
+	gamma_x = np.zeros((N_qubits))
+	gamma_y = np.zeros((N_qubits))
+
 	#Set random seed to be fixed for reproducibility
 	rand.seed(0)
-	for j in range(0, N):
+	for j in range(0, N_qubits):
 			# rand.seed(j)
 			b[j] = rand.uniform(0, pi/4)
 			# If gamma_y to be trained also and variable for each qubit
@@ -45,7 +52,7 @@ def NetworkParams(N, J, b, gamma_x, gamma_y):
 
 
 #Initialise Quantum State created after application of gate sequence
-def StateInit(N, N_v, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, control, sign):
+def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign):
 		'''This function computes the state produced after the given circuit, either QAOA, IQP, or IQPy,
 		depending on the value of circuit_choice.'''
 
@@ -58,6 +65,12 @@ def StateInit(N, N_v, J, b,  gamma_x, gamma_y, p, q, r, s, circuit_choice, contr
 		prog = Program()
 		qc = get_qc("5q-qvm")
 		make_wf = WavefunctionSimulator()
+
+		#Unpack circuit parameters from dictionary
+		J = circuit_params['J']
+		b = circuit_params['b']
+		gamma_x = circuit_params['gamma_x']
+		gamma_y = circuit_params['gamma_y']
 
 		#Apply
 		prog = HadamardToAll(prog, N)

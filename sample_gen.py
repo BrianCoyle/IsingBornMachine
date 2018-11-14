@@ -16,12 +16,12 @@ prog = Program()
 	P(z) = |<z|U|s>|^2, where |s> is the uniform superposition'''
 def BornSampler(N, N_v,
  				N_born_samples,
-				J, b, gamma_x, gamma_y, circuit_choice):
+				circuit_params, circuit_choice):
 
 	#final_layer = ('IQP'for IQP), = ('QAOA' for QAOA), = ('IQPy' for Y-Rot)
 	#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, ='GAMMA' for gamma params, ='NEITHER' for neither
 	#sign = 'POSITIVE' to run the positive circuit, = 'NEGATIVE' for the negative circuit, ='NEITHER' for neither
-	prog, wavefunction, born_probs_dict = StateInit(N, N_v, J, b,  gamma_x, gamma_y, 0, 0, 0, 0, circuit_choice , 'NEITHER', 'NEITHER')
+	prog, wavefunction, born_probs_dict = StateInit(N, N_v, circuit_params, 0, 0, 0, 0, circuit_choice , 'NEITHER', 'NEITHER')
 
 	# print('Wavefunciton is:\n',wavefunction, '\nBorn probs are:\n', born_probs_dict)
 
@@ -35,7 +35,7 @@ def BornSampler(N, N_v,
 	return born_samples, born_probs_dict
 
 def PlusMinusSampleGen(N, N_v,
- 						J, b, gamma_x, gamma_y,
+ 						circuit_params,
 						p, q, r, s, circuit_choice, control,
 						N_born_samples_plus, N_born_samples_minus):
 	''' This function computes the samples required in the estimator, in the +/- terms of the MMD loss function gradient
@@ -43,9 +43,9 @@ def PlusMinusSampleGen(N, N_v,
 	'''
 
 	#probs_minus, probs_plus are the exact probabilites outputted from the circuit
-	prog_plus, wavefunc_plus, born_probs_dict_plus = StateInit(N, N_v, J, b,  gamma_x, gamma_y,\
+	prog_plus, wavefunc_plus, born_probs_dict_plus = StateInit(N, N_v, circuit_params,\
 	 												p, q, r, s, circuit_choice, control, 'POSITIVE')
-	prog_minus, wavefunc_minus, born_probs_dict_minus = StateInit(N, N_v, J, b,  gamma_x, gamma_y,\
+	prog_minus, wavefunc_minus, born_probs_dict_minus = StateInit(N, N_v, circuit_params,\
 	 														p, q, r, s, circuit_choice, control, 'NEGATIVE')
 
 	#generate samples from measurements of shifted circuits

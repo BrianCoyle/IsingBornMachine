@@ -3,24 +3,25 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib import style
 
+from param_init import StateInit, NetworkParams
+
 from sample_gen import BornSampler, PlusMinusSampleGen
 from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel
 from mmd_kernel import KernelCircuit, KernelComputation, EncodingFunc
-from mmd_sampler import MMDGrad, MMDCost, MMDKernel
+from mmd_functions import MMDGrad, MMDCost, MMDKernel
 
 from file_operations_out import PrintFinalParamsToFile
 from file_operations_in import DataDictFromFile, DataImport, ParamsFromFile
 
 from train_plot import Plot
 
-from param_init import StateInit, NetworkParams
 
 import sys
 #N_epoch is the total number of training epochs
-N_epochs = 200
+N_epochs = 50
 #N is the total number of qubits.
-N1 = 3
+N1 = 2
 N_trials = 2
 
 #N_v is the number of visible units
@@ -37,17 +38,18 @@ N3 = N1
 N_v3 = N3
 N_h3 = N3 - N_v3
 
-#Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
-J = np.zeros((N1, N1))
-b = np.zeros((N1))
-gamma_x = np.zeros((N1))
-gamma_y = np.zeros((N1))
+# #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
+# J = np.zeros((N1, N1))
+# b = np.zeros((N1))
+# gamma_x = np.zeros((N1))
+# gamma_y = np.zeros((N1))
 
 #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
 #Read in from file for reproducibility
 # J_i, b_i, g_x_i, g_y_i =  ParamsFromFile(N_v1)
-
-J_i, b_i, g_x_i, g_y_i = NetworkParams(N_v1, J, b, gamma_x, gamma_y)
+initial_params = {}
+initial_params['J'], initial_params['b'], \
+initial_params['gamma_x'], initial_params['gamma_y'] = NetworkParams(N_v1)
 # print(J_i, b_i, g_x_i, g_y_i)
 #Set learning rate for parameter updates
 learning_rate = []
@@ -56,7 +58,7 @@ learning_rate.append(0.05)
 # learning_rate[2] = 0.001
 
 N_data_samples1 = 200
-N_data_samples2 = 10
+N_data_samples2 = 200
 
 weight_sign1 = -1
 weight_sign2 = -1
@@ -70,7 +72,7 @@ N_bornplus_samples1 = N_born_samples1
 N_bornminus_samples1 = N_bornplus_samples1
 N_kernel_samples1 = 2000
 
-N_born_samples2 = 300
+N_born_samples2 = 400
 N_bornplus_samples2 = N_born_samples2
 N_bornminus_samples2 =N_born_samples2
 N_kernel_samples2 = 2000
@@ -110,19 +112,19 @@ plot_colour = []
 plot_colour.append(('r', 'b'))
 plot_colour.append(('m', 'c'))
 
-L_stein1, L_var1, L_mmd1, J1, b1, gamma_x1, gamma_y1, born_probs_list1, empirical_probs_list1  = Plot(N1, N_v1, N_epochs, J_i, b_i, g_x_i, g_y_i, learning_rate[0],\
+L_stein1, L_var1, L_mmd1, circuit_params1, born_probs_list1, empirical_probs_list1  = Plot(N1, N_v1, N_epochs, initial_params, learning_rate[0],\
                                                                                 approx[0], kernel_type[0], data_samples1, data_exact_dict1,\
                                                                                 N_data_samples1, N_born_samples1, N_bornplus_samples1, \
                                                                                 N_bornminus_samples1, N_kernel_samples1, plot_colour[0], weight_sign1,\
                                                                                 cost_func[0], stein_approx[0])
 
-L_stein2, L_var2, L_mmd2,  J2, b2, gamma_x2, gamma_y2, born_probs_list2, empirical_probs_list2 = Plot(N2, N_v2, N_epochs, J_i, b_i, g_x_i, g_y_i,learning_rate[1],\
+L_stein2, L_var2, L_mmd2, circuit_params_2, born_probs_list2, empirical_probs_list2 = Plot(N2, N_v2, N_epochs, initial_params,learning_rate[1],\
                                                                                 approx[1], kernel_type[1], data_samples2, data_exact_dict2, \
                                                                                 N_data_samples2, N_born_samples2, N_bornplus_samples2, \
                                                                                 N_bornminus_samples2, N_kernel_samples2, plot_colour[1], weight_sign2,\
                                                                                 cost_func[1], stein_approx[1])
 
-# L3, J3, b3, gamma_x3, gamma_y3, born_probs_list3, empirical_probs_list3 = PlotMMD(N3, N_v3, N_epochs, J_i, b_i, g_x_i, g_y_i,learning_rate[2],\
+# L_stein3, L_var3, L_mmd3, circuit_params3, born_probs_list3, empirical_probs_list3 = PlotMMD(N3, N_v3, N_epochs, initial_params,learning_rate[2],\
 #                                                                                 approx[2], kernel_type[2], data_samples, data_exact_dict1, \
 #                                                                                 N_data_samples, N_born_samples3, N_bornplus_samples3, \
 #                                                                                 N_bornminus_samples3, N_kernel_samples3, 'b', weight_sign3, cost_func[2], stein_approx[2])

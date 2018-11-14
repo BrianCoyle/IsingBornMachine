@@ -16,7 +16,7 @@ from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCo
 #Train Model Using Stein Discrepancy with either exact kernel and gradient or approximate one using samples
 ################################################################################################################
 def TrainBorn(N, N_v, cost_func,
-			J_i, b_i, g_x_i, g_y_i,
+			initial_params,
 			N_epochs, N_d, N_b, N_k_samples,
 			data, data_exact_dict,
 			k_choice, learning_rate, approx, score_approx, weight_sign):
@@ -26,17 +26,17 @@ def TrainBorn(N, N_v, cost_func,
     gamma_x = np.zeros((N,  N_epochs))
     gamma_y = np.zeros((N,  N_epochs))
 
-    #Import initial parameter values
-    J[:,:,0] = J_i
-    b[:,0] =b_i
-    gamma_x[:,0] = g_x_i
-    gamma_y[:,0] = g_y_i
+    # #Import initial parameter values
+    J[:,:,0] = initial_params['J']
+    b[:,0] = initial_params['b']
+    gamma_x[:,0] = initial_params['gamma_x']
+    gamma_y[:,0] = initial_params['gamma_y']
 
     circuit_params = {}
-    circuit_params[('J', '0')] = J_i
-    circuit_params[('b', '0')] = b_i
-    circuit_params[('gamma_x', '0')] = g_x_i
-    circuit_params[('gamma_y', '0')] = g_y_i
+    circuit_params[('J', 0)] = initial_params['J']
+    circuit_params[('b', 0)] = initial_params['b']
+    circuit_params[('gamma_x', 0)] = initial_params['gamma_x']
+    circuit_params[('gamma_y', 0)] = initial_params['gamma_y']
 
     #Initialise the gradient arrays, each element is one parameter
     bias_grad = np.zeros((N))
@@ -61,23 +61,24 @@ def TrainBorn(N, N_v, cost_func,
         # print('bias for epoch', b[:, epoch])
 
         print("\nThis is Epoch number: ", epoch)
-        Jt = J[:,:,epoch]
-        bt = b[:,epoch]
-        gxt = gamma_x[:,epoch]
-        gyt = gamma_y[:,epoch]
+        # Jt = J[:,:,epoch]
+        # bt = b[:,epoch]
+        # gxt = gamma_x[:,epoch]
+        # gyt = gamma_y[:,epoch]
         circuit_params_per_epoch = {}
 
         circuit_params_per_epoch['J'] = J[:,:,epoch]
         circuit_params_per_epoch['b'] = b[:,epoch]
         circuit_params_per_epoch['gamma_x'] = gamma_x[:,epoch]
         circuit_params_per_epoch['gamma_y'] = gamma_y[:,epoch]
+        print(circuit_params_per_epoch)
 
-        circuit_params[('J', epoch)] = J_i
-        circuit_params[('b', epoch)] = b_i
-        circuit_params[('gamma_x', epoch)] = g_x_i
-        circuit_params[('gamma_y', epoch)] = g_y_i
+        circuit_params[('J', epoch)] = J[:,:,epoch]
+        circuit_params[('b', epoch)] = b[:,epoch]
+        circuit_params[('gamma_x', epoch)] = gamma_x[:,epoch]
+        circuit_params[('gamma_y', epoch)] = gamma_y[:,epoch]
         #generate samples, and exact probabilities for current set of parameters
-        born_samples, born_probs_dict = BornSampler(N, N_v, N_b, Jt, bt, gxt, gyt, circuit_choice)
+        born_samples, born_probs_dict = BornSampler(N, N_v, N_b, circuit_params_per_epoch, circuit_choice)
         #Flip the samples to be consistent with exact probabilities derived from simulator [00010] -> [01000]
         
         born_probs_list.append(born_probs_dict)
@@ -94,7 +95,7 @@ def TrainBorn(N, N_v, cost_func,
         for bias_index in range(0,N):
             born_samples_plus, born_samples_minus, born_plus_exact_dict, born_minus_exact_dict\
                                     = PlusMinusSampleGen(N, N_v, \
-                                                Jt, bt, gxt, gyt, \
+                                                circuit_params_per_epoch,\
                                                 0,0, bias_index, 0, \
                                                 circuit_choice, 'BIAS',\
                                                     N_b, N_b)
@@ -124,7 +125,7 @@ def TrainBorn(N, N_v, cost_func,
         # 	for gammaindex in range(0,N):
         # 		born_samples_plus_unflip, born_samples_minus_unflip, born_plus_exact_dict, born_minus_exact_dict\
         # 							= PlusMinusSampleGen(N, N_v, N_h, \
-        # 											Jt, bt, gxt, gyt, \
+        # 											circuit_params_per_epoch, \
         # 											0, 0, 0, gammaindex, \
         # 											circuit_choice, 'GAMMA',\
         # 											N_b, N_b)
@@ -149,7 +150,7 @@ def TrainBorn(N, N_v, cost_func,
                 ## Draw samples from +/- pi/2 shifted circuits for each weight update, J_{p, q}
                 born_samples_plus, born_samples_plus, born_plus_exact_dict, born_minus_exact_dict \
                                 = PlusMinusSampleGen(N, N_v, \
-                                                    Jt, bt, gxt, gyt, \
+                                                    circuit_params_per_epoch, \
                                                     p, q , 0, 0,\
                                                     circuit_choice, 'WEIGHTS',\
                                                         N_b, N_b)
@@ -194,7 +195,7 @@ def TrainBorn(N, N_v, cost_func,
         print("The MMD Loss for epoch ", epoch, "is", L_mmd[epoch])
         
 
-    return L_stein, L_var, L_mmd, J, b, gamma_x, gamma_y, born_probs_list, empirical_probs_list
+    return L_stein, L_var, L_mmd, circuit_params, born_probs_list, empirical_probs_list
 
 
 
