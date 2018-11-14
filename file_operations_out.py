@@ -1,7 +1,7 @@
 from train_generation import TrainingData, DataSampler
 from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray
 from classical_kernel import GaussianKernel, GaussianKernelExact
-from mmd_sampler2 import MMDKernel
+from mmd_functions import MMDKernel
 from param_init import NetworkParams
 import sys
 import json

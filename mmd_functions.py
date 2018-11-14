@@ -12,7 +12,7 @@ from sample_gen import BornSampler, PlusMinusSampleGen
 from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_in import KernelDictFromFile, DataDictFromFile
-from mmd_kernel import KernelCircuit, KernelComputation, EncodingFunc
+from quantum_kernel import KernelCircuit, QuantumKernelComputation, EncodingFunc
 
 from auxiliary_functions import ConvertToString, EmpiricalDist, SampleArrayToList
 import sys
@@ -161,7 +161,7 @@ def MMDKernel(N_v, bin_visible, N_k_samples, k_choice):
 	elif (k_choice ==  'Quantum'):
 		#compute for all binary strings
 		ZZ, Z = EncodingFunc(N_v, bin_visible)
-		k, k_exact, k_dict, k_exact_dict = KernelComputation(N_v, 2**N_v , 2**N_v, N_k_samples, ZZ, Z, ZZ, Z)
+		k, k_exact, k_dict, k_exact_dict = QuantumKernelComputation(N_v, 2**N_v , 2**N_v, N_k_samples, ZZ, Z, ZZ, Z)
 	else: raise IOError("Please enter either 'Gaussian' or 'Quantum' to choose a kernel")
 
 	#compute the expectation values for including each binary string sample
