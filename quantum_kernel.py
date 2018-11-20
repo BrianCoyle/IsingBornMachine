@@ -13,12 +13,12 @@ from auxiliary_functions import ConvertToString
 
 '''Define Non-Linear function to encode samples in graph weights/biases'''
 #Fill graph weight and bias arrays according to one single sample
-def EncodingFunc(N_v, samples):
+def EncodingFunc(N_qubits, samples):
 	N_samples = samples.shape[0]
-	ZZ = np.zeros((N_v, N_v, N_samples))
-	Z = np.zeros((N_v, N_samples))
+	ZZ = np.zeros((N_qubits, N_qubits, N_samples))
+	Z = np.zeros((N_qubits, N_samples))
 	for sample_number in range(0, N_samples):
-		for i in range(0, N_v):
+		for i in range(0, N_qubits):
 			if int(samples[sample_number, i]) == 1:
 				Z[i, sample_number] = (np.pi)/4
 			j = 0
@@ -32,19 +32,18 @@ def EncodingFunc(N_v, samples):
 def TwoQubitGate(prog, two_q_arg, qubit_1, qubit_2):
 	return prog.inst(CPHASE(4*two_q_arg,qubit_1, qubit_2)).inst(PHASE(-2*two_q_arg, qubit_1)).inst(PHASE(-2*two_q_arg, qubit_2))
 
-def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
+def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_qubits):
 	'''Compute Quantum kernel given samples from the Born Machine (born_samples) and the Data Distribution (data_samples)
 		This must be done for every sample from each distribution (batch gradient descent), (x, y)'''
 	'''First layer, sample from first distribution (1), parameters phi_ZZ_1, phi_Z_1'''
-	qc = get_qc("5q-qvm")
+	qc = get_qc("9q-qvm")
 
 	prog = Program()
-	#Declare memory allocation for the quantum circuit measurements
-	ro = prog.declare('classical_register', 'BIT', N_v)
+	
 
-	prog = HadamardToAll(prog, N_v)
+	prog = HadamardToAll(prog, N_qubits)
 
-	for j in range(0, N_v):
+	for j in range(0, N_qubits):
 		one_q_arg = phi_Z_1[j]
 	#Apply local Z rotations (b) to each qubit
 		if (one_q_arg != False):
@@ -60,9 +59,9 @@ def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 
 	'''Second layer, sample from both distributions with parameters,
 	 	phi_ZZ_1 - phi_ZZ_2, phi_Z_1 - phi_Z_2'''
-	prog = HadamardToAll(prog, N_v)
+	prog = HadamardToAll(prog, N_qubits)
 
-	for j in range(0, N_v):
+	for j in range(0, N_qubits):
 		one_q_arg = phi_Z_1[j]-phi_Z_2[j]
 		#Apply local Z rotations (b) to each qubit
 		if (one_q_arg  != False):
@@ -76,9 +75,9 @@ def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 			i = i+1
 
 	'''Third Layer, sample from Data distibution, (y)'''
-	prog = HadamardToAll(prog, N_v)
+	prog = HadamardToAll(prog, N_qubits)
 
-	for j in range(0,N_v):
+	for j in range(0, N_qubits):
 		one_q_arg = phi_Z_2[j]
 		#Apply local Z rotations (b) to each qubit
 		if (one_q_arg != False):
@@ -91,28 +90,28 @@ def KernelCircuit(phi_ZZ_1, phi_Z_1, phi_ZZ_2, phi_Z_2, N_v):
 				prog = TwoQubitGate(prog, -two_q_arg, i,j)
 			i = i+1
 
-	prog = HadamardToAll(prog, N_v)
+	prog = HadamardToAll(prog, N_qubits)
 	return prog
 
-def QuantumKernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, ZZ_2, Z_2):
+def QuantumKernelComputation(N_qubits, N_samples1, N_samples2, N_kernel_samples, ZZ_1, Z_1, ZZ_2, Z_2):
 	kernel = np.zeros((N_samples1, N_samples2))
 	kernel_exact = np.zeros((N_samples1, N_samples2))
 	#define a dictionary for both approximate and exact kernel
 	kernel_dict = {}
 	kernel_exact_dict = {}
-	qc = get_qc("5q-qvm")
+	qc = get_qc("9q-qvm")
 	make_wf = WavefunctionSimulator()
 	for sample2 in range(0, N_samples2):
 		for sample1 in range(0, sample2+1):
 
-			s_temp1 = ConvertToString(sample1, N_v)
-			s_temp2 = ConvertToString(sample2, N_v)
+			s_temp1 = ConvertToString(sample1, N_qubits)
+			s_temp2 = ConvertToString(sample2, N_qubits)
 			
-			prog = KernelCircuit(ZZ_1[:,:,sample1], Z_1[:,sample1], ZZ_2[:,:,sample2], Z_2[:,sample2], N_v)
+			prog = KernelCircuit(ZZ_1[:,:,sample1], Z_1[:,sample1], ZZ_2[:,:,sample2], Z_2[:,sample2], N_qubits)
 			kernel_outcomes = make_wf.wavefunction(prog).get_outcome_probs()
 
 			#Create zero string
-			zero_string = '0'*N_v
+			zero_string = '0'*N_qubits
 			kernel_exact[sample1, sample2] = kernel_outcomes[zero_string]
 			kernel_exact[sample2, sample1] = kernel_exact[sample2, sample1]
 			kernel_exact_dict[s_temp1, s_temp2] = kernel_exact[sample1, sample2]
@@ -126,10 +125,13 @@ def QuantumKernelComputation(N_v, N_samples1, N_samples2, N_kernel_samples, ZZ_1
 						kernel_dict[s_temp1, s_temp2] = kernel_exact_dict[s_temp1, s_temp2]
 						kernel_dict[s_temp2, s_temp1] = kernel_dict[s_temp1, s_temp2]
 			else:
-			
-				kernel_measurements_all_qubits = np.asarray(qc.run_and_measure(prog, N_kernel_samples))
-				#qc.run_and_measure measures ALL (5) qubits, remove measurements which are not needed on qubits (N_v, 9]
-				kernel_measurements_used_qubits = np.flip(np.delete(kernel_measurements_all_qubits, range(N_v, 9), axis=1), 1)
+
+				kernel_measurements_all_qubits_dict = qc.run_and_measure(prog, N_kernel_samples)
+				#All (5) qubits are measured at once
+				kernel_measurements_all_qubits = np.vstack(kernel_measurements_all_qubits_dict[q] for q in sorted(qc.qubits())).T
+
+				#qc.run_and_measure measures ALL (5) qubits, remove measurements which are not needed on qubits (N_qubits, 9]
+				kernel_measurements_used_qubits = np.flip(np.delete(kernel_measurements_all_qubits, range(N_qubits, 9), axis=1), 1)
 				#m is total number of samples, n is the number of used qubits (out of 9)
 				(m,n) = kernel_measurements_used_qubits.shape
 

@@ -12,14 +12,16 @@ def FileLoad(file):
 	k1 = [eval(key) for key in dict_keys]
 	return kernel_dict, k1, dict_values
 
-def DataDictFromFile(N_v, N_data_samples):
+def DataDictFromFile(N_qubits, N_samples):
 	#reads data dictionary from file
-	if (N_data_samples == 'infinite'):
-		with open('Data_Dict_Exact_%iNv' % N_v, 'r') as f:
+	print(N_samples)
+	if (N_samples == 'infinite'):
+		with open('Data_Dict_Exact_%iQBs' % N_qubits, 'r') as f:
 			raw_from_file = json.load(f)
 			data_dict = json.loads(raw_from_file)
 	else: 
-		with open('Data_Dict_%iSamples_%iNv' % (N_data_samples, N_v), 'r') as g:
+		print(N_samples)
+		with open('Data_Dict_%iSamples_%iQBs' % (N_samples[0], N_qubits), 'r') as g:
 			raw_from_file = json.load(g)
 			data_dict = json.loads(raw_from_file)
 	return data_dict
@@ -28,9 +30,9 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
 	data_exact_dict = DataDictFromFile(N_qubits, 'infinite')
 
 	if (approx == 'Sampler'):
-		data_samples_orig = np.loadtxt('Data_%iNv_%iSamples' % (N_qubits, N_data_samples), dtype = str)
+		data_samples_orig = list(np.loadtxt('Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
 		data_samples = SampleListToArray(data_samples_orig, N_qubits)
-
+		
 	elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
 		data_samples = []
 
@@ -38,13 +40,13 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
 		
 	return data_samples, data_exact_dict 
 
-def KernelDictFromFile(N_v, N_kernel_samples, kernel_choice):
+def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
 	#reads kernel dictionary from file
-	if (N_kernel_samples == 'infinite'):
-		with open('%sKernel_Exact_Dict_%iNv' % (kernel_choice[0], N_v), 'r') as f:
+	if (N_samples[4] == 'infinite'):
+		with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
 			kernel_dict, k1, v = FileLoad(f)
 	else:
-		with open('%sKernel_Dict_%iNv_%iKernelSamples' % (kernel_choice[0], N_v, N_kernel_samples), 'r') as f:
+		with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_samples[4]), 'r') as f:
 			kernel_dict, k1, v = FileLoad(f)
 
 	return dict(zip(*[k1,v]))

@@ -52,7 +52,7 @@ def NetworkParams(N_qubits):
 
 
 #Initialise Quantum State created after application of gate sequence
-def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign):
+def StateInit(N_qubits, circuit_params, p, q, r, s, circuit_choice, control, sign):
 		'''This function computes the state produced after the given circuit, either QAOA, IQP, or IQPy,
 		depending on the value of circuit_choice.'''
 
@@ -60,7 +60,6 @@ def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign)
 		#final_layer is either 'IQP', 'QAOA', 'IQPy' for IQP (Final Hadamard), QAOA (Final X rotation) or IQPy (Final Y rotation)
 		#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, = 'NEITHER' for neither
 
-		N_h  = N - N_v
 		#Initialise empty quantum program, with QuantumComputer Object, and Wavefunction Simulator
 		prog = Program()
 		qc = get_qc("5q-qvm")
@@ -73,12 +72,12 @@ def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign)
 		gamma_y = circuit_params['gamma_y']
 
 		#Apply
-		prog = HadamardToAll(prog, N)
+		prog = HadamardToAll(prog, N_qubits)
 		make_wf = WavefunctionSimulator()
 		#Apply Control-Phase(4J) gates to each qubit, the factor of 4 comes from the decomposition of the Ising gate
 		#with local Z corrections to neighbouring qubits, coming from the decomposition of the Ising gate
 		#If weight J_{p,q} is updated, add a +/- pi/2 rotation
-		for j in range(0, N):
+		for j in range(0, N_qubits):
 			i = 0
 			while (i < j):
 
@@ -97,7 +96,7 @@ def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign)
 				i = i+1
 
 		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated
-		for j in range(0, N):
+		for j in range(0, N_qubits):
 
 			if (control == 'BIAS' and j == r and sign == 'POSITIVE'):
 				prog.inst(PHASE(-2*b[j] + pi/2,j))
@@ -109,10 +108,10 @@ def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign)
 		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
 		if (circuit_choice == 'IQP'):
 			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)
-			prog = HadamardToAll(prog, N)
+			prog = HadamardToAll(prog, N_qubits)
 		elif (circuit_choice =='QAOA'):
 			#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)X_i)on all qubits)
-			for k in range(0, N):
+			for k in range(0, N_qubits):
 				# if (control == 'GAMMA' and k == s and sign == 'POSITIVE'):
 				# 	prog.inst(pl.exponential_map(sX(k))(-float(gamma_x[k])+ pi/2))
 				# elif (control == 'GAMMA' and k == s and sign == 'NEGATIVE'):
@@ -123,7 +122,7 @@ def StateInit(N, N_v, circuit_params, p, q, r, s, circuit_choice, control, sign)
 				# print('GAMMA IS:',-float(gamma_x[k]))
 		elif (circuit_choice == 'IQPy' ):
 			#If the final 'measurement' layer is to be a IQPy measurement (i.e. e^(-i(pi/4)Y_i) on all qubits)
-			for k in range(0,N):
+			for k in range(0, N_qubits):
 				H_temp = (-float(gamma_y[k]))*sY(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
