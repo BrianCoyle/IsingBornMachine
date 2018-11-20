@@ -8,7 +8,6 @@ from cost_function_train import TrainBorn
 
 from file_operations_in import DataDictFromFile
 from auxiliary_functions import EmpiricalDist, SampleListToArray
-from stein_discrepancy import SteinTrain
 import sys
 
 def CostPlot(N_qubits, N_epochs, initial_params, \

@@ -17,7 +17,7 @@ import sys
 #N_epoch is the total number of training epochs
 N_epochs = 200
 #N is the total number of qubits.
-N_qubits = 2
+N_qubits = 3
 N_trials = 1
 
 # #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
@@ -68,7 +68,7 @@ N_samples['Trial_1'] = [N_data_samples[0],\
                         N_bornminus_samples[0],\
                         N_kernel_samples[0]]
 # batch_size.append(N_data_samples[0])
-batch_size.append(20)
+batch_size.append(10)
 
 '''Trial 2 Number of samples:'''
 N_data_samples.append(100)
@@ -82,7 +82,7 @@ if (N_trials == 2):
                                 N_bornplus_samples[1],\
                                 N_bornminus_samples[1],\
                                 N_kernel_samples[1]]
-        batch_size.append(N_data_samples[1])
+        batch_size.append(10)
 
 '''Trial 3 Number of samples:'''
 N_born_samples.append(1)
@@ -96,7 +96,7 @@ if (N_trials == 3):
                                 N_bornplus_samples[2],\
                                 N_bornminus_samples[2],\
                                 N_kernel_samples[2]]
-        batch_size.append(N_data_samples[2])
+        batch_size.append(10)
 
 
 kernel_type = []
