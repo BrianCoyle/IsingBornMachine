@@ -7,7 +7,7 @@ from sample_gen import BornSampler, PlusMinusSampleGen
 from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_in import KernelDictFromFile
-from mmd_kernel import KernelCircuit, KernelComputation, EncodingFunc
+# from quantum_kernel import KernelCircuit, QuantumKernelComputation, EncodingFunc
 from mmd_functions import MMDGrad, MMDCost
 from stein_functions import SteinGrad, SteinCost
 from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCost, MiniBatchSplit

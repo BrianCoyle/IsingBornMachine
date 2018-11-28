@@ -1,102 +1,100 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import animation
-from matplotlib import style
-
+import sys
+from matplotlib import animation, style
 from param_init import NetworkParams
-
 from file_operations_out import PrintFinalParamsToFile
-
 from file_operations_in import DataImport
-
 from train_plot import CostPlot
 from random import shuffle
-
 from auxiliary_functions import TrainTestPartition
-import sys
-#N_epoch is the total number of training epochs
-N_epochs = 30
-#N is the total number of qubits.
-N_qubits = 2
-N_trials = 1
 
-# #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
-# J = np.zeros((N1, N1))
-# b = np.zeros((N1))
-# gamma_x = np.zeros((N1))
-# gamma_y = np.zeros((N1))
+N_epochs = 0    # N_epoch is the total number of training epochs
+N_qubits = 0    # N_qubits is the total number of qubits.
+N_trials = 0
 
-#Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-#Read in from file for reproducibility
+learning_rate_one = 0
+learning_rate_two = 0
 
 initial_params = {}
-initial_params['J'], initial_params['b'], \
-initial_params['gamma_x'], initial_params['gamma_y'] = NetworkParams(N_qubits)
-# print(J_i, b_i, g_x_i, g_y_i)
-#Set learning rate for parameter updates
+
 learning_rate = []
-learning_rate.append(0.05)
-learning_rate.append(0.05)
-# learning_rate[2] = 0.001
 
 weight_sign = []
-weight_sign.append(-1)
-weight_sign.append(-1)
-weight_sign.append(-1)
 
-batch_size = []
+def get_inputs(file_name):
+    
+    input_file = open(file_name, 'r')
+   
+    input_values = input_file.readlines()
+
+    N_epochs = int(input_values[0])
+    N_qubits = int(input_values[1])
+    N_trials = int(input_values[2])
+    learning_rate_one = float(input_values[3])
+    learning_rate_two = float(input_values[4])
+    
+    return N_epochs, N_qubits, N_trials, learning_rate_one, learning_rate_two
+
+def main():
+
+    global N_epochs
+    global N_qubits
+    global N_trials
+    global initial_params
+    global learning_rate
+    global learning_rate_one
+    global learning_rate_two
+    global weight_sign
+
+    if len(sys.argv) != 2:
+        sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
+    else:
+        N_epochs, N_qubits, N_trials, learning_rate_one, learning_rate_two = get_inputs(sys.argv[1])
+
+        initial_params = NetworkParams(N_qubits)
+
+        #Set learning rate for parameter updates
+        learning_rate = [learning_rate_one, learning_rate_two] 
+
+        weight_sign = [-1,-1,-1]
+
+if __name__ == "__main__":
+
+    main()
 
 '''If kernel is to be computed exactly set N_kernel_samples = 'infinite' '''
-N_data_samples =        []
-N_born_samples =        []
-N_bornplus_samples=     []
-N_bornminus_samples=    []
-N_kernel_samples=       []
-N_samples=              {}
+N_data_samples =        [100, 100, 100]
+N_born_samples =        [50, 100, 1]
+N_bornplus_samples =    N_born_samples
+N_bornminus_samples =   N_born_samples
+N_kernel_samples =      [2000, 2000, 2000]
+N_samples =             {}
 
 '''Trial 1 Number of samples:'''
-N_data_samples.append(100)
-N_born_samples.append(50)
-N_bornplus_samples.append(N_born_samples[0])
-N_bornminus_samples.append(N_born_samples[0])
-N_kernel_samples.append(2000)
-
-
 N_samples['Trial_1'] = [N_data_samples[0],\
                         N_born_samples[0],\
                         N_bornplus_samples[0],\
                         N_bornminus_samples[0],\
                         N_kernel_samples[0]]
-# batch_size.append(N_data_samples[0])
-batch_size.append(10)
 
-'''Trial 2 Number of samples:'''
-N_data_samples.append(100)
-N_born_samples.append(100)
-N_bornplus_samples.append(N_born_samples[1])
-N_bornminus_samples.append(N_born_samples[1])
-N_kernel_samples.append(2000)
-if (N_trials == 2):
-        N_samples['Trial_2'] = [N_data_samples[1], \
+batch_size = [10, 10, 10]
+
+if (N_trials == 2):     # Trial 2 Number of samples
+
+    N_samples['Trial_2'] = [N_data_samples[1], \
                                 N_born_samples[1],\
                                 N_bornplus_samples[1],\
                                 N_bornminus_samples[1],\
                                 N_kernel_samples[1]]
-        batch_size.append(10)
 
-'''Trial 3 Number of samples:'''
-N_born_samples.append(1)
-N_bornplus_samples.append(N_born_samples[2])
-N_bornminus_samples.append(N_born_samples[2])
-N_kernel_samples.append(2000)
-
-if (N_trials == 3):
-        N_samples['Trial_3'] = [N_data_samples[2], \
+elif (N_trials == 3):   # Trial 3 Number of samples
+    
+    N_samples['Trial_3'] = [N_data_samples[2], \
                                 N_born_samples[2],\
                                 N_bornplus_samples[2],\
                                 N_bornminus_samples[2],\
                                 N_kernel_samples[2]]
-        batch_size.append(10)
 
 
 kernel_type = []
@@ -355,3 +353,4 @@ SaveAnimation(N_trials, 2000)
 
 # sys.stdout.close()
 # sys.stdout= console_output
+
