@@ -96,7 +96,7 @@ def DataDictToFile(N_qubits, data_dict, N_data_samples):
 	return
 
 def PrintDataToFiles():
-	for N_qubits in range(2, 8):
+	for N_qubits in range(2, 6):
 		
 		
 		#Define training data along with all binary strings on the visible and hidden variables from train_generation

@@ -15,9 +15,9 @@ from random import shuffle
 from auxiliary_functions import TrainTestPartition
 import sys
 #N_epoch is the total number of training epochs
-N_epochs = 200
+N_epochs = 30
 #N is the total number of qubits.
-N_qubits = 3
+N_qubits = 2
 N_trials = 1
 
 # #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
@@ -56,7 +56,7 @@ N_samples=              {}
 
 '''Trial 1 Number of samples:'''
 N_data_samples.append(100)
-N_born_samples.append(100)
+N_born_samples.append(50)
 N_bornplus_samples.append(N_born_samples[0])
 N_bornminus_samples.append(N_born_samples[0])
 N_kernel_samples.append(2000)
