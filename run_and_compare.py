@@ -22,17 +22,35 @@ learning_rate = []
 
 weight_sign = []
 
+'''If kernel is to be computed exactly set N_kernel_samples = 'infinite' '''
+N_data_samples =        []
+N_born_samples =        []
+N_bornplus_samples =    []
+N_bornminus_samples =   []
+N_kernel_samples =      []
+N_samples =             {}
+
+batch_size = []
+
+kernel_type = []
+
+approx = []
+
+cost_func = []
+
+stein_approx = []
+
 def get_inputs(file_name):
     
-    input_file = open(file_name, 'r')
+    with open(file_name, 'r') as input_file:
    
-    input_values = input_file.readlines()
+        input_values = input_file.readlines()
 
-    N_epochs = int(input_values[0])
-    N_qubits = int(input_values[1])
-    N_trials = int(input_values[2])
-    learning_rate_one = float(input_values[3])
-    learning_rate_two = float(input_values[4])
+        N_epochs = int(input_values[0])
+        N_qubits = int(input_values[1])
+        N_trials = int(input_values[2])
+        learning_rate_one = float(input_values[3])
+        learning_rate_two = float(input_values[4])
     
     return N_epochs, N_qubits, N_trials, learning_rate_one, learning_rate_two
 
@@ -46,6 +64,17 @@ def main():
     global learning_rate_one
     global learning_rate_two
     global weight_sign
+    global N_data_samples
+    global N_born_samples
+    global N_bornplus_samples
+    global N_bornminus_samples
+    global N_kernel_samples
+    global batch_size
+    global kernel_type
+    global approx
+    global cost_func
+    global stein_approx
+    global N_samples
 
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
@@ -59,62 +88,49 @@ def main():
 
         weight_sign = [-1,-1,-1]
 
+        '''If kernel is to be computed exactly set N_kernel_samples = 'infinite' '''
+        N_data_samples =        [100, 100, 100]
+        N_born_samples =        [50, 100, 1]
+        N_bornplus_samples =    N_born_samples
+        N_bornminus_samples =   N_born_samples
+        N_kernel_samples =      [2000, 2000, 2000]
+
+        batch_size = [10, 10, 10]
+
+        kernel_type = ['Gaussian', 'Gaussian', 'Gaussian']
+        
+        approx = ['Sampler', 'Sampler', 'Exact']
+        
+        cost_func = ['MMD', 'Stein']
+        
+        stein_approx = ['Exact_Score', 'Exact_Score']
+
+        '''Trial 1 Number of samples:'''
+        N_samples['Trial_1'] = [N_data_samples[0],\
+                                N_born_samples[0],\
+                                N_bornplus_samples[0],\
+                                N_bornminus_samples[0],\
+                                N_kernel_samples[0]]
+        
+        if (N_trials == 2):     # Trial 2 Number of samples
+        
+            N_samples['Trial_2'] = [N_data_samples[1], \
+                                        N_born_samples[1],\
+                                        N_bornplus_samples[1],\
+                                        N_bornminus_samples[1],\
+                                        N_kernel_samples[1]]
+        
+        elif (N_trials == 3):   # Trial 3 Number of samples
+            
+            N_samples['Trial_3'] = [N_data_samples[2], \
+                                        N_born_samples[2],\
+                                        N_bornplus_samples[2],\
+                                        N_bornminus_samples[2],\
+                                        N_kernel_samples[2]]
+
 if __name__ == "__main__":
 
     main()
-
-'''If kernel is to be computed exactly set N_kernel_samples = 'infinite' '''
-N_data_samples =        [100, 100, 100]
-N_born_samples =        [50, 100, 1]
-N_bornplus_samples =    N_born_samples
-N_bornminus_samples =   N_born_samples
-N_kernel_samples =      [2000, 2000, 2000]
-N_samples =             {}
-
-'''Trial 1 Number of samples:'''
-N_samples['Trial_1'] = [N_data_samples[0],\
-                        N_born_samples[0],\
-                        N_bornplus_samples[0],\
-                        N_bornminus_samples[0],\
-                        N_kernel_samples[0]]
-
-batch_size = [10, 10, 10]
-
-if (N_trials == 2):     # Trial 2 Number of samples
-
-    N_samples['Trial_2'] = [N_data_samples[1], \
-                                N_born_samples[1],\
-                                N_bornplus_samples[1],\
-                                N_bornminus_samples[1],\
-                                N_kernel_samples[1]]
-
-elif (N_trials == 3):   # Trial 3 Number of samples
-    
-    N_samples['Trial_3'] = [N_data_samples[2], \
-                                N_born_samples[2],\
-                                N_bornplus_samples[2],\
-                                N_bornminus_samples[2],\
-                                N_kernel_samples[2]]
-
-
-kernel_type = []
-kernel_type.append('Gaussian')
-kernel_type.append('Gaussian')
-kernel_type.append('Gaussian')
-
-approx = []
-approx.append('Sampler')
-approx.append('Sampler')
-approx.append('Exact')
-
-cost_func = []
-cost_func.append('MMD')
-cost_func.append('Stein')
-
-stein_approx = []
-stein_approx.append('Exact_Score')
-stein_approx.append('Exact_Score')
-# stein_approx.append('Exact_Score')
 
 data_samples1, data_exact_dict1 = DataImport(approx[0], N_qubits, N_data_samples[0], stein_approx[0])
 data_samples2, data_exact_dict2 = DataImport(approx[1], N_qubits, N_data_samples[1], stein_approx[1])
