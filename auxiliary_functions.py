@@ -1,3 +1,7 @@
+## @package auxiliary_functions some additional useful functions
+#
+# A collection of sever additional function useful during the running of the code.
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -23,6 +27,14 @@ def StringToList(string):
         string_list.append(int(string[element]))
     return string_list
 
+## Convert list to array
+#
+# @param[in] original_samples_list The original list
+# @param[in] N_qubits The number of qubits
+#
+# @param[out] sample_array The list converted into an array
+#
+# return Converted list
 def SampleListToArray(original_samples_list, N_qubits):
     '''This function converts a list of strings, into a numpy array, where
         each [i,j] element of the new array is the jth bit of the ith string'''
@@ -120,10 +132,17 @@ def L2NormForStrings(string1, string2):
     '''This function computes the L2 norm between two strings'''
     return (np.linalg.norm(np.abs(ConvertStringToVector(string1) - ConvertStringToVector(string2)), 2))**2
 
+
+## This function partitions an array of samples into a training array and a test array. 
+#
+# The last 20% of the original set is used for testing
+#
+# @param[in] samples A list of samples
+#
+# @param[out] train_test array of lists 
+#
+# return Split array
 def TrainTestPartition(samples):
-    '''This function partitions an array of samples into a 
-    training array and a test array. The last 20% of the original set is used 
-    for testing'''
     train_test = np.split(samples, [round(len(samples)*0.8), len(samples)], axis = 0)
 
     return train_test

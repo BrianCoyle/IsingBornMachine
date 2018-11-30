@@ -1,3 +1,7 @@
+## @package file_operations_in import functions 
+#
+# A collection of functions for imported pre-computed data
+
 import numpy as np
 import ast
 import sys
@@ -12,8 +16,13 @@ def FileLoad(file):
 	k1 = [eval(key) for key in dict_keys]
 	return kernel_dict, k1, dict_values
 
+## Reads data dictionary from file
+#
+# @param[in] N_qubits The number of qubits
+# @param[in] N_samples The number of samples
+#
+# @returns A dictionary containing the appropriate data
 def DataDictFromFile(N_qubits, N_samples):
-	#reads data dictionary from file
 	print(N_samples)
 	if (N_samples == 'infinite'):
 		with open('Data_Dict_Exact_%iQBs' % N_qubits, 'r') as f:
@@ -26,22 +35,37 @@ def DataDictFromFile(N_qubits, N_samples):
 			data_dict = json.loads(raw_from_file)
 	return data_dict
 
+## Returns relevant data
+#
+# @param[in] approx The approximation type
+# @param[in] N_qubits The number of qubits
+# @param[in] N_data_samples The number of data samples
+# @param[in] stein_approx The approximation type
+#
+# @param[out] data_samples The requested list of samples
+# @param[out] data_exact_dict The requested dictionary of exact samples
+#
+# @return Requested data
 def DataImport(approx, N_qubits, N_data_samples, stein_approx):
-	data_exact_dict = DataDictFromFile(N_qubits, 'infinite')
+    
+    data_exact_dict = DataDictFromFile(N_qubits, 'infinite')
+    
+    if (approx == 'Sampler'):
+        
+        data_samples_orig = list(np.loadtxt('Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+        data_samples = SampleListToArray(data_samples_orig, N_qubits)
+    
+    elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
+        
+        data_samples = []
+    
+    else: raise IOError('Please enter either \'Sampler\' or \'Exact\' for \'approx\' ')
+    
+    return data_samples, data_exact_dict 
 
-	if (approx == 'Sampler'):
-		data_samples_orig = list(np.loadtxt('Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
-		data_samples = SampleListToArray(data_samples_orig, N_qubits)
-		
-	elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
-		data_samples = []
 
-	else: raise IOError('Please enter either \'Sampler\' or \'Exact\' for \'approx\' ')
-		
-	return data_samples, data_exact_dict 
-
+## Reads kernel dictionary from file
 def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
-	#reads kernel dictionary from file
 	if (N_samples[4] == 'infinite'):
 		with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
 			kernel_dict, k1, v = FileLoad(f)

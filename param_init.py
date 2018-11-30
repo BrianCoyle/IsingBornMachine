@@ -1,3 +1,7 @@
+## @package param_init
+#
+# Initialise some inputted variables
+
 from pyquil.quil import Program
 from pyquil.paulis import *
 import pyquil.paulis as pl
@@ -16,17 +20,21 @@ def HadamardToAll(prog, N_qubits):
 	return prog
 
 
-#Initialise weights and biases as random
+## Initialise weights and biases as random
+#
+# This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained
+#
+# @param[in] N_qubits The number of qubits
+#
+# @return initialised parameters
 def NetworkParams(N_qubits):
-    '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
-    #Initialise arrays for parameters
-
+    
     J = np.zeros((N_qubits, N_qubits))
     b = np.zeros((N_qubits))
     gamma_x = np.zeros((N_qubits))
     gamma_y = np.zeros((N_qubits))
 
-    #Set random seed to be fixed for reproducibility
+    # Set random seed to be fixed for reproducibility
     rand.seed(0)
     
     for j in range(0, N_qubits):
