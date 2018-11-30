@@ -1,3 +1,8 @@
+## @package run_and_compare
+# This is the main module for this project.
+#
+# More details.
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -9,7 +14,7 @@ from train_plot import CostPlot
 from random import shuffle
 from auxiliary_functions import TrainTestPartition
 
-N_epochs = 0    # N_epoch is the total number of training epochs
+N_epochs = 0    ## N_epoch is the total number of training epochs
 N_qubits = 0    # N_qubits is the total number of qubits.
 N_trials = 0
 
@@ -30,6 +35,7 @@ N_bornminus_samples =   []
 N_kernel_samples =      []
 N_samples =             {}
 
+## a description
 batch_size = []
 
 kernel_type = []
@@ -40,6 +46,18 @@ cost_func = []
 
 stein_approx = []
 
+
+## This function gathers inputs from file
+#
+# @param[in] file_name name of file to gather inputs from
+# 
+# @param[out] N_epochs number of epochs
+# @param[out] N_qubits number of qubits
+# @param[out] N_trials number of trials
+# @param[out] learning_rate_one first learning rate
+# @param[out] learning_rate_two second learning rate
+#
+# @returns listed parameters
 def get_inputs(file_name):
     
     with open(file_name, 'r') as input_file:
@@ -55,6 +73,8 @@ def get_inputs(file_name):
     return N_epochs, N_qubits, N_trials, learning_rate_one, learning_rate_two
 
 def main():
+    """This is the first function to be called
+    """
 
     global N_epochs
     global N_qubits
