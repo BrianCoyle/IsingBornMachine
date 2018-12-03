@@ -1,0 +1,89 @@
+\begin{theindex}
+
+  \item {auxiliary\+\_\+functions}, \hyperpage{5}
+    \subitem {Convert\+String\+To\+Vector}, \hyperpage{5}
+    \subitem {Empirical\+Dist}, \hyperpage{6}
+    \subitem {L2\+Norm\+For\+Strings}, \hyperpage{6}
+    \subitem {Mini\+Batch\+Split}, \hyperpage{6}
+    \subitem {Sample\+Array\+To\+List}, \hyperpage{6}
+    \subitem {Sample\+List\+To\+Array}, \hyperpage{6}
+    \subitem {String\+To\+List}, \hyperpage{7}
+    \subitem {Total\+Variation\+Cost}, \hyperpage{7}
+    \subitem {Train\+Test\+Partition}, \hyperpage{7}
+
+  \indexspace
+
+  \item {Convert\+String\+To\+Vector}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{5}
+
+  \indexspace
+
+  \item {Data\+Dict\+From\+File}
+    \subitem {file\+\_\+operations\+\_\+in}, \hyperpage{8}
+  \item {Data\+Import}
+    \subitem {file\+\_\+operations\+\_\+in}, \hyperpage{8}
+
+  \indexspace
+
+  \item {Empirical\+Dist}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{6}
+
+  \indexspace
+
+  \item {file\+\_\+operations\+\_\+in}, \hyperpage{8}
+    \subitem {Data\+Dict\+From\+File}, \hyperpage{8}
+    \subitem {Data\+Import}, \hyperpage{8}
+
+  \indexspace
+
+  \item {get\+\_\+inputs}
+    \subitem {run\+\_\+and\+\_\+compare}, \hyperpage{11}
+
+  \indexspace
+
+  \item {L2\+Norm\+For\+Strings}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{6}
+
+  \indexspace
+
+  \item {Mini\+Batch\+Split}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{6}
+
+  \indexspace
+
+  \item {Network\+Params}
+    \subitem {param\+\_\+init}, \hyperpage{9}
+
+  \indexspace
+
+  \item {param\+\_\+init}, \hyperpage{9}
+    \subitem {Network\+Params}, \hyperpage{9}
+    \subitem {State\+Init}, \hyperpage{10}
+  \item {plot\+\_\+colour}
+    \subitem {run\+\_\+and\+\_\+compare}, \hyperpage{11}
+
+  \indexspace
+
+  \item {run\+\_\+and\+\_\+compare}, \hyperpage{10}
+    \subitem {get\+\_\+inputs}, \hyperpage{11}
+    \subitem {plot\+\_\+colour}, \hyperpage{11}
+
+  \indexspace
+
+  \item {Sample\+Array\+To\+List}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{6}
+  \item {Sample\+List\+To\+Array}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{6}
+  \item {State\+Init}
+    \subitem {param\+\_\+init}, \hyperpage{10}
+  \item {String\+To\+List}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{7}
+
+  \indexspace
+
+  \item {Total\+Variation\+Cost}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{7}
+  \item {Train\+Test\+Partition}
+    \subitem {auxiliary\+\_\+functions}, \hyperpage{7}
+
+\end{theindex}

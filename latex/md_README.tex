@@ -1,0 +1,33 @@
+Implementation of Quantum Ising Born Machine using Rigetti Forest Platform, with two approaches\+:
+\begin{DoxyEnumerate}
+\item Training using M\+MD as a Cost function.
+\item Training using Stein Discrepancy as a Cost function
+\end{DoxyEnumerate}
+
+Both of the above have the option to run using a \textquotesingle{}Quantum-\/\+Hard\textquotesingle{} Kernel function
+
+To run the, Py\+Quil is needed, plus a user code which can be gotten by signing up to use the Rigetti simulator online\+:
+
+Follow instructions online\+: \href{http://docs.rigetti.com/en/stable/start.html}{\tt http\+://docs.\+rigetti.\+com/en/stable/start.\+html} This will allow you to download the Rigetti S\+DK which includes a compiler and a Quantum Virtual Machine
+
+Also the standard packages, numpy, matplotlib, etc.
+
+In the current form of the above codes, it is necessary to run some functions in file\+\_\+operations\+\_\+out.\+py to generate the data and pre-\/compute the quantum kernel etc. 
+
+ \subsection*{M\+A\+X\+I\+M\+UM M\+E\+AN D\+I\+S\+C\+R\+E\+P\+A\+N\+CY }
+
+
+
+ \subsection*{I\+N\+S\+T\+R\+U\+C\+T\+I\+O\+NS F\+OR U\+SE }
+
+run using\+:
+
+
+\begin{DoxyCode}
+python run\_and\_compare.py input.txt
+\end{DoxyCode}
+
+
+Where input.\+txt should look like\+:
+
+N\+\_\+epochs N\+\_\+qubits N\+\_\+trials learning\+\_\+rate\+\_\+one learning\+\_\+rate\+\_\+two 

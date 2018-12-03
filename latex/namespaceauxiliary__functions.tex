@@ -1,0 +1,131 @@
+\hypertarget{namespaceauxiliary__functions}{}\section{auxiliary\+\_\+functions Namespace Reference}
+\label{namespaceauxiliary__functions}\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+
+
+some additional useful functions  
+
+
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceauxiliary__functions_a75e3ea6f66138e5a56e5aaa6a96b8600}\label{namespaceauxiliary__functions_a75e3ea6f66138e5a56e5aaa6a96b8600}} 
+def {\bfseries Convert\+To\+String} (index, N\+\_\+qubits)
+\item 
+def \hyperlink{namespaceauxiliary__functions_ad0cee6281437348f8a5856495772f65d}{String\+To\+List} (string)
+\item 
+def \hyperlink{namespaceauxiliary__functions_af7a04a13c92d95c0d77c001b10fab894}{Sample\+List\+To\+Array} (original\+\_\+samples\+\_\+list, N\+\_\+qubits)
+\begin{DoxyCompactList}\small\item\em Convert list to array. \end{DoxyCompactList}\item 
+def \hyperlink{namespaceauxiliary__functions_a9338b2da58eea385c1e9d9d1f956867d}{Sample\+Array\+To\+List} (sample\+\_\+array)
+\item 
+def \hyperlink{namespaceauxiliary__functions_a65d08dfca6f21d777715ab4a24ba5e11}{Empirical\+Dist} (samples, N\+\_\+v, arg)
+\item 
+def \hyperlink{namespaceauxiliary__functions_ac81c85ec5da8c152fd9c646f85ecc0bf}{Total\+Variation\+Cost} (dict\+\_\+one, dict\+\_\+two)
+\item 
+def \hyperlink{namespaceauxiliary__functions_a32a6214120a3c44697fa73f31352f2b7}{Convert\+String\+To\+Vector} (string)
+\item 
+def \hyperlink{namespaceauxiliary__functions_a6c2ed3da4759f13ac407997c85313b31}{L2\+Norm\+For\+Strings} (string1, string2)
+\item 
+def \hyperlink{namespaceauxiliary__functions_a4f7400968718917f204b573f72a0a883}{Train\+Test\+Partition} (samples)
+\begin{DoxyCompactList}\small\item\em This function partitions an array of samples into a training array and a test array. \end{DoxyCompactList}\item 
+def \hyperlink{namespaceauxiliary__functions_afdaed4d363ed08c291ca6b32bbc2ea77}{Mini\+Batch\+Split} (samples, batch\+\_\+size)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+some additional useful functions 
+
+A collection of sever additional function useful during the running of the code. 
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{namespaceauxiliary__functions_a32a6214120a3c44697fa73f31352f2b7}\label{namespaceauxiliary__functions_a32a6214120a3c44697fa73f31352f2b7}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Convert\+String\+To\+Vector@{Convert\+String\+To\+Vector}}
+\index{Convert\+String\+To\+Vector@{Convert\+String\+To\+Vector}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Convert\+String\+To\+Vector()}{ConvertStringToVector()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Convert\+String\+To\+Vector (\begin{DoxyParamCaption}\item[{}]{string }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This function converts a string to a np array\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_a65d08dfca6f21d777715ab4a24ba5e11}\label{namespaceauxiliary__functions_a65d08dfca6f21d777715ab4a24ba5e11}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Empirical\+Dist@{Empirical\+Dist}}
+\index{Empirical\+Dist@{Empirical\+Dist}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Empirical\+Dist()}{EmpiricalDist()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Empirical\+Dist (\begin{DoxyParamCaption}\item[{}]{samples,  }\item[{}]{N\+\_\+v,  }\item[{}]{arg }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This method outputs the empirical probability distribution given samples in a numpy array
+as a dictionary, with keys as outcomes, and values as probabilities\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_a6c2ed3da4759f13ac407997c85313b31}\label{namespaceauxiliary__functions_a6c2ed3da4759f13ac407997c85313b31}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!L2\+Norm\+For\+Strings@{L2\+Norm\+For\+Strings}}
+\index{L2\+Norm\+For\+Strings@{L2\+Norm\+For\+Strings}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{L2\+Norm\+For\+Strings()}{L2NormForStrings()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+L2\+Norm\+For\+Strings (\begin{DoxyParamCaption}\item[{}]{string1,  }\item[{}]{string2 }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This function computes the L2 norm between two strings\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_afdaed4d363ed08c291ca6b32bbc2ea77}\label{namespaceauxiliary__functions_afdaed4d363ed08c291ca6b32bbc2ea77}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Mini\+Batch\+Split@{Mini\+Batch\+Split}}
+\index{Mini\+Batch\+Split@{Mini\+Batch\+Split}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Mini\+Batch\+Split()}{MiniBatchSplit()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Mini\+Batch\+Split (\begin{DoxyParamCaption}\item[{}]{samples,  }\item[{}]{batch\+\_\+size }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This function takes the first \'batch_size\' samples out of the full sample set \end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_a9338b2da58eea385c1e9d9d1f956867d}\label{namespaceauxiliary__functions_a9338b2da58eea385c1e9d9d1f956867d}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Sample\+Array\+To\+List@{Sample\+Array\+To\+List}}
+\index{Sample\+Array\+To\+List@{Sample\+Array\+To\+List}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Sample\+Array\+To\+List()}{SampleArrayToList()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Sample\+Array\+To\+List (\begin{DoxyParamCaption}\item[{}]{sample\+\_\+array }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This function converts a np.array where rows are samples
+    into a list of length N_samples\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_af7a04a13c92d95c0d77c001b10fab894}\label{namespaceauxiliary__functions_af7a04a13c92d95c0d77c001b10fab894}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Sample\+List\+To\+Array@{Sample\+List\+To\+Array}}
+\index{Sample\+List\+To\+Array@{Sample\+List\+To\+Array}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Sample\+List\+To\+Array()}{SampleListToArray()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Sample\+List\+To\+Array (\begin{DoxyParamCaption}\item[{}]{original\+\_\+samples\+\_\+list,  }\item[{}]{N\+\_\+qubits }\end{DoxyParamCaption})}
+
+
+
+Convert list to array. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em original\+\_\+samples\+\_\+list} & The original list \\
+\hline
+\mbox{\tt in}  & {\em N\+\_\+qubits} & The number of qubits\\
+\hline
+\mbox{\tt out}  & {\em sample\+\_\+array} & The list converted into an array\\
+\hline
+\end{DoxyParams}
+return Converted list \begin{DoxyVerb}This function converts a list of strings, into a numpy array, where
+    each [i,j] element of the new array is the jth bit of the ith string\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_ad0cee6281437348f8a5856495772f65d}\label{namespaceauxiliary__functions_ad0cee6281437348f8a5856495772f65d}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!String\+To\+List@{String\+To\+List}}
+\index{String\+To\+List@{String\+To\+List}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{String\+To\+List()}{StringToList()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+String\+To\+List (\begin{DoxyParamCaption}\item[{}]{string }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This kernel converts a binary string to a list of integers\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_ac81c85ec5da8c152fd9c646f85ecc0bf}\label{namespaceauxiliary__functions_ac81c85ec5da8c152fd9c646f85ecc0bf}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Total\+Variation\+Cost@{Total\+Variation\+Cost}}
+\index{Total\+Variation\+Cost@{Total\+Variation\+Cost}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Total\+Variation\+Cost()}{TotalVariationCost()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Total\+Variation\+Cost (\begin{DoxyParamCaption}\item[{}]{dict\+\_\+one,  }\item[{}]{dict\+\_\+two }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This Function computes the variation distace between two distributions\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceauxiliary__functions_a4f7400968718917f204b573f72a0a883}\label{namespaceauxiliary__functions_a4f7400968718917f204b573f72a0a883}} 
+\index{auxiliary\+\_\+functions@{auxiliary\+\_\+functions}!Train\+Test\+Partition@{Train\+Test\+Partition}}
+\index{Train\+Test\+Partition@{Train\+Test\+Partition}!auxiliary\+\_\+functions@{auxiliary\+\_\+functions}}
+\subsubsection{\texorpdfstring{Train\+Test\+Partition()}{TrainTestPartition()}}
+{\footnotesize\ttfamily def auxiliary\+\_\+functions.\+Train\+Test\+Partition (\begin{DoxyParamCaption}\item[{}]{samples }\end{DoxyParamCaption})}
+
+
+
+This function partitions an array of samples into a training array and a test array. 
+
+The last 20\% of the original set is used for testing
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em samples} & A list of samples\\
+\hline
+\mbox{\tt out}  & {\em train\+\_\+test} & array of lists\\
+\hline
+\end{DoxyParams}
+return Split array 
