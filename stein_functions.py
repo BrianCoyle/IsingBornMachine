@@ -5,7 +5,7 @@ from param_init import StateInit, NetworkParams
 
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_in import KernelDictFromFile, DataDictFromFile
-from mmd_kernel import  KernelComputation, EncodingFunc
+# from mmd_kernel import  KernelComputation, EncodingFunc
 from auxiliary_functions import SampleArrayToList, ConvertToString, EmpiricalDist
 import stein_score as ss
 import json
