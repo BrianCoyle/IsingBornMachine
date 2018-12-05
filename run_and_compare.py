@@ -5,15 +5,130 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 from matplotlib import animation, style
+from pyquil.api import get_qc
 from param_init import NetworkParams
 from file_operations_out import PrintFinalParamsToFile
 from file_operations_in import DataImport
 from train_plot import CostPlot
 from random import shuffle
 from auxiliary_functions import TrainTestPartition
+import sys
 
+#N_epoch is the total number of training epochs
+N_epochs = 3
+#Give device to run on, with specified number of qubits
+device_name = "Aspen-1-2Q-B"
+as_qvm_value = False     #as_qvm_value is True if simulator is to be run, False otherwise
+device_params = [device_name, as_qvm_value]
+N_trials = 1
+qc = get_qc(device_name, as_qvm = as_qvm_value)
+qubits = qc.qubits()
+N_qubits = len(qubits)
+#Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
+
+initial_params = {}
+initial_params['J'], initial_params['b'], \
+initial_params['gamma_x'], initial_params['gamma_y'] = NetworkParams(device_params)
+
+#Set learning rate for parameter updates
+learning_rate = []
+learning_rate.append(0.05)
+learning_rate.append(0.01)
+# learning_rate.append(0.05)
+
+weight_sign = []
+weight_sign.append(-1)
+weight_sign.append(-1)
+weight_sign.append(-1)
+
+batch_size = []
+
+'''If kernel is to be computed exactly set N_kernel_samples = 'infinite' '''
+N_data_samples =        []
+N_born_samples =        []
+N_bornplus_samples=     []
+N_bornminus_samples=    []
+N_kernel_samples=       []
+N_samples=              {}
+
+'''Trial 1 Number of samples:'''
+N_data_samples.append(100)
+N_born_samples.append(100)
+N_bornplus_samples.append(N_born_samples[0])
+N_bornminus_samples.append(N_born_samples[0])
+N_kernel_samples.append(2000)
+batch_size.append(50)
+
+
+N_samples['Trial_1'] = [N_data_samples[0],\
+                        N_born_samples[0],\
+                        batch_size[0],\
+                        N_kernel_samples[0]]
+
+'''Trial 2 Number of samples:'''
+N_data_samples.append(100)
+N_born_samples.append(100)
+# N_bornplus_samples.append(N_born_samples[1])
+# N_bornminus_samples.append(N_born_samples[1])
+N_kernel_samples.append(2000)
+batch_size.append(50)
+
+if (N_trials == 2):
+        N_samples['Trial_2'] = [N_data_samples[1], \
+                                N_born_samples[1], \
+                                batch_size[1],\
+                                N_kernel_samples[1]]
+
+'''Trial 3 Number of samples:'''
+N_born_samples.append(1)
+# N_bornplus_samples.append(N_born_samples[2])
+# N_bornminus_samples.append(N_born_samples[2])
+N_kernel_samples.append(2000)
+batch_size.append(10)
+
+if (N_trials == 3):
+        N_samples['Trial_3'] = [N_data_samples[2], \
+                                N_born_samples[2],\
+                                batch_size[2],\
+                                N_kernel_samples[2]]
+
+
+kernel_type = []
+kernel_type.append('Gaussian')
+kernel_type.append('Gaussian')
+kernel_type.append('Gaussian')
+
+approx = []
+approx.append('Sampler')
+approx.append('Sampler')
+approx.append('Exact')
+
+cost_func = []
+cost_func.append('MMD')
+cost_func.append('Stein')
+
+stein_approx = []
+stein_approx.append('Exact_Score')
+stein_approx.append('Exact_Score')
+# stein_approx.append('Exact_Score')
+
+data_samples1, data_exact_dict1 = DataImport(approx[0], N_qubits, N_data_samples[0], stein_approx[0])
+# print(len(data_samples1))
+# data_samples2, data_exact_dict2 = DataImport(approx[1], N_qubits, N_data_samples[1], stein_approx[1])
+
+
+#Randomise data
+np.random.shuffle(data_samples1)
+# np.random.shuffle(data_samples2)
+#Split data into training/test sets
+train_test_1 = TrainTestPartition(data_samples1)
+# train_test_2 = TrainTestPartition(data_samples1)
+
+
+# data_samples, data_exact_dict2 = DataImport(approx[1], N_v2, N_data_samples)
+# data_samples, data_exact_dict3 = DataImport(approx[2], N_v3, N_data_samples)
+plt.figure(1)
 plot_colour = []
 plot_colour.append(('r', 'b'))
 plot_colour.append(('m', 'c'))
@@ -57,7 +172,7 @@ def SaveAnimation(N_trials, framespersec, fig, N_epochs, N_qubits, learning_rate
                         %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], learning_rate[0], N_born_samples[0], N_epochs))
 
         elif (N_trials == 2): 
-
+                
                 ani.save("%s_%iNv_%s_%s_%.4fLR_%iSamples_%s_%s_%s_%.4fLR_%iSamples_%iEpochs.mp4" \
                         %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], learning_rate[0], N_born_samples[0], cost_func[1], kernel_type[1][0], approx[1][0],\
                         learning_rate[1], N_born_samples[1], N_epochs))

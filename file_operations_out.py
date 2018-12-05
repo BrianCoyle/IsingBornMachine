@@ -1,6 +1,6 @@
 from train_generation import TrainingData, DataSampler
 from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray
-from mmd_functions import MMDKernelExact
+from cost_function_train import KernelExact
 from param_init import NetworkParams
 import json
 import numpy as np
@@ -50,7 +50,7 @@ def PrintKernel(N_kernel_samples, kernel_choice):
 				bin_visible[v_index][v] = float(v_string[v])
 
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
-		kernel, kernel_exact, kernel_dict, kernel_exact_dict = MMDKernelExact(N_qubits, bin_visible,  N_kernel_samples, kernel_choice)
+		kernel, kernel_exact, kernel_dict, kernel_exact_dict = KernelExact(N_qubits, bin_visible,  N_kernel_samples, kernel_choice)
 		KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice)
 # 	return
 
@@ -119,8 +119,8 @@ def PrintDataToFiles():
 		data_samples10000_orig 	= DataSampler(N_qubits, N_h, M_h, 10000, data_probs, exact_data_dict)		
 		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 10),data_samples10_orig, fmt='%s')
 		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 100),data_samples100_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 200),data_samples100_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 500),data_samples100_orig, fmt='%s')
+		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 200),data_samples200_orig, fmt='%s')
+		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 500),data_samples500_orig, fmt='%s')
 		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 1000),data_samples1000_orig, fmt='%s')
 		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 2000),data_samples2000_orig, fmt='%s')
 		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 3000),data_samples3000_orig, fmt='%s')
@@ -175,7 +175,7 @@ def PrintDataToFiles():
 		DataDictToFile(N_qubits, exact_data_dict, 'infinite')
 	return
 
-# PrintDataToFiles()
+PrintDataToFiles()
 
 
 def PrintFinalParamsToFile(J, b, L, N_qubits, kernel_type, N_born_samples, N_epochs, N_data_samples, learning_rate):
