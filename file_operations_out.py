@@ -175,8 +175,7 @@ def PrintDataToFiles():
 		DataDictToFile(N_qubits, exact_data_dict, 'infinite')
 	return
 
-PrintDataToFiles()
-
+# PrintDataToFiles()
 
 def PrintFinalParamsToFile(J, b, L, N_qubits, kernel_type, N_born_samples, N_epochs, N_data_samples, learning_rate):
     print("THIS IS THE DATA FOR MMD WITH %i VISIBLE QUBITS, WITH %s KERNEL, %i SAMPLES FROM THE BORN MACHINE,\

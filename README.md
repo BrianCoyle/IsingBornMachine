@@ -34,10 +34,22 @@ Where input.txt should look like:
 
 N_epochs
 
-N_qubits
-
-N_trials
-
 learning_rate_one
 
 learning_rate_two
+
+N_data_samples
+
+N_kernel_samples
+
+batch_size
+
+kernel_type
+
+approx
+
+cost_func
+
+stein_approx
+
+weight_sign

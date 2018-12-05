@@ -66,17 +66,17 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
 ## Reads kernel dictionary from file
 def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
 	
-        #reads kernel dictionary from file
-	N_kernel_samples = N_samples[3]
-	
-        if (N_kernel_samples == 'infinite'):
-		with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
-			kernel_dict, k1, v = FileLoad(f)
-	else:
-		with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
-			kernel_dict, k1, v = FileLoad(f)
+    #reads kernel dictionary from file
+    N_kernel_samples = N_samples[3]
 
-	return dict(zip(*[k1,v]))
+    if (N_kernel_samples == 'infinite'):
+        with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
+            kernel_dict, k1, v = FileLoad(f)
+    else:
+        with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
+            kernel_dict, k1, v = FileLoad(f)
+
+    return dict(zip(*[k1,v]))
 
 
 def ParamsFromFile(N_qubits):
