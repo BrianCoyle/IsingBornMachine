@@ -36,20 +36,31 @@ def get_inputs(file_name):
         input_values = input_file.readlines()
 
         N_epochs = int(input_values[0])
+        
         learning_rate_one = float(input_values[1])
+        
         learning_rate_two = float(input_values[2])
+        
         N_data_samples = int(input_values[3])
+        
         N_kernel_samples = int(input_values[4])
+        
         batch_size = int(input_values[5])
+        
         kernel_type = str(input_values[6])
         kernel_type = kernel_type[0:len(kernel_type) - 1]
+        
         approx = str(input_values[7])
         approx = approx[0:len(approx) - 1]
+        
         cost_func = str(input_values[8])
         cost_func = cost_func[0:len(cost_func) - 1]
+        
         stein_approx = str(input_values[9])
         stein_approx = stein_approx[0:len(stein_approx) - 1]
+        
         weight_sign = int(input_values[10])
+        
         device_name = str(input_values[11])
         device_name = device_name[0:len(device_name) - 1]
 
@@ -68,7 +79,7 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_s
         
         ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list1), fargs=(N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs, N_data_samples, born_probs_list2), interval = 10)
         
-        ani.save("%s_%iNv_%s_%s_%.4fLR_%iSamples_%iEpochs.mp4" \
+        ani.save("animations/%s_%iNv_%s_%s_%.4fLR_%iSamples_%iEpochs.mp4" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], learning_rate[0], N_born_samples[0], N_epochs))
 
         plt.show()

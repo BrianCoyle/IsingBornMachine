@@ -25,12 +25,12 @@ def FileLoad(file):
 def DataDictFromFile(N_qubits, N_samples):
 	print(N_samples)
 	if (N_samples == 'infinite'):
-		with open('Data_Dict_Exact_%iQBs' % N_qubits, 'r') as f:
+		with open('data/Data_Dict_Exact_%iQBs' % N_qubits, 'r') as f:
 			raw_from_file = json.load(f)
 			data_dict = json.loads(raw_from_file)
 	else: 
 		print(N_samples)
-		with open('Data_Dict_%iSamples_%iQBs' % (N_samples[0], N_qubits), 'r') as g:
+		with open('data/Data_Dict_%iSamples_%iQBs' % (N_samples[0], N_qubits), 'r') as g:
 			raw_from_file = json.load(g)
 			data_dict = json.loads(raw_from_file)
 	return data_dict
@@ -70,10 +70,10 @@ def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
     N_kernel_samples = N_samples[3]
 
     if (N_kernel_samples == 'infinite'):
-        with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
+        with open('data/%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
             kernel_dict, k1, v = FileLoad(f)
     else:
-        with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
+        with open('data/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
             kernel_dict, k1, v = FileLoad(f)
 
     return dict(zip(*[k1,v]))

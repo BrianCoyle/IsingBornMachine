@@ -12,7 +12,7 @@ def PrintParamsToFile():
 	for qubit_index in range(2, Max_qubits):
 		
 		J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index)
-		np.savez('Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
+		np.savez('data/Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
 
 	return
 
@@ -22,7 +22,7 @@ def PrintParamsToFile():
 def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
 	if (N_kernel_samples == 'infinite'):
-		with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'w') as f:
+		with open('data/%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'w') as f:
 			dict_keys = kernel_dict.keys()
 			dict_values = kernel_dict.values()
 			k1 = [str(key) for key in dict_keys]
@@ -30,7 +30,7 @@ def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 		print(json.dumps(dict(zip(*[k1, dict_values])), sort_keys=True, indent=0))
 
 	else:
-		with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_kernel_samples), 'w') as f:
+		with open('data/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_kernel_samples), 'w') as f:
 			dict_keys = kernel_dict.keys()
 			dict_values = kernel_dict.values()
 			k1 = [str(key) for key in dict_keys]
@@ -88,10 +88,10 @@ np.set_printoptions(threshold=np.nan)
 def DataDictToFile(N_qubits, data_dict, N_data_samples):
 	#writes data dictionary to file
 	if (N_data_samples == 'infinite'):
-		with open('Data_Dict_Exact_%iQBs' % N_qubits, 'w') as f:
+		with open('data/Data_Dict_Exact_%iQBs' % N_qubits, 'w') as f:
 			json.dump(json.dumps(data_dict, sort_keys=True),f)
 	else:
-		with open('Data_Dict_%iSamples_%iQBs' % (N_data_samples, N_qubits), 'w') as f:
+		with open('data/Data_Dict_%iSamples_%iQBs' % (N_data_samples, N_qubits), 'w') as f:
 			json.dump(json.dumps(data_dict, sort_keys=True),f)
 	return
 
@@ -117,18 +117,18 @@ def PrintDataToFiles():
 		data_samples6000_orig 	= DataSampler(N_qubits, N_h, M_h, 6000, data_probs, exact_data_dict)	
 		data_samples8000_orig 	= DataSampler(N_qubits, N_h, M_h, 8000, data_probs, exact_data_dict)
 		data_samples10000_orig 	= DataSampler(N_qubits, N_h, M_h, 10000, data_probs, exact_data_dict)		
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 10),data_samples10_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 100),data_samples100_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 200),data_samples200_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 500),data_samples500_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 1000),data_samples1000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 2000),data_samples2000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 3000),data_samples3000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 4000),data_samples4000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 5000),data_samples5000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 6000),data_samples6000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 8000),data_samples8000_orig, fmt='%s')
-		np.savetxt('Data_%iQBs_%iSamples' % (N_qubits, 10000),data_samples10000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 10),data_samples10_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 100),data_samples100_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 200),data_samples200_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 500),data_samples500_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 1000),data_samples1000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 2000),data_samples2000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 3000),data_samples3000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 4000),data_samples4000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 5000),data_samples5000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 6000),data_samples6000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 8000),data_samples8000_orig, fmt='%s')
+		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 10000),data_samples10000_orig, fmt='%s')
 
 		data_samples10 = SampleListToArray(data_samples10_orig, N_qubits)
 		data_samples100 = SampleListToArray(data_samples100_orig,  N_qubits)
@@ -171,11 +171,11 @@ def PrintDataToFiles():
 		DataDictToFile(N_qubits, emp_dist10000, 10000)
 
 		#Output exact training data (not sampled)
-		np.savetxt('Data_Exact_%iQBs' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
+		np.savetxt('data/Data_Exact_%iQBs' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
 		DataDictToFile(N_qubits, exact_data_dict, 'infinite')
 	return
 
-# PrintDataToFiles()
+PrintDataToFiles()
 
 def PrintFinalParamsToFile(J, b, L, N_qubits, kernel_type, N_born_samples, N_epochs, N_data_samples, learning_rate):
     print("THIS IS THE DATA FOR MMD WITH %i VISIBLE QUBITS, WITH %s KERNEL, %i SAMPLES FROM THE BORN MACHINE,\
