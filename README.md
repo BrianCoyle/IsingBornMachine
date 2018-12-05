@@ -53,3 +53,7 @@ cost_func
 stein_approx
 
 weight_sign
+
+device_name
+
+as_qvm_value - 1 = True, 0 = False

@@ -15,17 +15,6 @@ from random import shuffle
 from auxiliary_functions import TrainTestPartition
 import sys
 
-#N_epoch is the total number of training epochs
-# N_epochs = 3
-#Give device to run on, with specified number of qubits
-device_name = "Aspen-1-2Q-B"
-as_qvm_value = True     #as_qvm_value is True if simulator is to be run, False otherwise
-device_params = [device_name, as_qvm_value]
-qc = get_qc(device_name, as_qvm = as_qvm_value)
-qubits = qc.qubits()
-N_qubits = len(qubits)
-#Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-
 plot_colour = []
 plot_colour.append(('r', 'b'))
 plot_colour.append(('m', 'c'))
@@ -61,8 +50,15 @@ def get_inputs(file_name):
         stein_approx = str(input_values[9])
         stein_approx = stein_approx[0:len(stein_approx) - 1]
         weight_sign = int(input_values[10])
+        device_name = str(input_values[11])
+        device_name = device_name[0:len(device_name) - 1]
+
+        if int(input_values[12]) == 1:
+            as_qvm_value = True
+        else:
+            as_qvm_value = False
     
-    return N_epochs, learning_rate_one, learning_rate_two, N_data_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, weight_sign
+    return N_epochs, learning_rate_one, learning_rate_two, N_data_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, weight_sign, device_name, as_qvm_value
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, born_probs_list1, axs, N_data_samples, born_probs_list2):
 
@@ -115,20 +111,16 @@ def animate(i, N_qubits, learning_rate, N_born_samples, kernel_type, approx, dat
 ## This is the main function
 def main():
 
-    #N_epoch is the total number of training epochs
-    #Give device to run on, with specified number of qubits
-    device_name = "Aspen-1-2Q-B"
-    as_qvm_value = True     #as_qvm_value is True if simulator is to be run, False otherwise
-    device_params = [device_name, as_qvm_value]
-    qc = get_qc(device_name, as_qvm = as_qvm_value)
-    qubits = qc.qubits()
-    N_qubits = len(qubits)
-    #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
     else:
-        N_epochs, learning_rate_one, learning_rate_two, N_data_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, weight_sign = get_inputs(sys.argv[1])
+        N_epochs, learning_rate_one, learning_rate_two, N_data_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, weight_sign, device_name, as_qvm_value = get_inputs(sys.argv[1])
+
+        device_params = [device_name, as_qvm_value]
+        qc = get_qc(device_name, as_qvm = as_qvm_value)
+        qubits = qc.qubits()
+        N_qubits = len(qubits)
+        #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
 
         initial_params = NetworkParams(device_params)
 
