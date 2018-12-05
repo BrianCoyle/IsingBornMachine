@@ -148,19 +148,18 @@ def PlotAnimate(N_trials, N_qubits, N_epochs, learning_rate, N_born_samples, cos
 def animate(i, N_trials, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs):
 
         if N_trials == 1:
-                for trial in range(0, N_trials):
-                        axs.clear()
-                        x = np.arange(len(data_exact_dict1))
-                        axs.bar(x, born_probs_list1[i].values(), width=0.2, color= plot_colour[trial][0], align='center')
-                        axs.bar(x-0.2, data_exact_dict1.values(), width=0.2, color='b', align='center')
-                        axs.set_title("%i Qbs, %s Kernel, %s Learning Rate = %.4f, %i Data Samps, %i Born Samps" \
-                                        %(N_qubits, kernel_type[trial][0], approx[trial][0], learning_rate[trial], N_born_samples[1], N_born_samples[0]))
-        
-                        axs.set_xlabel("Outcomes")
-                        axs.set_ylabel("Probability")
-                        axs.legend(('Born Probs','Data Probs'))
-                        axs.set_xticks(range(len(data_exact_dict1)))
-                        axs.set_xticklabels(list(data_exact_dict1.keys()),rotation=70)
+                axs.clear()
+                x = np.arange(len(data_exact_dict1))
+                axs.bar(x, born_probs_list1[i].values(), width=0.2, color= plot_colour[n][0], align='center')
+                axs.bar(x-0.2, data_exact_dict1.values(), width=0.2, color='b', align='center')
+                axs.set_title("%i Qbs, %s Kernel, %s Learning Rate = %.4f, %i Data Samps, %i Born Samps" \
+                                %(N_qubits, kernel_type[0][0], approx[0][0], learning_rate[0], N_born_samples[1], N_born_samples[0]))
+
+                axs.set_xlabel("Outcomes")
+                axs.set_ylabel("Probability")
+                axs.legend(('Born Probs','Data Probs'))
+                axs.set_xticks(range(len(data_exact_dict1)))
+                axs.set_xticklabels(list(data_exact_dict1.keys()),rotation=70)
 
         elif N_trials == 2:
                 for trial in range(0, N_trials):
