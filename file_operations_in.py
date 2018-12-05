@@ -32,7 +32,7 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
 	if (approx == 'Sampler'):
 		data_samples_orig = list(np.loadtxt('Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
 		data_samples = SampleListToArray(data_samples_orig, N_qubits)
-		
+
 	elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
 		data_samples = []
 
@@ -42,11 +42,12 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
 
 def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
 	#reads kernel dictionary from file
-	if (N_samples[4] == 'infinite'):
+	N_kernel_samples = N_samples[3]
+	if (N_kernel_samples == 'infinite'):
 		with open('%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
 			kernel_dict, k1, v = FileLoad(f)
 	else:
-		with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_samples[4]), 'r') as f:
+		with open('%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
 			kernel_dict, k1, v = FileLoad(f)
 
 	return dict(zip(*[k1,v]))

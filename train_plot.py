@@ -1,23 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-from sample_gen import BornSampler, PlusMinusSampleGen
-from train_generation import TrainingData, DataSampler
-
+from pyquil.api import get_qc
 from cost_function_train import TrainBorn
 
-from file_operations_in import DataDictFromFile
-from auxiliary_functions import EmpiricalDist, SampleListToArray
 import sys
 
-def CostPlot(N_qubits, N_epochs, initial_params, \
+def CostPlot(device_params, N_epochs, initial_params, \
             learning_rate, approx, kernel_type,\
             data_train_test, data_exact_dict, \
             N_samples,\
             plot_colour, weight_sign, cost_func, score_approx, flag, batch_size):
-    
+    device_name = device_params[0]
+    as_qvm_value = device_params[1]
+
+    qc = get_qc(device_name, as_qvm = as_qvm_value)
+    qubits = qc.qubits()
+    N_qubits = len(qubits)
     #Output MMD Loss function and parameter values, for given number of training samples
-    loss, circuit_params, born_probs_list, empirical_probs_dict = TrainBorn(N_qubits, cost_func,\
+    loss, circuit_params, born_probs_list, empirical_probs_dict = TrainBorn(device_params, cost_func,\
                                                                             initial_params, \
                                                                             N_epochs, N_samples, \
                                                                             data_train_test, data_exact_dict, \

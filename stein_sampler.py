@@ -6,7 +6,6 @@ from pyquil.api import QVMConnection
 from random import *
 from pyquil.quilbase import DefGate
 from pyquil.parameters import Parameter, quil_exp, quil_cos, quil_sin
-from param_init import StateInit, NetworkParams
 
 from sample_gen import BornSampler, PlusMinusSampleGen
 from train_generation import TrainingData, DataSampler

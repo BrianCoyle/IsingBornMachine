@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib import style
 
+from pyquil.api import get_qc
 from param_init import NetworkParams
 
 from file_operations_out import PrintFinalParamsToFile
@@ -14,30 +15,28 @@ from random import shuffle
 
 from auxiliary_functions import TrainTestPartition
 import sys
+
 #N_epoch is the total number of training epochs
-N_epochs = 200
-#N is the total number of qubits.
-N_qubits = 3
+N_epochs = 3
+#Give device to run on, with specified number of qubits
+device_name = "Aspen-1-2Q-B"
+as_qvm_value = False     #as_qvm_value is True if simulator is to be run, False otherwise
+device_params = [device_name, as_qvm_value]
 N_trials = 1
-
-# #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
-# J = np.zeros((N1, N1))
-# b = np.zeros((N1))
-# gamma_x = np.zeros((N1))
-# gamma_y = np.zeros((N1))
-
+qc = get_qc(device_name, as_qvm = as_qvm_value)
+qubits = qc.qubits()
+N_qubits = len(qubits)
 #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-#Read in from file for reproducibility
 
 initial_params = {}
 initial_params['J'], initial_params['b'], \
-initial_params['gamma_x'], initial_params['gamma_y'] = NetworkParams(N_qubits)
-# print(J_i, b_i, g_x_i, g_y_i)
+initial_params['gamma_x'], initial_params['gamma_y'] = NetworkParams(device_params)
+
 #Set learning rate for parameter updates
 learning_rate = []
 learning_rate.append(0.05)
-learning_rate.append(0.05)
-# learning_rate[2] = 0.001
+learning_rate.append(0.01)
+# learning_rate.append(0.05)
 
 weight_sign = []
 weight_sign.append(-1)
@@ -60,43 +59,40 @@ N_born_samples.append(100)
 N_bornplus_samples.append(N_born_samples[0])
 N_bornminus_samples.append(N_born_samples[0])
 N_kernel_samples.append(2000)
+batch_size.append(50)
 
 
 N_samples['Trial_1'] = [N_data_samples[0],\
                         N_born_samples[0],\
-                        N_bornplus_samples[0],\
-                        N_bornminus_samples[0],\
+                        batch_size[0],\
                         N_kernel_samples[0]]
-# batch_size.append(N_data_samples[0])
-batch_size.append(10)
 
 '''Trial 2 Number of samples:'''
 N_data_samples.append(100)
 N_born_samples.append(100)
-N_bornplus_samples.append(N_born_samples[1])
-N_bornminus_samples.append(N_born_samples[1])
+# N_bornplus_samples.append(N_born_samples[1])
+# N_bornminus_samples.append(N_born_samples[1])
 N_kernel_samples.append(2000)
+batch_size.append(50)
+
 if (N_trials == 2):
         N_samples['Trial_2'] = [N_data_samples[1], \
-                                N_born_samples[1],\
-                                N_bornplus_samples[1],\
-                                N_bornminus_samples[1],\
+                                N_born_samples[1], \
+                                batch_size[1],\
                                 N_kernel_samples[1]]
-        batch_size.append(10)
 
 '''Trial 3 Number of samples:'''
 N_born_samples.append(1)
-N_bornplus_samples.append(N_born_samples[2])
-N_bornminus_samples.append(N_born_samples[2])
+# N_bornplus_samples.append(N_born_samples[2])
+# N_bornminus_samples.append(N_born_samples[2])
 N_kernel_samples.append(2000)
+batch_size.append(10)
 
 if (N_trials == 3):
         N_samples['Trial_3'] = [N_data_samples[2], \
                                 N_born_samples[2],\
-                                N_bornplus_samples[2],\
-                                N_bornminus_samples[2],\
+                                batch_size[2],\
                                 N_kernel_samples[2]]
-        batch_size.append(10)
 
 
 kernel_type = []
@@ -119,16 +115,16 @@ stein_approx.append('Exact_Score')
 # stein_approx.append('Exact_Score')
 
 data_samples1, data_exact_dict1 = DataImport(approx[0], N_qubits, N_data_samples[0], stein_approx[0])
-data_samples2, data_exact_dict2 = DataImport(approx[1], N_qubits, N_data_samples[1], stein_approx[1])
-# print(data_samples1)
-# print(data_samples2)
+# print(len(data_samples1))
+# data_samples2, data_exact_dict2 = DataImport(approx[1], N_qubits, N_data_samples[1], stein_approx[1])
+
 
 #Randomise data
 np.random.shuffle(data_samples1)
-np.random.shuffle(data_samples2)
+# np.random.shuffle(data_samples2)
 #Split data into training/test sets
 train_test_1 = TrainTestPartition(data_samples1)
-train_test_2 = TrainTestPartition(data_samples1)
+# train_test_2 = TrainTestPartition(data_samples1)
 
 
 # data_samples, data_exact_dict2 = DataImport(approx[1], N_v2, N_data_samples)
@@ -138,19 +134,22 @@ plot_colour = []
 plot_colour.append(('r', 'b'))
 plot_colour.append(('m', 'c'))
 
-loss1, circuit_params1, born_probs_list1, empirical_probs_list1  = CostPlot(N_qubits, N_epochs, initial_params, learning_rate[0],\
+loss1, circuit_params1, born_probs_list1, empirical_probs_list1  = CostPlot(device_params, N_epochs, initial_params, learning_rate[0],\
                                                                                 approx[0], kernel_type[0], train_test_1, data_exact_dict1,\
                                                                                 N_samples['Trial_1'], plot_colour[0], weight_sign[0],\
                                                                                 cost_func[0], stein_approx[0], 'Onfly', batch_size[0])
 
-# loss2, circuit_params2, born_probs_list2, empirical_probs_list2 = CostPlot(N_qubits, N_epochs, initial_params,learning_rate[1],\
+# loss2, circuit_params2, born_probs_list2, empirical_probs_list2 = CostPlot(device_params, N_epochs, initial_params,learning_rate[1],\
 #                                                                                 approx[1], kernel_type[1], train_test_2, data_exact_dict2, \
 #                                                                                 N_samples['Trial_2'], plot_colour[1], weight_sign[1],\
 #                                                                                 cost_func[1], stein_approx[1],'Precompute',batch_size[1])
 
-# loss3, circuit_params3, born_probs_list3, empirical_probs_list3 = PlotMMD(N_qubits, N_epochs, initial_params,learning_rate[2],\
+# loss3, circuit_params3, born_probs_list3, empirical_probs_list3 = PlotMMD(device_params, N_epochs, initial_params,learning_rate[2],\
 #                                                                                 approx[2], kernel_type[2], train_test_3, data_exact_dict[2], \
 #                                                                                 N_samples['Trial_3'], 'b', weight_sign[2], cost_func[2], stein_approx[2])
+
+# print('It took', time.time()-start, 'seconds.')
+
 
 
 def PlotAnimate(N_trials):

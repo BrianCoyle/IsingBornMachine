@@ -72,12 +72,12 @@ def ComputeDeltaTerms(N_qubits, sample_list_1, sample_list_2, kernel_dict):
             count = count+1
     return delta_x_kernel, delta_y_kernel, kernel_shifted_trace
  
-def DeltaDictsToMatrix(N_v, delta_kernel, sample_list_1, sample_list_2):
+def DeltaDictsToMatrix(N_qubits, delta_kernel, sample_list_1, sample_list_2):
     '''This function converts a delta dictionary (i.e. a kernel shifted in one argument by all bits)
         to the corresponding matrix'''
     N_samples_1 = len(sample_list_1)
     N_samples_2 = len(sample_list_2)
-    delta_matrix  = np.asarray(list(delta_kernel.values())).reshape(N_samples_1, N_samples_2, N_v)
+    delta_matrix  = np.asarray(list(delta_kernel.values())).reshape(N_samples_1, N_samples_2, N_qubits)
     [n, m, q] = delta_matrix.shape
     delta_matrix_slices = {}
     for delta_row in range(0, n):
@@ -88,7 +88,7 @@ def DeltaDictsToMatrix(N_v, delta_kernel, sample_list_1, sample_list_2):
             # print(delta_matrix_slices)
     return delta_matrix_slices
 
-def ComputeSampleKernelDict(N_v, kernel_dict, sample_list_1, sample_list_2):
+def ComputeSampleKernelDict(N_qubits, kernel_dict, sample_list_1, sample_list_2):
     '''This function computes the fills a kernel dictionary according to the samples in 
     data_samples_list, with values drawn from kernel_dict, '''
     sample_kernel_dict = {}
@@ -108,7 +108,7 @@ def ConvertKernelDictToMatrix(sample_kernel_dict, N_samples_1, N_samples_2):
 def ComputeInverseTerm(sample_kernel_matrix, N_samples, chi):
     return inv(sample_kernel_matrix - chi*np.identity(N_samples))
     
-def ComputeKernelShift(N_v, kernel_dict, data_samples_list):
+def ComputeKernelShift(N_qubits, kernel_dict, data_samples_list):
     '''This kernel will not be the same as the one used in the MMD, it will only be computed
     between all samples from distribution P, with every sample from the SAME distribution P'''
 
@@ -120,7 +120,7 @@ def ComputeKernelShift(N_v, kernel_dict, data_samples_list):
     count = 0
     for x_sample in data_samples_list:
 
-        for qubit in range(0, N_v):
+        for qubit in range(0, N_qubits):
             shifted_kernel_sum[(count, x_sample, qubit)] = 0 
             for y_sample in data_samples_list:
      
@@ -134,7 +134,7 @@ def ComputeKernelShift(N_v, kernel_dict, data_samples_list):
      
             count = count + 1
 
-    shifted_kernel_matrix = np.asarray(list(shifted_kernel_sum.values())).reshape(N_data_samples, N_v)
+    shifted_kernel_matrix = np.asarray(list(shifted_kernel_sum.values())).reshape(N_data_samples, N_qubits)
 
     return shifted_kernel_matrix
 
@@ -152,51 +152,61 @@ def SteinMatrixtoDict(stein_score_matrix, samples_list):
 
     return stein_score_dict, stein_score_dict_samples
 
-def ComputeApproxScoreFunc(N_v, sample_kernel_matrix, kernel_dict, data_samples_list, chi):
+def ComputeApproxScoreFunc(N_qubits, sample_kernel_matrix, kernel_dict, data_samples_list, chi):
     N_data_samples = len(data_samples_list)
     
     #Compute inverse term in Stein score approximation
     inverse = ComputeInverseTerm(sample_kernel_matrix, N_data_samples, chi)
     #Compute shifted kernel term in Stein Score Approximation
-    shifted_kernel_matrix  = ComputeKernelShift(N_v, kernel_dict, data_samples_list)
+    shifted_kernel_matrix  = ComputeKernelShift(N_qubits, kernel_dict, data_samples_list)
 
     #Compute Approximate kernel
     stein_score_matrix_approx = N_data_samples*np.dot(inverse, shifted_kernel_matrix)
 
     return stein_score_matrix_approx
 
-def ComputeExactScoreFunc(N_v, samples_list, data_exact_dict):
+def ComputeExactScoreFunc(N_qubits, samples_list, data_exact_dict):
     N_data_samples = len(samples_list)
     score_dict_exact = {}
     count = 0
 
     for x_sample in samples_list:
-        for qubit in range(0, N_v):
+        for qubit in range(0, N_qubits):
             score_dict_exact[(count, x_sample,  qubit)]  = 1 - (data_exact_dict[ShiftString(x_sample, qubit)]/data_exact_dict[x_sample])
             count = count + 1    
     
-    stein_score_matrix_exact = np.asarray(list(score_dict_exact.values())).reshape(N_data_samples, N_v)
+    stein_score_matrix_exact = np.asarray(list(score_dict_exact.values())).reshape(N_data_samples, N_qubits)
     return stein_score_matrix_exact
 
-def ComputeWeightedKernel(N_v, kernel_dict, data_samples_list, data_probs,  sample_list_1, sample_list_2, score_approx, chi):
+def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_probs,  sample_list_1, sample_list_2, score_approx, chi):
     '''This kernel computes the weighted kernel for all samples from the distribution test_samples'''
+
+   
+    device_name = device_params[0]
+    as_qvm_value = device_params[1]
+
+    qc = get_qc(device_name, as_qvm = as_qvm_value)
+
+    qubits = qc.qubits()
+    N_qubits = len(qubits)
+
     N_samples_1 = len(sample_list_1)
     N_samples_2 = len(sample_list_2)
 
-    sample_kernel_dict = ComputeSampleKernelDict(N_v, kernel_dict,  sample_list_1, sample_list_2)
+    sample_kernel_dict = ComputeSampleKernelDict(N_qubits, kernel_dict,  sample_list_1, sample_list_2)
     sample_kernel_matrix = ConvertKernelDictToMatrix(sample_kernel_dict,  N_samples_1, N_samples_2)
     
-    delta_x_kernel_dict, delta_y_kernel_dict, kernel_shifted_trace = ComputeDeltaTerms(N_v, sample_list_1, sample_list_2, kernel_dict)
+    delta_x_kernel_dict, delta_y_kernel_dict, kernel_shifted_trace = ComputeDeltaTerms(N_qubits, sample_list_1, sample_list_2, kernel_dict)
 
-    delta_x_matrix_slices = DeltaDictsToMatrix(N_v, delta_x_kernel_dict,   sample_list_1, sample_list_2)
-    delta_y_matrix_slices = DeltaDictsToMatrix(N_v, delta_y_kernel_dict,   sample_list_1, sample_list_2)
+    delta_x_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_x_kernel_dict,   sample_list_1, sample_list_2)
+    delta_y_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_y_kernel_dict,   sample_list_1, sample_list_2)
 
     if (score_approx == 'Exact_Score'):
-        stein_score_matrix_1 = ComputeExactScoreFunc(N_v, sample_list_1, data_probs)
-        stein_score_matrix_2 = ComputeExactScoreFunc(N_v, sample_list_2, data_probs)
+        stein_score_matrix_1 = ComputeExactScoreFunc(N_qubits, sample_list_1, data_probs)
+        stein_score_matrix_2 = ComputeExactScoreFunc(N_qubits, sample_list_2, data_probs)
     elif (score_approx == 'Approx_Score'):
-        stein_score_matrix_1 = ComputeApproxScoreFunc(N_v, sample_kernel_matrix, kernel_dict, sample_list_1, chi)
-        stein_score_matrix_2 = ComputeApproxScoreFunc(N_v, sample_kernel_matrix, kernel_dict, sample_list_2, chi)
+        stein_score_matrix_1 = ComputeApproxScoreFunc(N_qubits, sample_kernel_matrix, kernel_dict, sample_list_1, chi)
+        stein_score_matrix_2 = ComputeApproxScoreFunc(N_qubits, sample_kernel_matrix, kernel_dict, sample_list_2, chi)
 
     else: raise IOError('Please enter Exact_Score or Approx_Score for score_approx')
 
