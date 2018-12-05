@@ -27,6 +27,16 @@ plot_colour.append(('m', 'c'))
 # @param[out] N_qubits number of qubits
 # @param[out] learning_rate_one first learning rate
 # @param[out] learning_rate_two second learning rate
+# @param[out] N_data_samples
+# @param[out] N_kernel_samples
+# @param[out] batch_size
+# @param[out] kernel_type
+# @param[out] approx
+# @param[out] cost_func
+# @param[out] stein_approx
+# @param[out] weight_sign
+# @param[out] device_name
+# @param[out] as_qvm_value
 #
 # @returns listed parameters
 def get_inputs(file_name):
