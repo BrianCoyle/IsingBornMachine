@@ -88,7 +88,7 @@ def PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, ke
         
         plt.legend(prop={'size': 7}, loc='best').draggable()
         
-        plt.savefig("%s_%iNv_%s_%s_%iBSamps_%.3fLR_%iEpoch.pdf" \
+        plt.savefig("plots/%s_%iNv_%s_%s_%iBSamps_%.3fLR_%iEpoch.pdf" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples[0], learning_rate[0], N_epochs))
         
         fig, axs = plt.subplots()

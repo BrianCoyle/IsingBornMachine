@@ -52,7 +52,7 @@ def DataImport(approx, N_qubits, N_data_samples, stein_approx):
     
     if (approx == 'Sampler'):
         
-        data_samples_orig = list(np.loadtxt('Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+        data_samples_orig = list(np.loadtxt('data/Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
         data_samples = SampleListToArray(data_samples_orig, N_qubits)
     
     elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
