@@ -1,3 +1,7 @@
+## @package param_init
+#
+# Initialise some inputted variables
+
 from pyquil.quil import Program
 from pyquil.paulis import *
 import pyquil.paulis as pl
@@ -16,39 +20,49 @@ def HadamardToAll(prog, N_qubits):
 	return prog
 
 
-#Initialise weights and biases as random
+## Initialise weights and biases as random
+#
+# This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained
+#
+# @param[in] N_qubits The number of qubits
+#
+# @return initialised parameters
 def NetworkParams(N_qubits):
-	'''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
-	#Initialise arrays for parameters
+    
+    J = np.zeros((N_qubits, N_qubits))
+    b = np.zeros((N_qubits))
+    gamma_x = np.zeros((N_qubits))
+    gamma_y = np.zeros((N_qubits))
 
-	J = np.zeros((N_qubits, N_qubits))
-	b = np.zeros((N_qubits))
-	gamma_x = np.zeros((N_qubits))
-	gamma_y = np.zeros((N_qubits))
+    # Set random seed to be fixed for reproducibility
+    rand.seed(0)
+    
+    for j in range(0, N_qubits):
+        
+        b[j] = rand.uniform(0, pi/4)
+        
+        # If gamma_y to be trained also and variable for each qubit
+        # rand.seed(j+N)
+        # gamma_x[j] = rand.uniform(0,pi/4)
+        # If gamma_y to be trained also and variable for each qubit
+        # gamma_y[j] = uniform(0,pi/4)
+        
+        # If gamma_x constant for all qubits
+        gamma_x[j] = pi/4
+        # If gamma_y constant for all qubits
+        gamma_y[j] = pi/4
+        
+        for i in range(0,j):
+            J[i][j] = rand.uniform(0, pi/4)
+            J[j][i] = J[i][j]
 
-	#Set random seed to be fixed for reproducibility
-	rand.seed(0)
-	for j in range(0, N_qubits):
-			# rand.seed(j)
-			b[j] = rand.uniform(0, pi/4)
-			# If gamma_y to be trained also and variable for each qubit
-			# rand.seed(j+N)
-			# gamma_x[j] = rand.uniform(0,pi/4)
-			#If gamma_y to be trained also and variable for each qubit
-			#gamma_y[j] = uniform(0,pi/4)
+    initial_params = {}
+    initial_params['J'] = J
+    initial_params['b'] = b
+    initial_params['gamma_x'] = gamma_x
+    initial_params['gamma_y'] = gamma_y
 
-			# #If gamma_x constant for all qubits
-			gamma_x[j] = pi/4
-			#If gamma_y constant for all qubits
-			gamma_y[j] = pi/4
-
-			i = 0
-			while (i < j):
-				J[i][j] = rand.uniform(0, pi/4)
-				J[j][i] = J[i][j]
-				i = i+1
-
-	return J, b, gamma_x, gamma_y
+    return initial_params
 
 
 #Initialise Quantum State created after application of gate sequence
