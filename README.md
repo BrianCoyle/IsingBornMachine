@@ -33,7 +33,11 @@ python run_and_compare.py input.txt
 Where input.txt should look like:
 
 N_epochs
+
 N_qubits
+
 N_trials
+
 learning_rate_one
+
 learning_rate_two

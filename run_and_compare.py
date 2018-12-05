@@ -14,8 +14,6 @@ from train_plot import CostPlot
 from random import shuffle
 from auxiliary_functions import TrainTestPartition
 
-## If kernel is to be computed exactly set N_kernel_samples = 'infinite'
-
 plot_colour = []
 plot_colour.append(('r', 'b'))
 plot_colour.append(('m', 'c'))
@@ -45,13 +43,13 @@ def get_inputs(file_name):
     
     return N_epochs, N_qubits, N_trials, learning_rate_one, learning_rate_two
 
-def SaveAnimation(N_trials, framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, data_exact_dict2, born_probs_list1, axs):
+def SaveAnimation(N_trials, framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, data_exact_dict2, born_probs_list1, axs, N_data_samples, born_probs_list2):
 
         Writer = animation.writers['ffmpeg']
 
         writer = Writer(fps=framespersec, metadata=dict(artist='Me'), bitrate=-1)
         
-        ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list1), fargs=(N_trials, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs), interval = 10)
+        ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list1), fargs=(N_trials, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs, N_data_samples, born_probs_list2), interval = 10)
 
         if (N_trials == 1): 
 
@@ -145,12 +143,12 @@ def PlotAnimate(N_trials, N_qubits, N_epochs, learning_rate, N_born_samples, cos
 
         return fig, axs
 
-def animate(i, N_trials, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs):
+def animate(i, N_trials, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict1, born_probs_list1, axs, N_data_samples, born_probs_list2):
 
         if N_trials == 1:
                 axs.clear()
                 x = np.arange(len(data_exact_dict1))
-                axs.bar(x, born_probs_list1[i].values(), width=0.2, color= plot_colour[n][0], align='center')
+                axs.bar(x, born_probs_list1[i].values(), width=0.2, color= plot_colour[0][0], align='center')
                 axs.bar(x-0.2, data_exact_dict1.values(), width=0.2, color='b', align='center')
                 axs.set_title("%i Qbs, %s Kernel, %s Learning Rate = %.4f, %i Data Samps, %i Born Samps" \
                                 %(N_qubits, kernel_type[0][0], approx[0][0], learning_rate[0], N_born_samples[1], N_born_samples[0]))
@@ -298,7 +296,7 @@ def main():
 
     fig, axs = PlotAnimate(N_trials, N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, data_exact_dict2)
 
-    SaveAnimation(N_trials, 2000, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, data_exact_dict2, born_probs_list1, axs)
+    SaveAnimation(N_trials, 2000, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict1, data_exact_dict2, born_probs_list1, axs, N_data_samples, born_probs_list1)
 
 if __name__ == "__main__":
 
