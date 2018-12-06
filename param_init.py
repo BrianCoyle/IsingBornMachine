@@ -38,7 +38,6 @@ def NetworkParams(device_params):
     qc = get_qc(device_name, as_qvm = as_qvm_value)
 
     qubits = qc.qubits()
-    print(qubits)
 
     #Initialise arrays for parameters
     #for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) len(qubits) + qubits[0] = 3 + 5 = 8 elements
@@ -85,7 +84,6 @@ def NetworkParamsSingleQubitGates(device_params, layers):
 	qc = get_qc(device_name, as_qvm = as_qvm_value)
 
 	qubits = qc.qubits()
-	print(qubits)
 	
 	#Initialise arrays for parameters
 	#for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) len(qubits) + qubits[0] = 3 + 5 = 8 elements

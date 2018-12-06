@@ -9,7 +9,7 @@ def CostPlot(device_params, N_epochs, initial_params, \
             learning_rate, approx, kernel_type,\
             data_train_test, data_exact_dict, \
             N_samples,\
-            plot_colour, weight_sign, cost_func, score_approx, flag, batch_size):
+            plot_colour,  cost_func, score_approx, flag):
     device_name = device_params[0]
     as_qvm_value = device_params[1]
 
@@ -22,8 +22,9 @@ def CostPlot(device_params, N_epochs, initial_params, \
                                                                             N_epochs, N_samples, \
                                                                             data_train_test, data_exact_dict, \
                                                                             kernel_type, learning_rate, approx,\
-                                                                            score_approx, weight_sign, flag, batch_size)
+                                                                            score_approx, flag)
 	
+    print(plot_colour[0])
     if (approx == 'Sampler'):                       
         if kernel_type == 'Quantum':
             plt.plot(loss[('MMD', 'Train')],  '%so-' %(plot_colour[0]), label ='MMD, %i Training Points,  %i Born Samples for a %s kernel with %i Measurements.' \

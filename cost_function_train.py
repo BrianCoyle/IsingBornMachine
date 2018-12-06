@@ -5,7 +5,7 @@ from pyquil.api import get_qc
 from sample_gen import BornSampler, PlusMinusSampleGen
 from classical_kernel import GaussianKernel, GaussianKernelExact
 from file_operations_in import KernelDictFromFile
-# from quantum_kernel import KernelCircuit, QuantumKernelComputation, EncodingFunc
+from quantum_kernel import KernelCircuit, QuantumKernelComputation, EncodingFunc
 from mmd_functions import MMDGrad, MMDCost
 from stein_functions import SteinGrad, SteinCost
 from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCost, MiniBatchSplit
@@ -16,7 +16,7 @@ from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCo
 def TrainBorn(device_params, cost_func,initial_params,
 			N_epochs,  N_samples,
 			data_train_test, data_exact_dict,
-			k_choice, learning_rate, approx, score_approx, weight_sign, flag, batch_size):
+			k_choice, learning_rate, approx, score_approx, flag):
     device_name = device_params[0]
     as_qvm_value = device_params[1]
 
@@ -41,6 +41,7 @@ def TrainBorn(device_params, cost_func,initial_params,
     circuit_params[('gamma_x', 0)] = initial_params['gamma_x']
     circuit_params[('gamma_y', 0)] = initial_params['gamma_y']
 
+    batch_size = N_samples[2]
     #Initialise the gradient arrays, each element is one parameter
     weight_grad     = np.zeros((int(qubits[-1])+1, int(qubits[-1])+1))
     bias_grad       = np.zeros((int(qubits[-1])+1))
@@ -131,7 +132,7 @@ def TrainBorn(device_params, cost_func,initial_params,
             else: raise IOError('\'cost_func\' must be either \'Stein\', or \'MMD\' ')
             # print('bias_grad:', bias_grad)
 
-            b[:, epoch + 1] = b[:, epoch] + weight_sign*learning_rate*bias_grad
+            b[:, epoch + 1] = b[:, epoch] - learning_rate*bias_grad
 
         # if (circuit_choice == 'QAOA'):	
         # 	'''Updating finalparam gamma[s], control set to 'FINALPARAM' '''
@@ -154,7 +155,7 @@ def TrainBorn(device_params, cost_func,initial_params,
         # 								N_samples, k_choice, approx, score_approx, chi, stein_kernel_choice)
             
         # 	# print('gamma_x_grad is:', gamma_x_grad)
-        # 	gamma_x[:, epoch + 1] = gamma_x[:, epoch] + weight_sign*learning_rate*gamma_x_grad
+        # 	gamma_x[:, epoch + 1] = gamma_x[:, epoch] - learning_rate*gamma_x_grad
 
         '''Updating weight J[p,q], control set to 'WEIGHTS' '''
         for q in qubits:
@@ -164,8 +165,7 @@ def TrainBorn(device_params, cost_func,initial_params,
                     born_samples_plus, born_samples_plus \
                                     = PlusMinusSampleGen(device_params, circuit_params_per_epoch, \
                                                         p, q , 0, 0,\
-                                                        circuit_choice, 'WEIGHTS',\
-                                                        N_samples)
+                                                        circuit_choice, 'WEIGHTS', N_samples)
             
                     #Shuffle all samples to avoid bias in Minibatch Training
                     np.random.shuffle(data_train_test[0])
@@ -179,8 +179,6 @@ def TrainBorn(device_params, cost_func,initial_params,
                     else:
                         data_batch      = MiniBatchSplit(data_train_test[0], batch_size)
                         born_batch      = MiniBatchSplit(born_samples, batch_size)
-                        # bornplus_batch  = MiniBatchSplit(born_samples_plus, batch_size)
-                        # bornminus_batch = MiniBatchSplit(born_samples_minus, batch_size)
 
 
                     ##If the exact MMD is to be computed approx == 'Exact', if only approximate version using samples, approx == 'Sampler'
@@ -199,7 +197,7 @@ def TrainBorn(device_params, cost_func,initial_params,
                                             N_samples, k_choice, approx, flag)
                     else: raise IOError('\'cost_func\' must be either \'Stein\', or \'MMD\' ')
 
-        J[:,:, epoch+1] = J[:,:, epoch] + weight_sign*learning_rate*(weight_grad + np.transpose(weight_grad))
+        J[:,:, epoch+1] = J[:,:, epoch] - learning_rate*(weight_grad + np.transpose(weight_grad))
 
         # #Check Stein Discrepancy of Model Distribution with training set
         # loss[('Stein', 'Train')].append(SteinCost(device_params, data_train_test[0], data_exact_dict, born_samples,\
@@ -209,11 +207,11 @@ def TrainBorn(device_params, cost_func,initial_params,
         # loss[('Stein', 'Test')].append(SteinCost(device_params, data_train_test[1], data_exact_dict, born_samples,\
         #                             born_probs_dict, N_samples, k_choice, approx, score_approx, chi, stein_kernel_choice))
 
-        #Check MMD of Model Distribution with training set
+        #Check MMD of Model Distribution with training set: data_train_test[0]
         loss[('MMD', 'Train')].append(MMDCost(device_params, data_train_test[0], data_exact_dict, born_samples,born_probs_dict, N_samples, k_choice, approx, flag))
 
 
-        #Check MMD of Model Distribution with test set
+        #Check MMD of Model Distribution with test set: data_train_test[1]
         loss[('MMD', 'Test')].append(MMDCost(device_params, data_train_test[1], data_exact_dict, born_samples,born_probs_dict, N_samples, k_choice, approx, flag))
 
         # #Check Total Variation Distribution
