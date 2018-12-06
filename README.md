@@ -19,3 +19,41 @@ file_operations_out.py to generate the data and pre-compute the quantum kernel e
 ---------------------------------------------------------------------------------------------
 MAXIMUM MEAN DISCREPANCY
 ----------------------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------------------
+INSTRUCTIONS FOR USE
+---------------------------------------------------------------------------------------------
+
+run using:
+
+```python
+python run_and_compare.py input.txt
+```
+
+Where input.txt should look like:
+
+N_epochs
+
+learning_rate_one
+
+learning_rate_two
+
+N_data_samples
+
+N_kernel_samples
+
+batch_size
+
+kernel_type
+
+approx
+
+cost_func
+
+stein_approx
+
+weight_sign
+
+device_name
+
+as_qvm_value - 1 = True, 0 = False
