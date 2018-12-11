@@ -17,7 +17,7 @@ def CostPlot(device_params, N_epochs, initial_params, \
     qubits = qc.qubits()
     N_qubits = len(qubits)
     #Output MMD Loss function and parameter values, for given number of training samples
-    loss, circuit_params, born_probs_list, empirical_probs_dict = TrainBorn(device_params, cost_func,\
+    loss, circuit_params, born_probs_list, empirical_probs_list = TrainBorn(device_params, cost_func,\
                                                                             initial_params, \
                                                                             N_epochs, N_samples, \
                                                                             data_train_test, data_exact_dict, \
@@ -62,6 +62,6 @@ def CostPlot(device_params, N_epochs, initial_params, \
     plt.ylabel("Loss")
     plt.title("Loss for %i qubits" % N_qubits)
 
-    return loss, circuit_params, born_probs_list, empirical_probs_dict
+    return loss, circuit_params, born_probs_list, empirical_probs_list
 
 

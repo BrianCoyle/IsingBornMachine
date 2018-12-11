@@ -141,13 +141,12 @@ def main():
 
         initial_params = NetworkParams(device_params)
 
-        N_samples = {}
 
-        '''Trial 1 Number of samples:'''
-        N_samples['Trial_1'] = [N_data_samples,\
-                                N_born_samples,\
-                                batch_size,\
-                                N_kernel_samples]
+        '''Number of samples:'''
+        N_samples =     [N_data_samples,\
+                        N_born_samples,\
+                        batch_size,\
+                        N_kernel_samples]
         
         data_samples, data_exact_dict = DataImport(approx, N_qubits, N_data_samples, stein_approx)
 
@@ -160,25 +159,28 @@ def main():
     
     loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, learning_rate,\
                                                                                     approx, kernel_type, train_test, data_exact_dict,\
-                                                                                    N_samples['Trial_1'], plot_colour,\
-                                                                                    cost_func, stein_approx, 'Onfly')
+                                                                                    N_samples, plot_colour,\
+                                                                                    cost_func, stein_approx, 'Precompute')
     
     fig, axs = PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict)
 
     SaveAnimation(2000, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples)
+    
+    console_output = sys.stdout
+    sys.stdout = open("Output_%sCost_%sDevice_%skernel_%iN_k_samples_%i_N_Born_Samples%iN_Data_samples_%iBatch_size_%iEpochs_%.3flr" \
+                %(cost_func,\
+                device_params[0],\
+                kernel_type,\
+                N_kernel_samples,\
+                N_born_samples,\
+                N_data_samples,\
+                batch_size,\
+                N_epochs,\
+                learning_rate), 'w')
+    PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples, learning_rate)
+    sys.stdout.close()
+    sys.stdout= console_output
 
 if __name__ == "__main__":
 
     main() 
-                
-# console_output = sys.stdout
-# sys.stdout = open("Output_MMD_%iNv_%s_%iBS_%iNv_%s_%iBS_%iNv_%s_%iBS_%iEpochs_%i_DS" \
-#     %(N_qubits, kernel_type[0][0], N_born_samples[0], N_v2, kernel_type[1][0], N_born_samples[1], N_v3, kernel_type[2][0], N_born_samples[2],  N_epochs, N_data_samples), 'w')
-# sys.stdout = open("Output_MMD_%iNv_%s_%s_%.3fLR_%s_%s_%.3fLR_%iEpochs" \
-#     %(N_qubits, kernel_type[0][0], approx1 ,learning_rate[0], kernel_type[1][0], approx[1][0], learning_rate[1], N_epochs), 'w')
-#PrintParamsToFile(J1, b1, L1, N_qubits, kernel_type[0], N_born_samples[0], N_epochs, N_born_samples[1], learning_rate[0])
-#PrintParamsToFile(J2, b2, L2, N_v2, kernel_type[1], N_born_samples[1], N_epochs, N_data_samples[1], learning_rate[1])
-#PrintParamsToFile(J3, b3, L3, N_v3, kernel_type[2], N_born_samples[2], N_epochs, N_data_samples[2], learning_rate[2])
-
-# sys.stdout.close()
-# sys.stdout= console_output

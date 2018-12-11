@@ -5,6 +5,8 @@ from param_init import NetworkParams
 import json
 import numpy as np
 
+from pyquil.api import get_qc
+
 Max_qubits = 9
 
 def PrintParamsToFile():
@@ -41,7 +43,15 @@ def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 
 def PrintKernel(N_kernel_samples, kernel_choice):
 	#print the required kernel out to a file, for all binary strings
-	for N_qubits in range(2, 6):
+	devices = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 7)]
+	print(devices)
+	for device_params in devices:
+		device_name = device_params[0]
+		as_qvm_value = device_params[1]
+
+		qc = get_qc(device_name, as_qvm = as_qvm_value)
+		qubits = qc.qubits()
+		N_qubits =len(qubits)
 		print("This is qubit, ", N_qubits)
 		bin_visible = np.zeros((2**N_qubits, N_qubits))
 		for v_index in range(0, 2**N_qubits):
@@ -50,37 +60,34 @@ def PrintKernel(N_kernel_samples, kernel_choice):
 				bin_visible[v_index][v] = float(v_string[v])
 
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
-		kernel, kernel_exact, kernel_dict, kernel_exact_dict = KernelExact(N_qubits, bin_visible,  N_kernel_samples, kernel_choice)
+		kernel, kernel_exact, kernel_dict, kernel_exact_dict = KernelExact(device_params, bin_visible,  N_kernel_samples, kernel_choice)
 		KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice)
-# 	return
+	return
 
-# print("Kernel is printing for 10 samples")
-# PrintKernel(10, 'Gaussian')
-# print("Kernel is printing for 100 samples")
-# PrintKernel(100, 'Gaussian')
-# print("Kernel is printing for 200 samples")
-# PrintKernel(200, 'Gaussian')
-# print("Kernel is printing for 500 samples")
-# PrintKernel(500, 'Gaussian')
-# print("Kernel is printing for 1000 samples")
-# PrintKernel(1000, 'Gaussian')
-# print("Kernel is printing for 2000 samples")
-# PrintKernel(2000, 'Gaussian')
+def PrintSomeKernels(kernel_type):
 
-# print("Kernel is printing for 10 samples")
-# PrintKernel(10, 'Quantum')
-# print("Kernel is printing for 100 samples")
-# PrintKernel(100, 'Quantum')
-# print("Kernel is printing for 200 samples")
-# PrintKernel(200, 'Quantum')
-# print("Kernel is printing for 500 samples")
-# PrintKernel(500, 'Quantum')
-# print("Kernel is printing for 1000 samples")
-# PrintKernel(1000, 'Quantum')
-# print("Kernel is printing for 2000 samples")
-# PrintKernel(2000, 'Quantum')
-# print("Exact Kernel is Printing")
-# PrintKernel('infinite', 'Gaussian')
+	print("Kernel is printing for 10 samples")
+	PrintKernel(10, kernel_type)
+	print("Kernel is printing for 100 samples")
+	PrintKernel(100, kernel_type)
+	print("Kernel is printing for 200 samples")
+	PrintKernel(200, kernel_type)
+	print("Kernel is printing for 500 samples")
+	PrintKernel(500, kernel_type)
+	print("Kernel is printing for 1000 samples")
+	PrintKernel(1000, kernel_type)
+	print("Kernel is printing for 2000 samples")
+	PrintKernel(2000, kernel_type)
+	print("Exact Kernel is Printing")
+	PrintKernel('infinite', kernel_type)
+	return
+
+#Uncomment if Gaussian Kernel needed to be printed to file
+#PrintSomeKernels('Gaussian')
+
+#Uncomment if Quantum Kernel needed to be printed to file
+#PrintSomeKernels('Quantum')
+
 np.set_printoptions(threshold=np.nan)
 
 ### This function prepares data samples according to a a specified number of samples
@@ -97,7 +104,6 @@ def DataDictToFile(N_qubits, data_dict, N_data_samples):
 
 def PrintDataToFiles():
 	for N_qubits in range(2, 6):
-		
 		
 		#Define training data along with all binary strings on the visible and hidden variables from train_generation
 		#M_h is the number of hidden Bernoulli modes in the data
@@ -175,15 +181,40 @@ def PrintDataToFiles():
 		DataDictToFile(N_qubits, exact_data_dict, 'infinite')
 	return
 
-PrintDataToFiles()
+# PrintDataToFiles()
 
-def PrintFinalParamsToFile(J, b, L, N_qubits, kernel_type, N_born_samples, N_epochs, N_data_samples, learning_rate):
-    print("THIS IS THE DATA FOR MMD WITH %i VISIBLE QUBITS, WITH %s KERNEL, %i SAMPLES FROM THE BORN MACHINE,\
-                %i DATA SAMPLES, %i NUMBER OF EPOCHS AND LEARNING RATE = %.3f" \
-                        %(N_qubits, kernel_type[0], N_born_samples, N_epochs, N_data_samples, learning_rate))
-    for epoch in range(0, N_epochs-1):
-        print('The weights for Epoch', epoch ,'are :', J[:,:,epoch], '\n')
-        print('The biases for Epoch', epoch ,'are :', b[:,epoch], '\n')
-        print('MMD Loss for Epoch', epoch ,'is:', L[epoch], '\n')
+def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples, learning_rate):
+	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
+	print("The data is:             \n \
+	cost function:	        %s      \n \
+	chip:        	        %s      \n \
+	kernel:      		    %s      \n \
+	N kernel samples:       %i      \n \
+	N Born Samples:         %i      \n \
+	N Data samples:         %i      \n \
+	Batch size:             %i      \n \
+	Epochs:                 %i      \n \
+	Learning rate:          %.3f     " \
+	%(cost_func,\
+	device_params[0],\
+	kernel_type,\
+	N_kernel_samples,\
+	N_born_samples,\
+	N_data_samples,\
+	batch_size,\
+	N_epochs,\
+	learning_rate))
 
-    return
+	for epoch in range(0, N_epochs-1):
+		print('%s Loss for Epoch on Train Batch for epoch' %(cost_func), epoch ,'is:', loss[('%s'% cost_func, 'Train')][epoch], '\n')
+		print('%s Loss for Epoch on Test Batch for epoch' %(cost_func), epoch ,'is:', loss[('%s'% cost_func, 'Test')][epoch], '\n')
+		print('Born Exact probabilities for epoch ', epoch, 'is', born_probs_list[epoch], '\n')
+		print('Born Approximate probabilities for epoch ', epoch, 'is', empirical_probs_list[epoch], '\n')
+		print('The weights for Epoch', epoch ,'are :', circuit_params[('J', epoch)], '\n')
+		print('The biases for Epoch', epoch ,'are :', circuit_params[('b', epoch)], '\n')
+		print('The gamma_x\'s for Epoch', epoch ,'are :', circuit_params[('gamma_x', epoch)], '\n')
+		print('The gamma_y\'s for Epoch', epoch ,'are :', circuit_params[('gamma_y', epoch)], '\n')
+
+
+
+	return
