@@ -32,28 +32,19 @@ python run_and_compare.py input.txt
 
 Where input.txt should look like:
 
-N_epochs
-
-learning_rate_one
-
-learning_rate_two
-
+N_epochs 
+N_qubits
+learning_rate
 N_data_samples
-
+N_born_samples
 N_kernel_samples
-
 batch_size
-
 kernel_type
-
 approx
-
 cost_func
-
 stein_approx
-
-weight_sign
-
 device_name
+as_qvm_value (-1) = True, (0) = False
 
-as_qvm_value - 1 = True, 0 = False
+
+
