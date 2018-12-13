@@ -12,7 +12,7 @@ from file_operations_out import PrintFinalParamsToFile
 from file_operations_in import DataImport
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition
+from auxiliary_functions import TrainTestPartition, FindQubits
 import sys
 
 plot_colour = ['r', 'b']
@@ -47,35 +47,39 @@ def get_inputs(file_name):
         
         learning_rate = float(input_values[1])
 
-        N_data_samples = int(input_values[2])
-        
-        N_born_samples = int(input_values[3])
+        data_type = str(input_values[2])
+        data_type = data_type[0:len(data_type) - 1]
 
-        N_kernel_samples = int(input_values[4])
+        N_data_samples = int(input_values[3])
         
-        batch_size = int(input_values[5])
+        N_born_samples = int(input_values[4])
+
+        N_kernel_samples = int(input_values[5])
         
-        kernel_type = str(input_values[6])
+        batch_size = int(input_values[6])
+        
+        kernel_type = str(input_values[7])
         kernel_type = kernel_type[0:len(kernel_type) - 1]
         
-        approx = str(input_values[7])
+        approx = str(input_values[8])
         approx = approx[0:len(approx) - 1]
         
-        cost_func = str(input_values[8])
+        cost_func = str(input_values[9])
         cost_func = cost_func[0:len(cost_func) - 1]
         
-        stein_approx = str(input_values[9])
+        stein_approx = str(input_values[10])
         stein_approx = stein_approx[0:len(stein_approx) - 1]
                 
-        device_name = str(input_values[10])
+        device_name = str(input_values[11])
         device_name = device_name[0:len(device_name) - 1]
 
-        if int(input_values[11]) == 1:
+        if int(input_values[12]) == 1:
             as_qvm_value = True
         else:
             as_qvm_value = False
+
     
-    return N_epochs, learning_rate, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value
+    return N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples):
 
@@ -131,24 +135,25 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
     else:
-        N_epochs, learning_rate, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value = get_inputs(sys.argv[1])
-
+        N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value = get_inputs(sys.argv[1])
+       
         device_params = [device_name, as_qvm_value]
-        qc = get_qc(device_name, as_qvm = as_qvm_value)
-        qubits = qc.qubits()
-        N_qubits = len(qubits)
+        device_name, qubits, N_qubits = FindQubits(device_params)
         #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-
-        initial_params = NetworkParams(device_params)
-
+        #Set random seed to 0 to initialise the actual Born machine to be trained
+        random_seed = 0
+        initial_params = NetworkParams(device_params, random_seed)
+        circuit_choice = 'QAOA'
 
         '''Number of samples:'''
         N_samples =     [N_data_samples,\
                         N_born_samples,\
                         batch_size,\
                         N_kernel_samples]
-        
-        data_samples, data_exact_dict = DataImport(approx, N_qubits, N_data_samples, stein_approx)
+        if data_type == 'Quantum_Data':
+                data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx, circuit_choice)
+        if data_type == 'Classical_Data':
+                data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx)
 
     #Randomise data
     np.random.shuffle(data_samples)
@@ -157,11 +162,11 @@ def main():
 
     plt.figure(1)
     
-    loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, learning_rate,\
-                                                                                    approx, kernel_type, train_test, data_exact_dict,\
-                                                                                    N_samples, plot_colour,\
-                                                                                    cost_func, stein_approx, 'Precompute')
-    
+    loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, circuit_choice, cost_func, initial_params, N_epochs, learning_rate,\
+                                                                                approx, kernel_type, train_test, data_exact_dict,\
+                                                                                N_samples, plot_colour,\
+                                                                                stein_approx, 'Precompute')
+   
     fig, axs = PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict)
 
     SaveAnimation(2000, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples)

@@ -5,21 +5,11 @@ from param_init import NetworkParams
 import json
 import numpy as np
 
+from sample_gen import BornSampler
+
 from pyquil.api import get_qc
 
 Max_qubits = 9
-
-def PrintParamsToFile():
-
-	for qubit_index in range(2, Max_qubits):
-		
-		J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index)
-		np.savez('data/Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
-
-	return
-
-
-#PrintParamsToFile()
 
 def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
@@ -92,96 +82,104 @@ np.set_printoptions(threshold=np.nan)
 
 ### This function prepares data samples according to a a specified number of samples
 ### for all number of visible qubits up to Max_qubits, and saves them to files
-def DataDictToFile(N_qubits, data_dict, N_data_samples):
+def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 	#writes data dictionary to file
-	if (N_data_samples == 'infinite'):
-		with open('data/Data_Dict_Exact_%iQBs' % N_qubits, 'w') as f:
-			json.dump(json.dumps(data_dict, sort_keys=True),f)
-	else:
-		with open('data/Data_Dict_%iSamples_%iQBs' % (N_data_samples, N_qubits), 'w') as f:
-			json.dump(json.dumps(data_dict, sort_keys=True),f)
+	if data_type == 'Classical_Data':
+		if (N_data_samples == 'infinite'):
+			with open('data/Classical_Data_Dict_%iQBs_Exact' % N_qubits, 'w') as f:
+				json.dump(json.dumps(data_dict, sort_keys=True),f)
+		else:
+			with open('data/Classical_Data_Dict_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'w') as f:
+				json.dump(json.dumps(data_dict, sort_keys=True),f)
+	elif data_type == 'Quantum_Data':
+		circuit_choice = args[0]
+		if (N_data_samples == 'infinite'):
+			with open('data/Quantum_Data_Dict_%iQBs_Exact_%sCircuit' % (N_qubits, circuit_choice), 'w') as f:
+				json.dump(json.dumps(data_dict, sort_keys=True),f)
+		else:
+			with open('data/Quantum_Data_Dict_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_choice), 'w') as f:
+				json.dump(json.dumps(data_dict, sort_keys=True),f)
+
+	else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
+
 	return
 
-def PrintDataToFiles():
-	for N_qubits in range(2, 6):
+def PrintDataToFiles(data_type, *args):
 		
-		#Define training data along with all binary strings on the visible and hidden variables from train_generation
-		#M_h is the number of hidden Bernoulli modes in the data
-		M_h = 8
-		N_h = 0
-		data_probs, bin_visible, bin_hidden, exact_data_dict = TrainingData(N_qubits, N_h, M_h)
-	
-		data_samples10_orig 	= DataSampler(N_qubits, N_h, M_h, 10, data_probs, exact_data_dict)
-		data_samples100_orig 	= DataSampler(N_qubits, N_h, M_h, 100, data_probs, exact_data_dict)
-		data_samples200_orig 	= DataSampler(N_qubits, N_h, M_h, 200, data_probs, exact_data_dict)
-		data_samples500_orig 	= DataSampler(N_qubits, N_h, M_h, 500, data_probs, exact_data_dict)
-		data_samples1000_orig	= DataSampler(N_qubits, N_h, M_h, 1000, data_probs, exact_data_dict)
-		data_samples2000_orig 	= DataSampler(N_qubits, N_h, M_h, 2000, data_probs, exact_data_dict)
-		data_samples3000_orig	= DataSampler(N_qubits, N_h, M_h, 3000, data_probs, exact_data_dict)
-		data_samples4000_orig 	= DataSampler(N_qubits, N_h, M_h, 4000, data_probs, exact_data_dict)
-		data_samples5000_orig 	= DataSampler(N_qubits, N_h, M_h, 5000, data_probs, exact_data_dict)
-		data_samples6000_orig 	= DataSampler(N_qubits, N_h, M_h, 6000, data_probs, exact_data_dict)	
-		data_samples8000_orig 	= DataSampler(N_qubits, N_h, M_h, 8000, data_probs, exact_data_dict)
-		data_samples10000_orig 	= DataSampler(N_qubits, N_h, M_h, 10000, data_probs, exact_data_dict)		
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 10),data_samples10_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 100),data_samples100_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 200),data_samples200_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 500),data_samples500_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 1000),data_samples1000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 2000),data_samples2000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 3000),data_samples3000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 4000),data_samples4000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 5000),data_samples5000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 6000),data_samples6000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 8000),data_samples8000_orig, fmt='%s')
-		np.savetxt('data/Data_%iQBs_%iSamples' % (N_qubits, 10000),data_samples10000_orig, fmt='%s')
+		N_sample_trials = [10, 100, 200, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
 
-		data_samples10 = SampleListToArray(data_samples10_orig, N_qubits)
-		data_samples100 = SampleListToArray(data_samples100_orig,  N_qubits)
-		data_samples200 = SampleListToArray(data_samples200_orig,  N_qubits)
-		data_samples500 = SampleListToArray(data_samples500_orig,  N_qubits)
-		data_samples1000 = SampleListToArray(data_samples1000_orig, N_qubits)
-		data_samples2000 = SampleListToArray(data_samples2000_orig, N_qubits)
-		data_samples3000 = SampleListToArray(data_samples3000_orig, N_qubits)
-		data_samples4000 = SampleListToArray(data_samples4000_orig, N_qubits)
-		data_samples5000 = SampleListToArray(data_samples5000_orig, N_qubits)
-		data_samples6000 = SampleListToArray(data_samples6000_orig, N_qubits)
-		data_samples8000 = SampleListToArray(data_samples8000_orig, N_qubits)
-		data_samples10000 = SampleListToArray(data_samples10000_orig, N_qubits)
+		if data_type == 'Classical_Data':
+			for N_qubits in range(2,7):
+
+				#Define training data along with all binary strings on the visible and hidden variables from train_generation
+				#M_h is the number of hidden Bernoulli modes in the data
+				M_h = 8
+				N_h = 0
+				data_probs, bin_visible, bin_hidden, exact_data_dict = TrainingData(N_qubits, N_h, M_h)
 		
-		emp_dist10 = EmpiricalDist(data_samples10, N_qubits)
-		emp_dist100 = EmpiricalDist(data_samples100, N_qubits)
-		emp_dist200 = EmpiricalDist(data_samples200, N_qubits)
-		emp_dist500 = EmpiricalDist(data_samples500, N_qubits)
+				for N_samples in N_sample_trials:
+					data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs, exact_data_dict)
+					np.savetxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), data_samples, fmt='%s')
+					data_samples_list= SampleListToArray(data_samples, N_qubits)
+					emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
+					DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
+				#Output exact training data (not sampled)
+				np.savetxt('data/Classical_Data_%iQBs_Exact' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
+				DataDictToFile(data_type, N_qubits, exact_data_dict, 'infinite')
 
-		emp_dist1000 = EmpiricalDist(data_samples1000, N_qubits)
-		emp_dist2000 = EmpiricalDist(data_samples2000, N_qubits)
-		emp_dist3000 = EmpiricalDist(data_samples3000, N_qubits)
-		emp_dist4000 = EmpiricalDist(data_samples4000, N_qubits)
-		emp_dist5000 = EmpiricalDist(data_samples5000, N_qubits)
-		emp_dist6000 = EmpiricalDist(data_samples6000, N_qubits)
-		emp_dist8000 = EmpiricalDist(data_samples8000, N_qubits)
-		emp_dist10000 = EmpiricalDist(data_samples10000, N_qubits)
+		elif data_type == 'Quantum_Data':
+			
+			devices = args[0]
+			circuit_choice = args[1]
+			for device_params in devices:
+				device_name = device_params[0]
+				as_qvm_value = device_params[1]
+				qc = get_qc(device_name, as_qvm = as_qvm_value)
+				qubits = qc.qubits()
+				N_qubits = len(qubits)
+				for N_samples in N_sample_trials:
+					#Set random seed differently to that which initialises the actual Born machine to be trained
+					random_seed_for_data = 13
+					N_Born_Samples = [0, N_samples] #BornSampler takes a list of sample values, the [1] entry is the important one
+					circuit_params = NetworkParams(device_params, random_seed_for_data) #Initialise a fixed instance of parameters to learn.
+					quantum_data_samples, quantum_probs_dict, quantum_probs_dict_exact = BornSampler(device_params, N_Born_Samples, circuit_params, circuit_choice)
+					print(quantum_data_samples)
+					np.savetxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_samples, circuit_choice), quantum_data_samples, fmt='%s')
+					DataDictToFile(data_type, N_qubits, quantum_probs_dict, N_samples, circuit_choice)
+				np.savetxt('data/Quantum_Data_%iQBs_Exact_%sCircuit' % (N_qubits, circuit_choice), np.asarray(quantum_data_samples), fmt='%.10f')
+				DataDictToFile(data_type, N_qubits, quantum_probs_dict_exact, 'infinite', circuit_choice)
+		
+		else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
 
-		DataDictToFile(N_qubits, emp_dist10, 10)
-		DataDictToFile(N_qubits, emp_dist100, 100)
-		DataDictToFile(N_qubits, emp_dist200, 200)
-		DataDictToFile(N_qubits, emp_dist500, 500)
-		DataDictToFile(N_qubits, emp_dist1000, 1000)
-		DataDictToFile(N_qubits, emp_dist2000, 2000)
-		DataDictToFile(N_qubits, emp_dist3000, 3000)
-		DataDictToFile(N_qubits, emp_dist4000, 4000)
-		DataDictToFile(N_qubits, emp_dist5000, 5000)
-		DataDictToFile(N_qubits, emp_dist6000, 6000)
-		DataDictToFile(N_qubits, emp_dist8000, 8000)
-		DataDictToFile(N_qubits, emp_dist10000, 10000)
+		return
 
-		#Output exact training data (not sampled)
-		np.savetxt('data/Data_Exact_%iQBs' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
-		DataDictToFile(N_qubits, exact_data_dict, 'infinite')
+# # #Uncomment if quantum data needs to be printed to file
+# device_params = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 6)]
+# circuit_choice = 'QAOA'
+# PrintDataToFiles('Quantum_Data', device_params, circuit_choice)
+
+#Uncomment if classical data needs to be printed to file
+# PrintDataToFiles('Classical_Data')
+
+def PrintCircuitParamsToFile(random_seed, circuit_choice):
+	devices = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 7)]
+	for device_params in devices:
+		
+		device_name = device_params[0]
+		as_qvm_value = device_params[1]
+
+		qc = get_qc(device_name, as_qvm = as_qvm_value)
+		qubits = qc.qubits()
+		N_qubits = len(qubits)
+		circuit_params = NetworkParams(device_params, random_seed)
+		np.savez('data/Parameters_%iQbs_%sCircuit_%sDevice.npz' % (N_qubits, circuit_choice, device_name),\
+				 J = circuit_params['J'], b = circuit_params['b'], gamma_x = circuit_params['gamma_x'], gamma_y = circuit_params['gamma_y'])
+
 	return
 
-# PrintDataToFiles()
+#Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
+# random_seed_for_data = 13
+# PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
 
 def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples, learning_rate):
 	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples

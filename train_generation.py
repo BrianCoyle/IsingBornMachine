@@ -93,6 +93,7 @@ def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
 	for i in range(0, 2**N_v):
 		elements.append((ConvertToString(i, N_v)))
 
+	np.random.seed(0)
 	data_samples = np.random.choice(elements, N_samples, True, data_probs)
 
 	return data_samples

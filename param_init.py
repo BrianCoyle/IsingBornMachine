@@ -28,7 +28,7 @@ def HadamardToAll(prog, qubits):
 # @param[in] N_qubits The number of qubits
 #
 # @return initialised parameters
-def NetworkParams(device_params):
+def NetworkParams(device_params, random_seed):
 
     '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
 
@@ -47,8 +47,9 @@ def NetworkParams(device_params):
     gamma_x = np.zeros((int(qubits[-1])+1))
     gamma_y = np.zeros((int(qubits[-1])+1))
 
-    #Set random seed to be fixed for reproducibility
-    rand.seed(0)
+    #Set random seed to be fixed for reproducibility, set random_seed differently depending on whether quantum data
+	#is generated, or whether the actual Born machine is being used.
+    rand.seed(random_seed)
     for j in qubits:
         b[j] = rand.uniform(0, pi/4)
 	# If gamma_y to be trained also and variable for each qubit

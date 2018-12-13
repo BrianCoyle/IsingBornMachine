@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from collections import Counter
 
+from pyquil.api import get_qc
 import sys
 
 def ConvertToString(index, N_qubits):
@@ -154,3 +155,15 @@ def MiniBatchSplit(samples, batch_size):
     batches = np.split(samples, [batch_size, len(samples)], axis = 0)
 
     return batches[0]
+
+def FindQubits(device_params):
+    '''This function finds ouptuts the used qubits for a given quantum device, 
+        and the Number of qubits'''
+    device_name = device_params[0]
+    as_qvm_value = device_params[1]
+
+    qc = get_qc(device_name, as_qvm = as_qvm_value)
+    qubits = qc.qubits()
+    N_qubits = len(qubits)
+
+    return device_name, qubits, N_qubits

@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from pyquil.api import get_qc
