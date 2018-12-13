@@ -23,18 +23,9 @@ def TrainBorn(device_params, circuit_choice, cost_func,initial_params,
 
     qc = get_qc(device_name, as_qvm = as_qvm_value)
     qubits = qc.qubits() 
-    #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
     N_qubits = len(qubits)
 
-    # J 		= np.zeros((int(qubits[0]) + len(qubits), int(qubits[0]) + len(qubits), N_epochs))
-    # b 		= np.zeros((int(qubits[0]) + len(qubits), N_epochs))
-    # gamma_x = np.zeros((int(qubits[0]) + len(qubits), N_epochs))
-    # gamma_y = np.zeros((int(qubits[0]) + len(qubits), N_epochs))
     # #Import initial parameter values
-    # J[:,:,0] = initial_params['J']
-    # b[:,0] = initial_params['b']
-    # gamma_x[:,0] = initial_params['gamma_x']
-    # gamma_y[:,0] = initial_params['gamma_y']
 
     circuit_params = {}
     circuit_params[('J', 0)] = initial_params['J']

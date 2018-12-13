@@ -16,7 +16,6 @@ from auxiliary_functions import TrainTestPartition, FindQubits
 import sys
 
 plot_colour = ['r', 'b']
-# plot_colour.append(('r', 'b'))
 
 ## This function gathers inputs from file
 #
@@ -150,6 +149,7 @@ def main():
                         N_born_samples,\
                         batch_size,\
                         N_kernel_samples]
+
         if data_type == 'Quantum_Data':
                 data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx, circuit_choice)
         if data_type == 'Classical_Data':
