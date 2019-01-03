@@ -36,8 +36,6 @@ N_epochs
 
 N_qubits
 
-learning_rate
-
 data_type
 
 N_data_samples
