@@ -1,17 +1,9 @@
-from pyquil.quil import Program
-from pyquil.paulis import *
-from pyquil.gates import *
 import numpy as np
-from pyquil.api import QVMConnection
 from random import *
-from pyquil.quilbase import DefGate
-from pyquil.parameters import Parameter, quil_exp, quil_cos, quil_sin
 
-from sample_gen import BornSampler, PlusMinusSampleGen
-from train_generation import TrainingData, DataSampler
 from classical_kernel import GaussianKernel, GaussianKernelExact
-from file_operations_in import KernelDictFromFile, DataDictFromFile
-from mmd_kernel import KernelCircuit, KernelComputation, EncodingFunc
+from file_operations_in import KernelDictFromFile
+from quantum_kernel import KernelCircuit, KernelComputation, EncodingFunc
 from auxiliary_functions import SampleArrayToList, ConvertToString, EmpiricalDist
 import stein_score as ss
 import json

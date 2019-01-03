@@ -79,15 +79,13 @@ def NetworkParams(device_params, random_seed):
 def NetworkParamsSingleQubitGates(device_params, layers):
 	'''This function initilises single-qubit trainable parameters'''
 
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
-
-	qc = get_qc(device_name, as_qvm = as_qvm_value)
-
-	qubits = qc.qubits()
+	device_name 	= device_params[0]
+	as_qvm_value 	= device_params[1]
+	qc 				= get_qc(device_name, as_qvm = as_qvm_value)
+	qubits 			= qc.qubits()
 	
 	#Initialise arrays for parameters
-	#for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) len(qubits) + qubits[0] = 3 + 5 = 8 elements
+	#for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) int(qubits[-1])+1 = 7+1 = 8 elements
 	single_qubit_params	= np.zeros((int(qubits[-1])+1),(int(qubits[-1])+1),(int(qubits[-1])+1), layers) 
 	#layers is the number of single qubit layers, each 'layer', l, consists of three gates, R_z(\theta_l^1)R_x(\theta_l^2)R_x(\theta_l^3)
 
@@ -152,7 +150,6 @@ def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control
 
 		#Apply local Z rotations (b) to each qubit (with one phase changed by pi/2 if the corresponding parameter {r} is being updated
 		for j in qubits:
-
 			if (control == 'BIAS' and j == r and sign == 'POSITIVE'):
 				prog.inst(PHASE(-2*b[j] + pi/2,j))
 			elif (control == 'BIAS' and j == r and sign == 'NEGATIVE'):
@@ -181,8 +178,10 @@ def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control
 				H_temp = (-float(gamma_y[k]))*sY(k)
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
-		else: raise IOError("circuit_choice must be either 'IQP', 'QAOA' OR 'IQPy', for IQP (Final Hadamard), \
-					QAOA (Final X rotation) or IQPy (Final Y rotation)")
+		else: raise IOError("circuit_choice must be either  \
+							\'IQP\' for IQP (Final Hadamard), \
+							\'QAOA\' for QAOA (Final X rotation) or \
+							\'IQPy\' IQPy (Final Y rotation)")
 	
 
 		return prog

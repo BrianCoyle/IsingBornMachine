@@ -1,18 +1,19 @@
+
 import numpy as np
 
 from pyquil.api import get_qc
-from classical_kernel import GaussianKernel, GaussianKernelExact
+from classical_kernel import GaussianKernelArray, NormaliseKernel
 from file_operations_in import KernelDictFromFile, DataDictFromFile
-from quantum_kernel import  QuantumKernelComputation, EncodingFunc
+from quantum_kernel import  QuantumKernelComputation
 from auxiliary_functions import SampleArrayToList, ConvertToString, EmpiricalDist
 import stein_score as ss
 import json	
 
 def SteinGrad(device_params, data, data_exact_dict,
-						born_samples, born_probs_dict,
-						born_samples_plus,  
-						born_samples_minus, 
-						N_samples, k_choice, approx, score_approx, chi, stein_kernel_choice):
+				born_samples, born_probs_dict,
+				born_samples_plus,  
+				born_samples_minus, 
+				N_samples, k_choice, approx, score_approx, chi, stein_kernel_choice):
 
 	device_name = device_params[0]
 	as_qvm_value = device_params[1]

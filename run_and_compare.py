@@ -15,7 +15,6 @@ from random import shuffle
 from auxiliary_functions import TrainTestPartition, FindQubits
 import sys
 
-plot_colour = ['r', 'b']
 
 ## This function gathers inputs from file
 #
@@ -23,7 +22,6 @@ plot_colour = ['r', 'b']
 # 
 # @param[out] N_epochs number of epochs
 # @param[out] N_qubits number of qubits
-# @param[out] learning_rate
 # @param[out] data_type
 # @param[out] N_data_samples
 # @param[out] N_born_samples
@@ -45,61 +43,59 @@ def get_inputs(file_name):
 
         N_epochs = int(input_values[0])
         
-        learning_rate = float(input_values[1])
-
-        data_type = str(input_values[2])
+        data_type = str(input_values[1])
         data_type = data_type[0:len(data_type) - 1]
 
-        N_data_samples = int(input_values[3])
+        N_data_samples = int(input_values[2])
         
-        N_born_samples = int(input_values[4])
+        N_born_samples = int(input_values[3])
 
-        N_kernel_samples = int(input_values[5])
+        N_kernel_samples = int(input_values[4])
         
-        batch_size = int(input_values[6])
+        batch_size = int(input_values[5])
         
-        kernel_type = str(input_values[7])
+        kernel_type = str(input_values[6])
         kernel_type = kernel_type[0:len(kernel_type) - 1]
         
-        approx = str(input_values[8])
+        approx = str(input_values[7])
         approx = approx[0:len(approx) - 1]
         
-        cost_func = str(input_values[9])
+        cost_func = str(input_values[8])
         cost_func = cost_func[0:len(cost_func) - 1]
         
-        stein_approx = str(input_values[10])
+        stein_approx = str(input_values[9])
         stein_approx = stein_approx[0:len(stein_approx) - 1]
                 
-        device_name = str(input_values[11])
+        device_name = str(input_values[10])
         device_name = device_name[0:len(device_name) - 1]
 
-        if int(input_values[12]) == 1:
+        if int(input_values[11]) == 1:
             as_qvm_value = True
         else:
             as_qvm_value = False
 
     
-    return N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value
+    return N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value
 
-def SaveAnimation(framespersec, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples):
+def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples):
 
         Writer = animation.writers['ffmpeg']
 
         writer = Writer(fps=framespersec, metadata=dict(artist='Me'), bitrate=-1)
         
-        ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list), fargs=(N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples), interval = 10)
+        ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list), fargs=(N_qubits, N_born_samples, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples), interval = 10)
         
         ani.save("animations/%s_%iNv_%s_%s_%.4fLR_%iSamples_%iEpochs.mp4" \
-                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], learning_rate, N_born_samples, N_epochs))
+                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
 
         plt.show()
 
-def PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict):
+def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, approx, data_exact_dict):
         
         plt.legend(prop={'size': 7}, loc='best').draggable()
         
         plt.savefig("plots/%s_%iNv_%s_%s_%iBSamps_%.3fLR_%iEpoch.pdf" \
-                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, learning_rate, N_epochs))
+                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
         
         fig, axs = plt.subplots()
         
@@ -108,26 +104,26 @@ def PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, ke
         axs.legend(('Born Probs','Data Probs'))
         axs.set_xticks(range(len(data_exact_dict)))
         axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
-        axs.set_title("%i Qubits, %s Kernel, %s Learning Rate = %.4f, %i Born Samples" \
-                %(N_qubits, kernel_type[0][0], approx[0][0], learning_rate, N_born_samples))
+        axs.set_title("%i Qubits, %s Kernel, %s , %i Born Samples" \
+                %(N_qubits, kernel_type[0][0], approx[0][0], N_born_samples))
         
         plt.tight_layout()
 
         return fig, axs
 
-def animate(i, N_qubits, learning_rate, N_born_samples, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples):
-    
-    axs.clear()
-    x = np.arange(len(data_exact_dict))
-    axs.bar(x, born_probs_list[i].values(), width=0.2, color= plot_colour[0], align='center')
-    axs.bar(x-0.2, data_exact_dict.values(), width=0.2, color='b', align='center')
-    axs.set_title("%i Qbs, %s Kernel, %s Learning Rate = %.4f, %i Data Samps, %i Born Samps" \
-                %(N_qubits, kernel_type[0][0], approx[0][0], learning_rate, N_data_samples, N_born_samples))
-    axs.set_xlabel("Outcomes")
-    axs.set_ylabel("Probability")
-    axs.legend(('Born Probs','Data Probs'))
-    axs.set_xticks(range(len(data_exact_dict)))
-    axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
+def animate(i, N_qubits, N_born_samples, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples):
+        plot_colour = ['r', 'b']
+        axs.clear()
+        x = np.arange(len(data_exact_dict))
+        axs.bar(x, born_probs_list[i].values(), width=0.2, color= plot_colour[0], align='center')
+        axs.bar(x-0.2, data_exact_dict.values(), width=0.2, color='b', align='center')
+        axs.set_title("%i Qbs, %s Kernel, %s, %i Data Samps, %i Born Samps" \
+                %(N_qubits, kernel_type[0][0], approx[0][0], N_data_samples, N_born_samples))
+        axs.set_xlabel("Outcomes")
+        axs.set_ylabel("Probability")
+        axs.legend(('Born Probs','Data Probs'))
+        axs.set_xticks(range(len(data_exact_dict)))
+        axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
 
 ## This is the main function
 def main():
@@ -135,8 +131,9 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
     else:
-        N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value = get_inputs(sys.argv[1])
+        N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, approx, cost_func, stein_approx, device_name, as_qvm_value = get_inputs(sys.argv[1])
        
+        
         device_params = [device_name, as_qvm_value]
         device_name, qubits, N_qubits = FindQubits(device_params)
         #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
@@ -159,21 +156,22 @@ def main():
     #Randomise data
     np.random.shuffle(data_samples)
     #Split data into training/test sets
-    train_test = TrainTestPartition(data_samples)
+    data_train_test = TrainTestPartition(data_samples)
 
     plt.figure(1)
-    
-    loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, circuit_choice, cost_func, initial_params, N_epochs, learning_rate,\
-                                                                                approx, kernel_type, train_test, data_exact_dict,\
-                                                                                N_samples, plot_colour,\
-                                                                                stein_approx, 'Precompute')
+  
+    loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
+                                                                                approx, kernel_type,\
+                                                                                data_train_test, data_exact_dict, \
+                                                                                N_samples,\
+                                                                                cost_func, stein_approx, 'Onfly')
    
-    fig, axs = PlotAnimate(N_qubits, N_epochs, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict)
+    fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, approx, data_exact_dict)
 
-    SaveAnimation(2000, fig, N_epochs, N_qubits, learning_rate, N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples)
+    SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples)
     
     console_output = sys.stdout
-    sys.stdout = open("Output_%sCost_%sDevice_%skernel_%iN_k_samples_%i_N_Born_Samples%iN_Data_samples_%iBatch_size_%iEpochs_%.3flr" \
+    sys.stdout = open("Output_%sCost_%sDevice_%skernel_%iN_k_samples_%i_N_Born_Samples%iN_Data_samples_%iBatch_size_%iEpochs" \
                 %(cost_func,\
                 device_params[0],\
                 kernel_type,\
@@ -181,9 +179,8 @@ def main():
                 N_born_samples,\
                 N_data_samples,\
                 batch_size,\
-                N_epochs,\
-                learning_rate), 'w')
-    PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples, learning_rate)
+                N_epochs,), 'w')
+    PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
     sys.stdout.close()
     sys.stdout= console_output
 

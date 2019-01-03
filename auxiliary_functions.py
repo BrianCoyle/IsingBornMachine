@@ -6,9 +6,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from collections import Counter
-
 from pyquil.api import get_qc
+
 import sys
+
+def AllBinaryStrings(N_qubits):
+    #Generate Array of all binary strings of length N_qubits
+    binary_strings_array = np.zeros((2**N_qubits, N_qubits))
+    for integer in range(0, 2**N_qubits):
+        qubit_string = ConvertToString(integer, N_qubits)
+        for qubit in range(0, N_qubits):
+            binary_strings_array[integer][qubit] = float(qubit_string[qubit])
+
+    return binary_strings_array
 
 def ConvertToString(index, N_qubits):
     if type(index) is not int:
@@ -19,7 +29,7 @@ def ConvertToString(index, N_qubits):
     return "0" * (N_qubits-len(format(index,'b'))) + format(index,'b')
 
 def StringToList(string):
-    '''This kernel converts a binary string to a list of integers'''
+    '''This kernel converts a binary string to a list of bits'''
     if type(string) is not str:
         raise TypeError('\'string\' must be a str')
     string_list = []
@@ -28,6 +38,56 @@ def StringToList(string):
         string_list.append(int(string[element]))
     return string_list
 
+def ShiftString(string, shift_index):
+    '''This function shifts the (shift_index)th element of a string by 1 (mod 2).
+        This is the shift operator ¬ for on a binary space'''
+    string_list = StringToList(string)
+    shifted_string_list = []
+    for i in range(len(string_list)):
+        if i is shift_index:
+            shifted_string_list.append(str((string_list[i]+1)%2))
+        else:
+            shifted_string_list.append(str(string_list[i]))
+
+    shifted_string = ''.join(shifted_string_list)
+
+    return  shifted_string
+    
+## Convert string to 1D numpy array
+#
+# @param[in] input_object list or 1D numpy array
+#
+# @param[out] input_as_string converted array/list to string
+#
+# return Converted String
+
+def ToString(input_object):
+    '''This converts an input to string'''
+    if type(input_object) is np.ndarray:
+        if input_object.ndim != 1:
+            raise IOError('If \'input\' is numpy array it must be 1D')
+        else:
+            input_as_string = ''.join([str(bit) for bit in list(input_object)])
+    elif type(input_object) is list:
+        input_as_string = ''.join([str(bit) for bit in input_object])
+    elif type(input_object) is str:
+        input_as_string = input_object
+    return input_as_string
+
+## Convert 1D numpy array to string 
+#
+# @param[in] string original string
+#
+# @param[out] string_array converted string to array
+#
+# return Converted Array
+
+def StringToArray(string):
+    '''This breaks a string into a numpy array'''
+    string_array = np.zeros((len(string)), dtype = int)
+    for bit in range(0, len(string)):
+        string_array[bit] = int(string[bit])
+    return string_array
 ## Convert list to array
 #
 # @param[in] original_samples_list The original list
@@ -51,17 +111,22 @@ def SampleListToArray(original_samples_list, N_qubits):
 
 
 def SampleArrayToList(sample_array):
-	'''This function converts a np.array where rows are samples
-		into a list of length N_samples'''
-	N_samples = sample_array.shape[0]
-	sample_list = []
+    '''This function converts a np.array where rows are samples
+    into a list of length N_samples'''
+    #if number of samples in array is just one, handle separately
+    if sample_array.ndim == 1:
+        sample_list = []
+        sample_list.append(''.join(str(e) for e in (sample_array.tolist())))
+    else:
+        N_samples = sample_array.shape[0]
+        sample_list = []
 
-	for sample in range(0, N_samples):
-		sample_list.append(''.join(str(e) for e in (sample_array[sample, :].tolist())))
+        for sample in range(0, N_samples):
+            sample_list.append(''.join(str(int(e)) for e in (sample_array[sample][:].tolist())))
 
-	return sample_list
-    
-def EmpiricalDist(samples, N_v, *arg):
+    return sample_list
+
+def EmpiricalDist(samples, N_qubits, *arg):
     '''This method outputs the empirical probability distribution given samples in a numpy array
     as a dictionary, with keys as outcomes, and values as probabilities'''
 
@@ -76,7 +141,6 @@ def EmpiricalDist(samples, N_v, *arg):
             string_list.append(''.join(map(str, samples[sample, :].tolist())))
 
     elif type(samples) is list:
-        print(samples[0])
         if type(samples[0]) is not str:
             samples_new = [] 
             for sample in samples:
@@ -84,7 +148,6 @@ def EmpiricalDist(samples, N_v, *arg):
             samples = samples_new
         N_samples = len(samples)
         string_list = samples
-        print(type(string_list))
 
     counts = Counter(string_list)
 
@@ -92,10 +155,10 @@ def EmpiricalDist(samples, N_v, *arg):
         '''Convert occurances to relative frequencies of binary string'''
         counts[element] = counts[element]/(N_samples)
 
-    for index in range(0, 2**N_v):
+    for index in range(0, 2**N_qubits):
         '''If a binary string has not been seen in samples, set its value to zero'''
-        if ConvertToString(index, N_v) not in counts:
-            counts[ConvertToString(index, N_v)] = 0
+        if ConvertToString(index, N_qubits) not in counts:
+            counts[ConvertToString(index, N_qubits)] = 0
 
     sorted_samples_dict = {}
 
@@ -129,9 +192,17 @@ def ConvertStringToVector(string):
   
     return string_vector
 
-def L2NormForStrings(string1, string2):
-    '''This function computes the L2 norm between two strings'''
-    return (np.linalg.norm(np.abs(ConvertStringToVector(string1) - ConvertStringToVector(string2)), 2))**2
+def L2Norm(input1, input2):
+    '''This function computes the L2 norm between two binary vectors'''
+    if type(input1) is str and type(input2) is str:
+        l2norm = (np.linalg.norm(np.abs(ConvertStringToVector(input1) - ConvertStringToVector(input2)), 2))**2
+    elif type(input1) is np.ndarray and type(input2) is np.ndarray:
+        if input1.ndim != 1 or input2.ndim != 1:
+            raise IOError('Input vector arrays do not consist of single samples')
+        else:
+            l2norm = (np.linalg.norm(np.abs(input1 - input2), 2))**2
+    else: raise IOError('The inputs must be 1D numpy arrays, or strings')
+    return l2norm
 
 
 ## This function partitions an array of samples into a training array and a test array. 

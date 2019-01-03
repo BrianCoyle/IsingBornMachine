@@ -1,7 +1,7 @@
 import numpy as np
 from random import *
 from pyquil.api import get_qc
-from classical_kernel import GaussianKernel, GaussianKernelExact
+from classical_kernel import GaussianKernelArray, NormaliseKernel
 from file_operations_in import KernelDictFromFile, DataDictFromFile
 
 from auxiliary_functions import ConvertToString, EmpiricalDist, SampleArrayToList
@@ -56,20 +56,18 @@ def KernelSum(N_qubits, samplearray1, samplearray2, kernel_sampled_dict, *argsv)
 				kernel_sum = kernel_sum + (1/(N_samples1*N_samples2))*kernel_sampled_dict[sample1, sample2]
 			# else:
 			# 	kernel_sum_unnorm = kernel_sum_unnorm + kernel_sampled_dict[sample1, sample2]
-	# print(kernel_sum_unnorm)
 	
 
 	#Using the probabilities method
 	# kernel_prob = SumContribution(N_qubits, empiricaldist_dict1, empiricaldist_dict2, kernel_sampled_dict)
-	# print('kernel_sum is:\n', kernel_sum, '\nThe kernel prob summed is:\n', kernel_prob.sum())
 
 	return kernel_sum
 
 def MMDGrad(device_params, data, data_exact_dict,
-						born_samples, born_probs_dict,
-						born_samples_plus,  
-						born_samples_minus, 
-						N_samples, kernel_choice, approx, flag):
+			born_samples, born_probs_dict,
+			born_samples_plus,  
+			born_samples_minus, 
+			N_samples, kernel_choice, approx, flag):
 	device_name = device_params[0]
 	as_qvm_value = device_params[1]
 
@@ -82,11 +80,10 @@ def MMDGrad(device_params, data, data_exact_dict,
 				sigma = np.array([0.25, 10, 1000])
 
 				#Compute the Gaussian kernel on the fly for all pairs of samples required
-				gaussian_born_plus = GaussianKernel(born_samples, born_samples_plus, sigma)	
-				gaussian_born_minus = GaussianKernel(born_samples, born_samples_minus, sigma)	
-				gaussian_data_plus = GaussianKernel(data, born_samples_plus, sigma)		
-				gaussian_data_minus = GaussianKernel(data, born_samples_minus, sigma)
-				# print('This is the onfly gaussian_born_plus:', gaussian_data_minus)
+				gaussian_born_plus = NormaliseKernel(GaussianKernelArray(born_samples, born_samples_plus, sigma))	
+				gaussian_born_minus = NormaliseKernel(GaussianKernelArray(born_samples, born_samples_minus, sigma))	
+				gaussian_data_plus = NormaliseKernel(GaussianKernelArray(data, born_samples_plus, sigma))
+				gaussian_data_minus = NormaliseKernel(GaussianKernelArray(data, born_samples_minus, sigma))
 
 				L_MMD_Grad = 2*(gaussian_born_minus - gaussian_born_plus-gaussian_data_minus + gaussian_data_plus)
 
@@ -116,9 +113,7 @@ def MMDGrad(device_params, data, data_exact_dict,
 		# L_MMD_Grad1 = 2*(born_born_minus.sum()-born_born_plus.sum()-data_born_minus.sum()+data_born_plus.sum())
 		L_MMD_Grad =  2*(k_bornminus_born- k_bornplus_born- k_bornminus_data + k_bornplus_data)
 
-	# print('\nHEREE : L_MMD_Grad is:\n', L_MMD_Grad)
 	return L_MMD_Grad
-
 
 
 def MMDCost(device_params, data, data_exact_dict, born_samples, born_probs_dict,	
@@ -140,11 +135,9 @@ def MMDCost(device_params, data, data_exact_dict, born_samples, born_probs_dict,
 				sigma = np.array([0.25, 10, 1000])
 
 				#Compute the Gaussian kernel on the fly for all samples in the sample space
-				gaussian_born_born = GaussianKernel(born_samples, born_samples, sigma, 'same')	
-
-				gaussian_born_data = GaussianKernel(born_samples, data, sigma)	
-	
-				gaussian_data_data = GaussianKernel(data, data, sigma, 'same')	
+				gaussian_born_born = NormaliseKernel(GaussianKernelArray(born_samples, born_samples, sigma),'same')
+				gaussian_born_data = NormaliseKernel(GaussianKernelArray(born_samples, data, sigma))
+				gaussian_data_data = NormaliseKernel(GaussianKernelArray(data, data, sigma), 'same')	
 
 				L_mmd =  gaussian_born_born - 2*gaussian_born_data + gaussian_data_data
 		else: raise IOError('\'approx must be \'Sampler\' to run training with on-the-fly kernel computation\'')
@@ -159,10 +152,7 @@ def MMDCost(device_params, data, data_exact_dict, born_samples, born_probs_dict,
 			k_bd = KernelSum(N_qubits, born_samples, data, kernel_sampled_dict)
 			k_dd = KernelSum(N_qubits, data, data, kernel_sampled_dict, 'same')
 
-
-			#L1 = k_bb + k_dd - 2*(k_bd)
 			L_mmd =  k_bb - 2*k_bd + k_dd
-			# print('This is the precomputed mmd:', L_mmd)
 
 		elif (approx == 'Exact'):
 

@@ -5,7 +5,7 @@ import numpy as np
 from pyquil.api import get_qc, WavefunctionSimulator
 from pyquil.quilbase import DefGate
 
-from param_init import StateInit
+from param_init import StateInit, NetworkParams
 from train_generation import DataSampler
 from auxiliary_functions import EmpiricalDist
 import sys
@@ -24,8 +24,8 @@ def BornSampler(device_params, N_samples, circuit_params, circuit_choice):
 	#sign = 'POSITIVE' to run the positive circuit, = 'NEGATIVE' for the negative circuit, ='NEITHER' for neither
 	prog = StateInit(device_params, circuit_params, 0, 0, 0, 0, circuit_choice , 'NEITHER', 'NEITHER')
 
-	wavefunction = make_wf.wavefunction(prog)
-	born_probs_dict_exact = wavefunction.get_outcome_probs()
+	# wavefunction = make_wf.wavefunction(prog)
+	# born_probs_dict = wavefunction.get_outcome_probs()
 	# print(control, sign, outcome_dict, prog)
 	N_born_samples = N_samples[1]
 	'''Generate (N_born_samples) samples from output distribution on (N_qubits) visible qubits'''
@@ -33,10 +33,11 @@ def BornSampler(device_params, N_samples, circuit_params, circuit_choice):
 	#All (5) qubits are measured at once
 	born_samples = np.flip(np.vstack(born_samples_all_qubits_dict[q] for q in sorted(qc.qubits())).T, 1)
 	#Remove unused qubits and flip results for Rigetti convention |001> written as |100>
+	# born_samples = np.flip(np.delete(born_samples_all_qubits, range(N_qubits, 5), axis=1), 1)
 
 	born_probs_dict = EmpiricalDist(born_samples, len(qc.qubits()))
 
-	return born_samples, born_probs_dict, born_probs_dict_exact
+	return born_samples, born_probs_dict
 
 def PlusMinusSampleGen(device_params, circuit_params,
 						p, q, r, s, circuit_choice, control, N_samples):
@@ -63,12 +64,19 @@ def PlusMinusSampleGen(device_params, circuit_params,
 	batch_size = N_samples[2]
 	#generate N_bornplus_samples samples from measurements of shifted circuits N_sample[2] is the batch_size
 	born_samples_plus_all_qbs_dict = qc.run_and_measure(prog_plus, batch_size)
+	#All (5) qubits are measured at once
 	born_samples_plus = np.flip(np.vstack(born_samples_plus_all_qbs_dict[q] for q in sorted(qc.qubits())).T, 1)
+	#Remove unused qubits and flip results for Rigetti convention |001> written as |100>
+	# born_samples_plus = np.flip(np.delete(born_samples_plus_all_qbs, range(N_qubits, 5), axis=1), 1)
 	
 	#generate N_bornminus_samples samples from measurements of shifted circuits N_sample[2] is the batch_size
 	born_samples_minus_all_qbs_dict = qc.run_and_measure(prog_minus, batch_size)
-		
-	#Remove unused qubits and flip results for Rigetti convention |001> written as |100>
+	#All (5) qubits are measured at once in QPU (and QVM in run_and_measure)
 	born_samples_minus = np.flip(np.vstack(born_samples_minus_all_qbs_dict[q] for q in sorted(qc.qubits())).T, 1)
+	#Remove unused qubits and flip results for Rigetti convention |001> written as |100>
+	# born_samples_minus = np.flip(np.delete(born_samples_minus_all_qbs, range(N_qubits, 5), axis=1), 1)
 
 	return  born_samples_plus, born_samples_minus
+	# , born_probs_dict_plus, born_probs_dict_minus
+
+

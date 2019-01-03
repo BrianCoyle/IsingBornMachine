@@ -6,9 +6,7 @@ import numpy as np
 import ast
 import sys
 import json
-from auxiliary_functions import SampleListToArray, FindQubits
-
-from pyquil.api import get_qc
+from auxiliary_functions import SampleListToArray
 
 def FileLoad(file):
 	kernel = json.load(file)
@@ -24,6 +22,7 @@ def FileLoad(file):
 # @param[in] N_samples The number of samples
 #
 # @returns A dictionary containing the appropriate data
+
 def DataDictFromFile(data_type, N_qubits, N_samples, *args):
 	if data_type == 'Classical_Data':
 		if (N_samples == 'infinite'):
@@ -31,7 +30,6 @@ def DataDictFromFile(data_type, N_qubits, N_samples, *args):
 				raw_from_file = json.load(f)
 				data_dict = json.loads(raw_from_file)
 		else: 
-			print(N_samples)
 			with open('data/Classical_Data_Dict_%iQBs_%iSamples' % (N_qubits, N_samples[0]), 'r') as g:
 				raw_from_file = json.load(g)
 				data_dict = json.loads(raw_from_file)
@@ -50,7 +48,6 @@ def DataDictFromFile(data_type, N_qubits, N_samples, *args):
 	else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
 
 	return data_dict
-
 ## Returns relevant data
 #
 # @param[in] approx The approximation type
@@ -108,13 +105,23 @@ def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
 
     return dict(zip(*[k1,v]))
 
+def ConvertKernelDictToArray(N_qubits, N_kernel_samples, kernel_choice):
+	'''This function converts a dictionary of kernels to a numpy array'''
+	N_samples = [0, 0, 0, N_kernel_samples]
+	#read kernel matrix in from file as dictionary
+	kernel_dict = KernelDictFromFile(N_qubits, N_samples, kernel_choice)
+	#convert dictionary to np array
+	kernel_array = np.fromiter(kernel_dict.values(), dtype = float).reshape((2**N_qubits, 2**N_qubits))
 
-def CircuitParamsFromFile(device_params, circuit_choice):
-	device_name, qubits, N_qubits = FindQubits(device_params)
-	params = np.load('data/Parameters_%iQbs_%sCircuit_%sDevice.npz' % (N_qubits, circuit_choice, device_name))
-	return params
+	return  kernel_array
 
-# device_params = ['3q-qvm', True]
-# circuit_choice = 'QAOA'
-# params = CircuitParamsFromFile(device_params, circuit_choice)
-# print(params['J'])
+
+
+def ParamsFromFile(N_qubits):
+	Params = np.load('Parameters_%iQubits.npz' % (N_qubits))
+	J_i = Params['J_init']
+	b_i = Params['b_init']
+	g_x_i = Params['gamma_x_init']
+	g_y_i = Params['gamma_y_init']
+	
+	return J_i, b_i, g_x_i, g_y_i
