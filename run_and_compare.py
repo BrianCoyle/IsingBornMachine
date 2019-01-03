@@ -24,6 +24,7 @@ plot_colour = ['r', 'b']
 # @param[out] N_epochs number of epochs
 # @param[out] N_qubits number of qubits
 # @param[out] learning_rate
+# @param[out] data_type
 # @param[out] N_data_samples
 # @param[out] N_born_samples
 # @param[out] N_kernel_samples

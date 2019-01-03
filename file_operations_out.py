@@ -1,15 +1,25 @@
 from train_generation import TrainingData, DataSampler
-from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray
-from cost_function_train import KernelExact
+from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray, AllBinaryStrings
+from kernel_functions import KernelAllBinaryStrings
 from param_init import NetworkParams
 import json
 import numpy as np
 
-from sample_gen import BornSampler
-
 from pyquil.api import get_qc
 
 Max_qubits = 9
+
+def PrintParamsToFile():
+
+	for qubit_index in range(2, Max_qubits):
+		
+		J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index)
+		np.savez('data/Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
+
+	return
+
+
+#PrintParamsToFile()
 
 def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
@@ -35,23 +45,22 @@ def PrintKernel(N_kernel_samples, kernel_choice):
 	#print the required kernel out to a file, for all binary strings
 	devices = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 7)]
 	print(devices)
+
 	for device_params in devices:
 		device_name = device_params[0]
 		as_qvm_value = device_params[1]
 
 		qc = get_qc(device_name, as_qvm = as_qvm_value)
 		qubits = qc.qubits()
-		N_qubits =len(qubits)
+		N_qubits = len(qubits)
 		print("This is qubit, ", N_qubits)
-		bin_visible = np.zeros((2**N_qubits, N_qubits))
-		for v_index in range(0, 2**N_qubits):
-			v_string = ConvertToString(v_index, N_qubits)
-			for v in range(0, N_qubits):
-				bin_visible[v_index][v] = float(v_string[v])
-
+		binary_string_array = AllBinaryStrings(N_qubits) #all binary strings of length N_qubits
+		
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
-		kernel, kernel_exact, kernel_dict, kernel_exact_dict = KernelExact(device_params, bin_visible,  N_kernel_samples, kernel_choice)
-		KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice)
+		kernel_approx_array, kernel_exact_array, kernel_approx_dict, kernel_exact_dict = \
+			KernelAllBinaryStrings(device_params, binary_string_array,  N_kernel_samples, kernel_choice)
+
+		KernelDictToFile(N_qubits, N_kernel_samples, kernel_approx_dict, kernel_choice)
 	return
 
 def PrintSomeKernels(kernel_type):
@@ -73,7 +82,7 @@ def PrintSomeKernels(kernel_type):
 	return
 
 #Uncomment if Gaussian Kernel needed to be printed to file
-#PrintSomeKernels('Gaussian')
+# PrintSomeKernels('Gaussian')
 
 #Uncomment if Quantum Kernel needed to be printed to file
 #PrintSomeKernels('Quantum')
@@ -103,6 +112,7 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 	else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
 
 	return
+
 
 def PrintDataToFiles(data_type, *args):
 		
@@ -158,8 +168,8 @@ def PrintDataToFiles(data_type, *args):
 # circuit_choice = 'QAOA'
 # PrintDataToFiles('Quantum_Data', device_params, circuit_choice)
 
-#Uncomment if classical data needs to be printed to file
-# PrintDataToFiles('Classical_Data')
+# Uncomment if classical data needs to be printed to file
+PrintDataToFiles('Classical_Data')
 
 def PrintCircuitParamsToFile(random_seed, circuit_choice):
 	devices = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 7)]
@@ -180,8 +190,7 @@ def PrintCircuitParamsToFile(random_seed, circuit_choice):
 #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
-
-def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples, learning_rate):
+def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples):
 	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
 	print("The data is:             \n \
 	cost function:	        %s      \n \
@@ -191,8 +200,7 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs
 	N Born Samples:         %i      \n \
 	N Data samples:         %i      \n \
 	Batch size:             %i      \n \
-	Epochs:                 %i      \n \
-	Learning rate:          %.3f     " \
+	Epochs:                 %i      " \
 	%(cost_func,\
 	device_params[0],\
 	kernel_type,\
@@ -200,8 +208,7 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs
 	N_born_samples,\
 	N_data_samples,\
 	batch_size,\
-	N_epochs,\
-	learning_rate))
+	N_epochs))
 
 	for epoch in range(0, N_epochs-1):
 		print('%s Loss for Epoch on Train Batch for epoch' %(cost_func), epoch ,'is:', loss[('%s'% cost_func, 'Train')][epoch], '\n')
@@ -213,6 +220,14 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs
 		print('The gamma_x\'s for Epoch', epoch ,'are :', circuit_params[('gamma_x', epoch)], '\n')
 		print('The gamma_y\'s for Epoch', epoch ,'are :', circuit_params[('gamma_y', epoch)], '\n')
 
-
-
 	return
+
+def QuantumSamplesToFile(device_params, N_samples, circuit_params, circuit_choice):
+	device_name = device_params[0]
+	as_qvm_value = device_params[1]
+
+	qc = get_qc(device_name, as_qvm = as_qvm_value)
+
+	N_qubits = len()
+	born_samples, born_probs_dict = BornSampler(device_params, N_samples, circuit_params, circuit_choice)
+	np.savetxt('data/QuantumData%iQBs_%iSamples' % (N_qubits, 10),born_samples, fmt='%s')
