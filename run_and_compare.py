@@ -85,7 +85,7 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_fu
         
         ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list), fargs=(N_qubits, N_born_samples, kernel_type, approx, data_exact_dict, born_probs_list, axs, N_data_samples), interval = 10)
         
-        ani.save("animations/%s_%iNv_%s_%s_%.4fLR_%iSamples_%iEpochs.mp4" \
+        ani.save("animations/%s_%iNv_%s_%s_%iSamples_%iEpochs.mp4" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
 
         plt.show()
@@ -94,7 +94,7 @@ def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, appr
         
         plt.legend(prop={'size': 7}, loc='best').draggable()
         
-        plt.savefig("plots/%s_%iNv_%s_%s_%iBSamps_%.3fLR_%iEpoch.pdf" \
+        plt.savefig("plots/%s_%iNv_%s_%s_%iBSamps_%iEpoch.pdf" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
         
         fig, axs = plt.subplots()
@@ -150,7 +150,7 @@ def main():
 
         if data_type == 'Quantum_Data':
                 data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx, circuit_choice)
-        if data_type == 'Classical_Data':
+        elif data_type == 'Classical_Data':
                 data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx)
 
     #Randomise data
