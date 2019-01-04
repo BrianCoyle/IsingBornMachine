@@ -67,14 +67,23 @@ python run_and_compare.py input.txt
 Where input.txt should look like:
 
 N_epochs   
+
 data_type
+
 N_data_samples
+
 N_born_samples
+
 N_kernel_samples
+
 batch_size
+
 kernel_type
+
 cost_func
+
 device_name
+
 as_qvm_value (1) = True, (0) = False
 
 --------------------------------------------------------------------------------
