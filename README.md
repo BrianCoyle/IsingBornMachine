@@ -17,7 +17,7 @@ In the current form of the above codes, it is necessary to run some functions in
 file_operations_out.py to generate the data and pre-compute the quantum kernel etc.
 
 ---------------------------------------------------------------------------------------------
-MAXIMUM MEAN DISCREPANCY
+Maximum Mean Discrepancy (MMD)
 ----------------------------------------------------------------------------------------------
 The Maximum Mean Discrepancy is a cost function used for two-sample testing. It compares a measure
 of 'Discrepancy' between two distributions P and Q. If and only if the distributions are idential, 
