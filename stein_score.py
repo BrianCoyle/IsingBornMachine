@@ -94,7 +94,7 @@ def ComputeInverseTerm(kernel_array, N_samples, chi):
     '''This function computes the inverse matrix required by the Stein Score Approximator'''
     return inv(kernel_array - chi*np.identity(N_samples))
     
-def ComputeKernelShift(samples, kernel_choice, sigma):
+def ComputeKernelShift(samples, kernel_choice, stein_sigma):
     '''This kernel will not be the same as the one used in the MMD, it will only be computed
     between all samples from distribution P, with every sample from the SAME distribution P'''
     N_samples = len(samples)
@@ -120,8 +120,8 @@ def ComputeKernelShift(samples, kernel_choice, sigma):
 
                 # else:
                 shifted_kernel_for_score[qubit][sample_1_index][sample_2_index]  = \
-                    GaussianKernel(sample_1, sample_2, sigma) -\
-                    GaussianKernel(sample_1, ShiftString(sample_2, qubit), sigma)
+                    GaussianKernel(sample_1, sample_2, stein_sigma) -\
+                    GaussianKernel(sample_1, ShiftString(sample_2, qubit), stein_sigma)
                 #sum over all samples for a given x sample to get an estimate of the probability
                 # shifted_kernel_sum[(count, sample, qubit)] = shifted_kernel_sum[(count, sample, qubit)]\
                 #         + shifted_kernel_for_score[(count, x_sample, y_sample, qubit)]
@@ -148,32 +148,31 @@ def SteinMatrixtoDict(stein_score_matrix, samples_list):
 
     return stein_score_dict, stein_score_dict_samples
 
-def IdentitySteinScore(samples, kernel_type, chi, sigma):
+def IdentitySteinScore(samples, kernel_type, chi, stein_sigma):
     '''This function computes the Stein Score matrix for all samples, based
     on the method of inverting Stein's identity'''
 
     N_samples = len(samples)
 
     #compute kernel matrix between all samples
-    kernel_array = GaussianKernelArray(samples, samples, sigma)
+    kernel_array = GaussianKernelArray(samples, samples, stein_sigma)
 
     #Compute inverse term in Stein score approximation
     inverse = ComputeInverseTerm(kernel_array, N_samples, chi)
     #Compute shifted kernel term in Stein Score Approximation
-    shifted_kernel_matrix  = ComputeKernelShift(samples, kernel_type, sigma)
+    shifted_kernel_matrix  = ComputeKernelShift(samples, kernel_type, stein_sigma)
 
     #Compute Approximate kernel
-    stein_score_matrix_identity = N_samples*np.dot(inverse, np.transpose(shifted_kernel_matrix))
+    stein_score_array_identity = N_samples*np.dot(inverse, np.transpose(shifted_kernel_matrix))
 
-    return stein_score_matrix_identity
+    return stein_score_array_identity
 
 
 def MassSteinScoreSingleSample(sample, data_dict):
     '''This computes the exact Stein Score function in the discrete case for a single 
-    sample which is a 1D numpy array, based on probability mass data_dict'''
-    if sample.ndim != 1:
-        raise TypeError('\'sample\' must be a 1D numpy array')
-
+    sample which is a 1D numpy array, based on probability *mass* function data_dict'''
+    if type(sample) is np.ndarray and sample.ndim != 1:
+        raise TypeError('If \'sample\' is a numpy array, it must be 1 - Dimensional')
     N_qubits = len(sample)
     sample_string = ToString(sample)
     stein_score_sample_mass = np.zeros((N_qubits))
@@ -184,19 +183,17 @@ def MassSteinScoreSingleSample(sample, data_dict):
     return stein_score_sample_mass
 
 def MassSteinScore(samples, data_dict):
-    '''This computes the Stein Matrix for all samples, based on probability mass'''
-    if type(samples) is not np.ndarray:
-        raise TypeError('\'samples\' must be a numpy array')
-
+    '''This computes the Stein Matrix for all samples, based on probability *mass* function '''
     N_samples = len(samples)
     N_qubits  = len(samples[0])
-    stein_score_array_mass = np.zeros((N_samples, N_qubits))
+    stein_score_mass_array = np.zeros((N_samples, N_qubits))
+    if type(samples) is not np.ndarray and type(samples) is not list:
+        raise TypeError('\'samples\' must be a numpy array or a list')
 
     for sample_index in range(0, N_samples):
-        stein_score_array_mass[sample_index][:] =\
-                 MassSteinScoreSingleSample(samples[sample_index], data_dict)
-
-    return stein_score_array_mass
+        stein_score_mass_array[sample_index][:] =\
+                MassSteinScoreSingleSample(samples[sample_index][:], data_dict)
+    return stein_score_mass_array
 
 
 def ComputeScoreDifference(array_1, array_2, norm_type):
@@ -207,28 +204,24 @@ def ComputeScoreDifference(array_1, array_2, norm_type):
         Norm = np.linalg.norm((array_1 - array_2), ord = None)
     elif (norm_type is 'Infinity'):
         Norm = np.linalg.norm(array_1 - array_2, ord = np.inf)
-    elif (norm_type is 'Difference'):
-        #Use simple diffence as sum of all differences between two entries
-        Norm = (np.abs(array_1 - array_2)).sum()
-    else: raise IOError('\'norm_type\' must be \'Frobenius\', \'Infinity\', or \'Difference\' ')
+    else: raise IOError('\'norm_type\' must be \'Frobenius\', \'Infinity\'')
     return Norm
 
 
-N_qubits = 2
-sigma = [0.1, 10, 100]
+# N_qubits = 6
+# stein_sigma = [0.1, 10, 100]
 
-N_kernel_samples = 100
-N_data_samples = 100
-kernel_type = 'Gaussian'
-chi = 0.01
-J = 7
+# N_kernel_samples = 100
+# N_data_samples = 10
+# kernel_type = 'Gaussian'
+# data_type = 'Classical_Data'
+# chi = 0.01
+# J = 8
 
-# data_samples, data_dict = DataImport('Sampler', N_qubits, N_data_samples, 'Exact_Stein')
+# data_samples, data_dict = DataImport(data_type, 'Sampler', N_qubits, N_data_samples, 'Exact_Stein')
 # print(data_dict)
 # emp_data_dict = EmpiricalDist(data_samples, N_qubits)
 # print(emp_data_dict)
-
-
 
 # stein_score_array_approx_identity = IdentitySteinScore(data_samples, kernel_type, chi, sigma)
 # print('The Identity Score matrix is:\n' , stein_score_array_approx_identity)
@@ -242,9 +235,9 @@ J = 7
 # stein_score_array_approx_mass = MassSteinScore(data_samples, emp_data_dict)
 # print('\nThe Approx Score matrix using empirical density is:\n', stein_score_array_approx_mass)
 
-# spectral_exact_diff = ComputeScoreDifference(stein_score_array_approx_spectral, stein_score_array_exact_mass, 'Difference')
-# identity_exact_diff = ComputeScoreDifference(stein_score_array_approx_identity, stein_score_array_exact_mass, 'Difference')
-# mass_exact_diff = ComputeScoreDifference(stein_score_array_approx_mass, stein_score_array_exact_mass, 'Difference')
+# spectral_exact_diff = ComputeScoreDifference(stein_score_array_approx_spectral, stein_score_array_exact_mass, 'Frobenius')
+# identity_exact_diff = ComputeScoreDifference(stein_score_array_approx_identity, stein_score_array_exact_mass, 'Frobenius')
+# mass_exact_diff = ComputeScoreDifference(stein_score_array_approx_mass, stein_score_array_exact_mass, 'Frobenius')
 
 # print('Difference between exact and spectral method is:', spectral_exact_diff)
 # print('Difference between exact and identity method is:', identity_exact_diff)
@@ -252,10 +245,8 @@ J = 7
 
 
 
-
-
-def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_probs, sample_list_1, sample_list_2, score_approx, chi):
-    '''This kernel computes the weighted kernel for all samples from the distribution test_samples'''
+def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_probs, sample_list_1, sample_list_2, stein_params, *argsv):
+    '''This kernel computes the weighted kernel for all samples from the two distributions sample_list_1, sample_list_2'''
 
     device_name = device_params[0]
     as_qvm_value = device_params[1]
@@ -263,39 +254,60 @@ def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_pr
     qubits = qc.qubits()
     N_qubits = len(qubits)
 
-    N_samples_1 = len(sample_list_1)
-    N_samples_2 = len(sample_list_2)
-
-    sample_kernel_dict = ComputeSampleKernelDict(N_qubits, kernel_dict, sample_list_1, sample_list_2)
-    sample_kernel_matrix = ConvertKernelDictToMatrix(sample_kernel_dict,  N_samples_1, N_samples_2)
+    # sample_kernel_dict = ComputeSampleKernelDict(N_qubits, kernel_dict, sample_list_1, sample_list_2)
+    # sample_kernel_matrix = ConvertKernelDictToMatrix(sample_kernel_dict,  N_samples_1, N_samples_2)
     
     delta_x_kernel_dict, delta_y_kernel_dict, kernel_shifted_trace = ComputeDeltaTerms(N_qubits, sample_list_1, sample_list_2, kernel_dict)
 
-    delta_x_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_x_kernel_dict,   sample_list_1, sample_list_2)
-    delta_y_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_y_kernel_dict,   sample_list_1, sample_list_2)
+    delta_x_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_x_kernel_dict,  sample_list_1, sample_list_2)
+    delta_y_matrix_slices = DeltaDictsToMatrix(N_qubits, delta_y_kernel_dict,  sample_list_1, sample_list_2)
+
+    #Parameters required for computing the Stein Score
+    score_approx        = stein_params[0]
+    J                   = stein_params[1]
+    chi                 = stein_params[2]
+    stein_kernel_choice = stein_params[3]
+    stein_sigma         = stein_params[4]
+
 
     if (score_approx == 'Exact_Score'):
-        stein_score_matrix_1 = ExactSteinScore(sample_list_1, data_probs)
-        stein_score_matrix_2 = ExactSteinScore(sample_list_2, data_probs)
-    elif (score_approx == 'Approx_Score'):
-        stein_score_matrix_1 = ApproxSteinScoreIdentity(sample_kernel_matrix, kernel_dict, sample_list_1, chi)
-        stein_score_matrix_2 = ApproxSteinScoreIdentity(sample_kernel_matrix, kernel_dict, sample_list_2, chi)
+        stein_score_matrix_1 = MassSteinScore(sample_list_1, data_probs)
+        stein_score_matrix_2 = MassSteinScore(sample_list_2, data_probs)
+    elif (score_approx == 'Identity_Score'):
+        stein_score_matrix_1 = IdentitySteinScore(data_samples_list, stein_kernel_choice, chi, stein_sigma)
+        stein_score_matrix_2 = IdentitySteinScore(data_samples_list, stein_kernel_choice, chi, stein_sigma)
+    elif (score_approx == 'Spectral_Score'):
+        stein_score_matrix_1 = SpectralSteinScore(sample_list_1, J, stein_sigma)
+        stein_score_matrix_2 = SpectralSteinScore(sample_list_2, J, stein_sigma)
 
-    else: raise IOError('Please enter \'Exact_Score\' or \'Approx_Score\' for score_approx')
+    else: raise IOError('Please enter \'Exact_Score\', \'Identity_Score\' or \'Spectral_Score\' for score_approx')
 
-    stein_score_dict1, stein_score_dict_samples1 = SteinMatrixtoDict(stein_score_matrix_1, sample_list_1)
-    stein_score_dict2, stein_score_dict_samples2 = SteinMatrixtoDict(stein_score_matrix_2, sample_list_2)
+    # stein_score_dict1, stein_score_dict_samples1 = SteinMatrixtoDict(stein_score_matrix_1, sample_list_1)
+    # stein_score_dict2, stein_score_dict_samples2 = SteinMatrixtoDict(stein_score_matrix_2, sample_list_2)
 
-    weighted_kernel = {}
+    weighted_kernel = []
+    sample_index1 = 0
 
     for sample1 in sample_list_1:
+        sample_index2 = 0
         for sample2 in sample_list_2:
-        
-            first_term = np.dot(np.transpose(stein_score_dict_samples1[sample1]), np.dot(kernel_dict[(sample1, sample2)], stein_score_dict_samples2[sample2]))
-            second_term = - np.dot(np.transpose(stein_score_dict_samples1[sample1]), delta_y_matrix_slices[(sample1, sample2)])
-            third_term = - np.dot(np.transpose(delta_x_matrix_slices[(sample1, sample2)]), stein_score_dict_samples2[sample2])
-            fourth_term = kernel_shifted_trace[(sample1, sample2)]
-            weighted_kernel[(sample1, sample2)] = first_term + second_term + third_term + fourth_term
+            if sample_index1 == sample_index2:
+                if 'same' not in argsv: #if 'same' in optional args, do not contributions that are computed with themselves
+                    first_term = np.dot(np.transpose(stein_score_matrix_1[sample_index1][:]), np.dot(kernel_dict[(sample1, sample2)],stein_score_matrix_2[sample_index2][:]))
+                    second_term = - np.dot(np.transpose(stein_score_matrix_1[sample_index1][:]), delta_y_matrix_slices[(sample1, sample2)])
+                    third_term = - np.dot(np.transpose(delta_x_matrix_slices[(sample1, sample2)]), stein_score_matrix_2[sample_index2][:])
+                    fourth_term = kernel_shifted_trace[(sample1, sample2)]
+                    weighted_kernel.append(first_term + second_term + third_term + fourth_term) #if the same sample appears it is overwritten
+            else:
+                first_term = np.dot(np.transpose(stein_score_matrix_1[sample_index1][:]), np.dot(kernel_dict[(sample1, sample2)],stein_score_matrix_2[sample_index2][:]))
+                second_term = - np.dot(np.transpose(stein_score_matrix_1[sample_index1][:]), delta_y_matrix_slices[(sample1, sample2)])
+                third_term = - np.dot(np.transpose(delta_x_matrix_slices[(sample1, sample2)]), stein_score_matrix_2[sample_index2][:])
+                fourth_term = kernel_shifted_trace[(sample1, sample2)]
+                weighted_kernel.append(first_term + second_term + third_term + fourth_term) #if the same sample appears it is overwritten
+
+            sample_index2 += 1
+        sample_index1 += 1
+
 
     return weighted_kernel
 

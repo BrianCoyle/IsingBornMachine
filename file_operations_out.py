@@ -2,6 +2,7 @@ from train_generation import TrainingData, DataSampler
 from auxiliary_functions import  ConvertToString, EmpiricalDist, SampleListToArray, AllBinaryStrings
 from kernel_functions import KernelAllBinaryStrings
 from param_init import NetworkParams
+from sample_gen import BornSampler
 import json
 import numpy as np
 
@@ -9,11 +10,11 @@ from pyquil.api import get_qc
 
 Max_qubits = 9
 
-def PrintParamsToFile():
+def PrintParamsToFile(seed):
 
 	for qubit_index in range(2, Max_qubits):
 		
-		J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index)
+		J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index, seed)
 		np.savez('data/Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
 
 	return
@@ -116,7 +117,7 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 
 def PrintDataToFiles(data_type, *args):
 		
-		N_sample_trials = [10, 100, 200, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
+		N_sample_trials = [10, 100, 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
 
 		if data_type == 'Classical_Data':
 			for N_qubits in range(2,7):
@@ -169,7 +170,7 @@ def PrintDataToFiles(data_type, *args):
 # PrintDataToFiles('Quantum_Data', device_params, circuit_choice)
 
 # Uncomment if classical data needs to be printed to file
-PrintDataToFiles('Classical_Data')
+# PrintDataToFiles('Classical_Data')
 
 def PrintCircuitParamsToFile(random_seed, circuit_choice):
 	devices = [('%iq-qvm' %N_qubits , True) for N_qubits in range(2, 7)]
@@ -229,5 +230,5 @@ def QuantumSamplesToFile(device_params, N_samples, circuit_params, circuit_choic
 	qc = get_qc(device_name, as_qvm = as_qvm_value)
 
 	N_qubits = len()
-	born_samples, born_probs_dict = BornSampler(device_params, N_samples, circuit_params, circuit_choice)
-	np.savetxt('data/QuantumData%iQBs_%iSamples' % (N_qubits, 10),born_samples, fmt='%s')
+	born_samples, born_probs_approx_dict, born_probs_exact_dict = BornSampler(device_params, N_samples, circuit_params, circuit_choice)
+	np.savetxt('data/QuantumData%iQBs_%iSamples' % (N_qubits, 10), born_samples, fmt='%s')

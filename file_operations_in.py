@@ -59,32 +59,20 @@ def DataDictFromFile(data_type, N_qubits, N_samples, *args):
 # @param[out] data_exact_dict The requested dictionary of exact samples
 #
 # @return Requested data
-def DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx, *args):
+def DataImport(data_type, N_qubits, N_data_samples, *args):
     
 	data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', args)
 	if data_type == 'Classical_Data':
-		if (approx == 'Sampler'):
 
-			data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
-			data_samples = SampleListToArray(data_samples_orig, N_qubits)
-		
-		elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
-			
-			data_samples = []
-		
-		else: raise IOError('Please enter either \'Sampler\' or \'Exact\' for \'approx\' ')
+		data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+		data_samples = SampleListToArray(data_samples_orig, N_qubits)
+	
 	elif data_type == 'Quantum_Data':
 		circuit_choice = args[0]
-		if (approx == 'Sampler'):
 
-			data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_choice), dtype = str))
-			data_samples = SampleListToArray(data_samples_orig, N_qubits)
-		
-		elif (approx == 'Exact') or (stein_approx == 'Exact_Stein'):
-			
-			data_samples = []
-		
-		else: raise IOError('Please enter either \'Sampler\' or \'Exact\' for \'approx\' ')
+		data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_choice), dtype = str))
+		data_samples = SampleListToArray(data_samples_orig, N_qubits)
+
 
 	else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
     

@@ -26,7 +26,7 @@ def LargestEigValsVecs(kernel_array, J):
     return largest_eigs_dict
 
 
-def ComputeNystromEigenvectorsSingleSample(new_sample, samples, kernel_array_all_samples, J, sigma):
+def ComputeNystromEigenvectorsSingleSample(new_sample, samples, kernel_array_all_samples, J, stein_sigma):
     '''This function computes the approximate eigenvectors psi of the 
     weighed kernel using the Nystrom method, for a given sample, x'''
     psi = np.zeros((J)) #initialise numpy array for J^th approximate eigenvectors
@@ -34,24 +34,24 @@ def ComputeNystromEigenvectorsSingleSample(new_sample, samples, kernel_array_all
     largest_eigs_dict = LargestEigValsVecs(kernel_array_all_samples, J)
     D = len(samples)
     eigvals_list = list(largest_eigs_dict.keys())
-    kernel_array_single_sample = GaussianKernelArray(new_sample, samples, sigma) #Compute kernel matrix for a sample, with all others
+    kernel_array_single_sample = GaussianKernelArray(new_sample, samples, stein_sigma) #Compute kernel matrix for a sample, with all others
     for j in range(0, J):
         temp = np.real((np.sqrt(D)/eigvals_list[j])*np.dot(largest_eigs_dict[eigvals_list[j]], np.transpose(kernel_array_single_sample)))
         psi[j] = temp
     return psi
 
-def ComputeNystromEigenvectorsAllSamples(samples, kernel_array_all_samples, J, sigma):
+def ComputeNystromEigenvectorsAllSamples(samples, kernel_array_all_samples, J, stein_sigma):
     '''This function computes the set of nystrom eigenvectors for all samples'''
     NystromEigenvectorsAllSamples = []
     for sample in samples:
-        NystromEigenvectorsAllSamples.append(ComputeNystromEigenvectorsSingleSample(sample, samples, J,sigma, kernel_array_all_samples))
+        NystromEigenvectorsAllSamples.append(ComputeNystromEigenvectorsSingleSample(sample, samples, kernel_array_all_samples, J, stein_sigma))
     return NystromEigenvectorsAllSamples
 
-def SpectralBetaArray(samples, kernel_array_all_samples, J, sigma):
+def SpectralBetaArray(samples, kernel_array_all_samples, J, stein_sigma):
 
     N_qubits = len(samples[0])
     #List of arrays of Nystrom eigenvectors, for all samples
-    psi_all_samples = ComputeNystromEigenvectorsAllSamples(samples, kernel_array_all_samples, J, sigma)
+    psi_all_samples = ComputeNystromEigenvectorsAllSamples(samples, kernel_array_all_samples, J, stein_sigma)
     D = len(samples)
     #initialise array to be summed over with each index being 
     # (shifted bit, Nystrom eigenvec index, sample index)
@@ -68,31 +68,30 @@ def SpectralBetaArray(samples, kernel_array_all_samples, J, sigma):
             -ComputeNystromEigenvectorsSingleSample(shifted_string_array,\
                                                     samples,\
                                                     kernel_array_all_samples,\
-                                                    J, sigma)
+                                                    J, stein_sigma)
 
     beta = (1/D)*beta_summand.sum(axis = 1)
     return beta
 
-def SpectralSteinScoreSingleSample(new_sample, samples, kernel_array_all_samples, J, sigma):
+def SpectralSteinScoreSingleSample(new_sample, samples, kernel_array_all_samples, J, stein_sigma):
     '''Compute Stein Score using Spectral method'''
-    beta = SpectralBetaArray(samples, kernel_array_all_samples, J, sigma)
+    beta = SpectralBetaArray(samples, kernel_array_all_samples, J, stein_sigma)
     psi = ComputeNystromEigenvectorsSingleSample(new_sample,\
                                                     samples,\
                                                     kernel_array_all_samples,\
-                                                    J, sigma)
+                                                    J, stein_sigma)
     
     return np.dot(beta, psi)
 
-
-def SpectralSteinScore(samples, J, sigma):
+def SpectralSteinScore(samples, J, stein_sigma):
     '''This function compute the Approximate Stein Score matrix for all samples '''
 
-    kernel_array = GaussianKernelArray(samples, samples, sigma)
+    kernel_array = GaussianKernelArray(samples, samples, stein_sigma)
     N_qubits = len(samples[0])
     N_samples = len(samples)
     stein_score_array_spectral = np.zeros((N_samples, N_qubits))
     for sample_index in range(0, N_samples):
         stein_score_array_spectral[sample_index][:] = \
-            SpectralSteinScoreSingleSample(samples[sample_index], samples, J, sigma, kernel_array)
+            SpectralSteinScoreSingleSample(samples[sample_index], samples, kernel_array, J, stein_sigma)
 
     return stein_score_array_spectral

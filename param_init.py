@@ -40,7 +40,7 @@ def NetworkParams(device_params, random_seed):
     qubits = qc.qubits()
 
     #Initialise arrays for parameters
-    #for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) len(qubits) + qubits[0] = 3 + 5 = 8 elements
+    #for examples qubits = [5,6,7] (using qubits labelled 5,6,7 on chip) int(qubits[-1])+1 = 7 + 1 = 8 elements
     # if (qubits[0] > 0):
     J 		= np.zeros((int(qubits[-1])+1, int(qubits[-1])+1))
     b 		= np.zeros((int(qubits[-1])+1))

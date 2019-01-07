@@ -1,7 +1,7 @@
 import numpy as np
 from random import *
 
-from classical_kernel import GaussianKernel, GaussianKernelExact
+from classical_kernel import GaussianKernelArray, GaussianKernelExact
 from file_operations_in import KernelDictFromFile
 from quantum_kernel import KernelCircuit, KernelComputation, EncodingFunc
 from auxiliary_functions import SampleArrayToList, ConvertToString, EmpiricalDist
