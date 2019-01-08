@@ -127,7 +127,7 @@ def main():
         N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value = get_inputs(sys.argv[1])
        
         device_params = [device_name, as_qvm_value]
-        _, N_qubits = FindQubits(device_params)
+        N_qubits = FindNumQubits(device_params)
         circuit_type = 'QAOA'
         
         if data_type == 'Quantum_Data':
