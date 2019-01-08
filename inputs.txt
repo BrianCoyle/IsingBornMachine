@@ -1,10 +1,10 @@
-3
+100
 Classical_Data
-100
-100
+600
+600
 2000
-20
+300
 Gaussian
-Stein
-Aspen-1-2Q-B
+MMD
+Aspen-1-4Q-B
 1

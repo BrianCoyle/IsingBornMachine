@@ -194,9 +194,9 @@ def ConvertStringToVector(string):
 
 def L2Norm(input1, input2):
     '''This function computes the L2 norm between two binary vectors'''
-    if type(input1) is str and type(input2) is str:
+    if (type(input1) is str) and (type(input2) is str):
         l2norm = (np.linalg.norm(np.abs(ConvertStringToVector(input1) - ConvertStringToVector(input2)), 2))**2
-    elif type(input1) is np.ndarray and type(input2) is np.ndarray:
+    elif (type(input1) is np.ndarray) and (type(input2) is np.ndarray):
         if input1.ndim != 1 or input2.ndim != 1:
             raise IOError('Input vector arrays do not consist of single samples')
         else:
