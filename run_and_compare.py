@@ -186,10 +186,7 @@ def main():
                                                          batch_size,\
                                                          N_epochs)
 
-
         MakeDirectory(path_to_output)
-
-
 
         PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
 
