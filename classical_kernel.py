@@ -4,7 +4,6 @@ from auxiliary_functions import ConvertToString, SampleArrayToList, L2Norm
 def GaussianKernel(sample1, sample2, sigma):
 	'''This function computes a single Gaussian kernel value between two samples'''
 	c = len(sigma)
-
 	kernel = np.zeros((c))
 	for k in range(0, c):
 		kernel[k] = (1/c)*np.exp(-1/(2*sigma[k])*(L2Norm(sample1, sample2)))
@@ -33,11 +32,17 @@ def GaussianKernelArray(samples1, samples2, sigma):
 	gauss_kernel_array = np.zeros((N_samples1, N_samples2))
 
 	for sample1_index in range(0, N_samples1):
-			for sample2_index in range(0, N_samples2):
-				
+		for sample2_index in range(0, N_samples2):
+			if N_samples1 == 1:
 				gauss_kernel_array[sample1_index, sample2_index] =\
-					GaussianKernel(samples1[sample1_index][:], samples2[sample2_index][:], sigma)
-				
+					GaussianKernel(samples1, samples2[sample2_index], sigma)
+			elif N_samples2 == 1:
+				gauss_kernel_array[sample1_index, sample2_index] =\
+					GaussianKernel(samples1[sample1_index], samples2, sigma)
+			else:
+				gauss_kernel_array[sample1_index, sample2_index] =\
+					GaussianKernel(samples1[sample1_index], samples2[sample2_index], sigma)
+
 	return gauss_kernel_array
 
 def NormaliseKernel(kernel_array, *argsv):

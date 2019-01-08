@@ -10,6 +10,8 @@ from file_operations_in import KernelDictFromFile, DataImport
 from auxiliary_functions import ShiftString, SampleArrayToList, StringToList, ConvertToString, ToString, EmpiricalDist
 from spectral_stein_score import SpectralSteinScore
 
+import matplotlib.pyplot as plt
+
 def ComputeDeltaTerms(N_qubits, sample_list_1, sample_list_2, kernel_dict):
     '''This kernel computes the shifted value of a kernel for each argument'''
     delta_x_kernel = {}
@@ -207,43 +209,81 @@ def ComputeScoreDifference(array_1, array_2, norm_type):
     else: raise IOError('\'norm_type\' must be \'Frobenius\', \'Infinity\'')
     return Norm
 
+def CheckScoreApproximationDifference(max_qubits, eta):
+    N_qubits_list = [i for i in range(2, max_qubits)]
+    stein_sigma = [0.1, 10, 100]
+    N_kernel_samples = 100
+    N_data_samples = [10, 20]
+    
+    # N_data_samples = [10, 100, 200, 300, 400]
+    kernel_type = 'Gaussian'
+    data_type = 'Classical_Data'
+   
+    spectral_exact_diff = np.zeros((len(N_qubits_list), len(N_data_samples)))
+    identity_exact_diff = np.zeros((len(N_qubits_list), len(N_data_samples)))
+    mass_exact_diff = np.zeros((len(N_qubits_list), len(N_data_samples)))
 
-# N_qubits = 6
-# stein_sigma = [0.1, 10, 100]
+    for qubit_index in range(0, len(N_qubits_list)):
+        N_qubits = N_qubits_list[qubit_index]
+        for sample_index in range(0, len(N_data_samples)):
+            J = N_qubits + 2
+            N_samples = N_data_samples[sample_index]
+            data_samples, data_dict = DataImport(data_type, N_qubits, N_samples)
 
-# N_kernel_samples = 100
-# N_data_samples = 10
-# kernel_type = 'Gaussian'
-# data_type = 'Classical_Data'
-# chi = 0.01
-# J = 8
+            emp_data_dict = EmpiricalDist(data_samples, N_qubits)
 
-# data_samples, data_dict = DataImport(data_type, 'Sampler', N_qubits, N_data_samples, 'Exact_Stein')
-# print(data_dict)
-# emp_data_dict = EmpiricalDist(data_samples, N_qubits)
-# print(emp_data_dict)
+            stein_score_array_approx_identity = IdentitySteinScore(data_samples, kernel_type, eta, stein_sigma)
+            # print('The Identity Score matrix is:\n' , stein_score_array_approx_identity)
 
-# stein_score_array_approx_identity = IdentitySteinScore(data_samples, kernel_type, chi, sigma)
-# print('The Identity Score matrix is:\n' , stein_score_array_approx_identity)
+            stein_score_array_approx_spectral =  SpectralSteinScore(data_samples, J, stein_sigma)
+            # print('The Spectral Score matrix is:\n' , stein_score_array_approx_spectral)
 
-# stein_score_array_approx_spectral =  SpectralSteinScore(data_samples, J, sigma)
-# print('The Spectral Score matrix is:\n' , stein_score_array_approx_spectral)
+            stein_score_array_exact_mass = MassSteinScore(data_samples, data_dict)
+            # print('\nThe Exact Score matrix is:\n', stein_score_array_exact_mass)
 
-# stein_score_array_exact_mass = MassSteinScore(data_samples, data_dict)
-# print('\nThe Exact Score matrix is:\n', stein_score_array_exact_mass)
+            stein_score_array_approx_mass = MassSteinScore(data_samples, emp_data_dict)
+            # print('\nThe Approx Score matrix using empirical density is:\n', stein_score_array_approx_mass)
 
-# stein_score_array_approx_mass = MassSteinScore(data_samples, emp_data_dict)
-# print('\nThe Approx Score matrix using empirical density is:\n', stein_score_array_approx_mass)
+            spectral_exact_diff[qubit_index, sample_index] = ComputeScoreDifference(stein_score_array_approx_spectral, stein_score_array_exact_mass, 'Frobenius')
+            identity_exact_diff[qubit_index, sample_index] = ComputeScoreDifference(stein_score_array_approx_identity, stein_score_array_exact_mass, 'Frobenius')
+            mass_exact_diff[qubit_index, sample_index] = ComputeScoreDifference(stein_score_array_approx_mass, stein_score_array_exact_mass, 'Frobenius')
 
-# spectral_exact_diff = ComputeScoreDifference(stein_score_array_approx_spectral, stein_score_array_exact_mass, 'Frobenius')
-# identity_exact_diff = ComputeScoreDifference(stein_score_array_approx_identity, stein_score_array_exact_mass, 'Frobenius')
-# mass_exact_diff = ComputeScoreDifference(stein_score_array_approx_mass, stein_score_array_exact_mass, 'Frobenius')
+            print('Difference between exact and spectral method is:', spectral_exact_diff[qubit_index, sample_index])
+            print('Difference between exact and identity method is:', identity_exact_diff[qubit_index, sample_index])
+            print('Difference between exact and density method is:', mass_exact_diff[qubit_index, sample_index])
+    return  spectral_exact_diff, identity_exact_diff, mass_exact_diff, N_data_samples, N_qubits_list
 
-# print('Difference between exact and spectral method is:', spectral_exact_diff)
-# print('Difference between exact and identity method is:', identity_exact_diff)
-# print('Difference between exact and density method is:', mass_exact_diff)
+max_qubits = 9
+eta = 0.01
+# J = 4
+def PlotScoreGivenNumberSamples(max_qubits, N_samples, eta):
+    spectral_exact_diff, identity_exact_diff, mass_exact_diff, N_data_samples, N_qubits_list = CheckScoreApproximationDifference(max_qubits, eta)
+
+    fig, ax = plt.subplots()  
+    spectral_exact_diff_plot = np.zeros((len(N_qubits_list)), dtype = int)
+    identity_exact_diff_plot = np.zeros((len(N_qubits_list)), dtype = int)
+    mass_exact_diff_plot = np.zeros((len(N_qubits_list)), dtype = int)
+    for qubit_index in range(0, len(N_qubits_list)):
+        spectral_exact_diff_plot[qubit_index]   = spectral_exact_diff[qubit_index, N_data_samples.index(N_samples)]
+        identity_exact_diff_plot[qubit_index]   = identity_exact_diff[qubit_index, N_data_samples.index(N_samples)]
+        mass_exact_diff_plot[qubit_index]       = mass_exact_diff[qubit_index,      N_data_samples.index(N_samples)] 
 
 
+        ax.plot(spectral_exact_diff_plot,  '%so' %('r'), label ='Spectral Score')
+        ax.plot(identity_exact_diff_plot,  '%s+' %('b'), label ='Identity Score')
+        ax.plot(mass_exact_diff_plot,  '%sx' %('g'), label ='Mass Score')
+        ax.set_title("Frobenius Norm of Score Matrix using %i samples," %(N_samples)) 
+        ax.set_xlabel("Number of Qubits")
+        ax.set_ylabel("Frobenius Norm")
+                
+        ax.set_xticks(np.arange(len(N_qubits_list)))
+        ax.set_xticklabels(N_qubits_list)
+        ax.legend(('Spectral Score','Identity Score', 'Mass Score'))
+        plt.show()
+
+    return
+# PlotScoreGivenNumberSamples(max_qubits, 10, eta)
+# PlotScoreGivenNumberSamples(max_qubits, 20, eta)
 
 def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_probs, sample_list_1, sample_list_2, stein_params, *argsv):
     '''This kernel computes the weighted kernel for all samples from the two distributions sample_list_1, sample_list_2'''

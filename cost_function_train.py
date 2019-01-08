@@ -53,7 +53,7 @@ def TrainBorn(device_params, cost_func,initial_params,
     circuit_choice ='QAOA'
 
     for epoch in range(0, N_epochs-1):
-        learning_rate = 0.1*(1/(epoch+1))
+        learning_rate = (1/(epoch+1))
         #gamma_x/gamma_y is not to be trained, set gamma values to be constant at each epoch
         circuit_params[('gamma_x', epoch+1)] = circuit_params[('gamma_x', epoch)]
         circuit_params[('gamma_y', epoch+1)] = circuit_params[('gamma_y', epoch)]

@@ -5,7 +5,8 @@ from param_init import NetworkParams
 from sample_gen import BornSampler
 import json
 import numpy as np
-
+import sys
+import os
 from pyquil.api import get_qc
 
 Max_qubits = 9
@@ -117,10 +118,10 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 
 def PrintDataToFiles(data_type, *args):
 		
-		N_sample_trials = [10, 100, 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
+		N_sample_trials = [10, 20, 30, 40, 50, 80, 100, 200, 300, 400, 500, 600, 700, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
 
 		if data_type == 'Classical_Data':
-			for N_qubits in range(2,7):
+			for N_qubits in range(2,10):
 
 				#Define training data along with all binary strings on the visible and hidden variables from train_generation
 				#M_h is the number of hidden Bernoulli modes in the data
@@ -191,35 +192,69 @@ def PrintCircuitParamsToFile(random_seed, circuit_choice):
 #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
-def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples):
-	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
-	print("The data is:             \n \
-	cost function:	        %s      \n \
-	chip:        	        %s      \n \
-	kernel:      		    %s      \n \
-	N kernel samples:       %i      \n \
-	N Born Samples:         %i      \n \
-	N Data samples:         %i      \n \
-	Batch size:             %i      \n \
-	Epochs:                 %i      " \
-	%(cost_func,\
-	device_params[0],\
-	kernel_type,\
-	N_kernel_samples,\
-	N_born_samples,\
-	N_data_samples,\
-	batch_size,\
-	N_epochs))
 
-	for epoch in range(0, N_epochs-1):
-		print('%s Loss for Epoch on Train Batch for epoch' %(cost_func), epoch ,'is:', loss[('%s'% cost_func, 'Train')][epoch], '\n')
-		print('%s Loss for Epoch on Test Batch for epoch' %(cost_func), epoch ,'is:', loss[('%s'% cost_func, 'Test')][epoch], '\n')
-		print('Born Exact probabilities for epoch ', epoch, 'is', born_probs_list[epoch], '\n')
-		print('Born Approximate probabilities for epoch ', epoch, 'is', empirical_probs_list[epoch], '\n')
-		print('The weights for Epoch', epoch ,'are :', circuit_params[('J', epoch)], '\n')
-		print('The biases for Epoch', epoch ,'are :', circuit_params[('b', epoch)], '\n')
-		print('The gamma_x\'s for Epoch', epoch ,'are :', circuit_params[('gamma_x', epoch)], '\n')
-		print('The gamma_y\'s for Epoch', epoch ,'are :', circuit_params[('gamma_y', epoch)], '\n')
+def MakeDirectory(path):
+	'''Makes an directory in the given \'path\', if it does not exist already'''
+	if not os.path.exists(path):
+		os.makedirs(path)
+	return
+
+def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples):
+	'''This function prints out all information generated during the training process for a specified set of parameters'''
+
+	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
+	trial_name = "outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
+				%(cost_func,\
+				device_params[0],\
+				kernel_type,\
+				N_kernel_samples,\
+				N_born_samples,\
+				N_data_samples,\
+				batch_size,\
+				N_epochs)
+
+	with open('%s/info' %trial_name, 'w') as f:
+		sys.stdout  = f
+		print("The data is:           			\n \
+				cost function:	        %s      \n \
+				chip:        	        %s      \n \
+				kernel:      		    %s      \n \
+				N kernel samples:       %i      \n \
+				N Born Samples:         %i      \n \
+				N Data samples:         %i      \n \
+				Batch size:             %i      \n \
+				Epochs:                 %i      " \
+		%(cost_func,\
+		device_params[0],\
+		kernel_type,\
+		N_kernel_samples,\
+		N_born_samples,\
+		N_data_samples,\
+		batch_size,\
+		N_epochs))
+
+	loss_path = '%s/loss/%s/' %(trial_name, cost_func)
+	weight_path = '%s/params/weights/' %trial_name
+	bias_path = '%s/params/biases/' %trial_name
+	gammax_path = '%s/params/gammaX/'  %trial_name
+	gammay_path = '%s/params/gammaY/'  %trial_name
+
+	#create directories to store output training information
+	MakeDirectory(loss_path)
+	MakeDirectory(weight_path)
+	MakeDirectory(bias_path)
+	MakeDirectory(gammax_path)
+	MakeDirectory(gammay_path)
+
+
+	# with open('%s/loss' %trail_name, 'w'):
+	np.savetxt('%s/loss/%s/train' 	%(trial_name,cost_func),  	loss[('%s' %cost_func, 'Train')])
+	np.savetxt('%s/loss/%s/test' 	%(trial_name,cost_func), 	loss[('%s' %cost_func, 'Test')] )
+	for epoch in range(0, N_epochs - 1):
+		np.savetxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), circuit_params[('J', epoch)]	)
+		np.savetxt('%s/params/biases/epoch%s' 		%(trial_name, epoch), circuit_params[('b', epoch)])
+		np.savetxt('%s/params/gammaX/epoch%s' 	%(trial_name, epoch), circuit_params[('gamma_x', epoch)])
+		np.savetxt('%s/params/gammaY/epoch%s' 	%(trial_name, epoch), circuit_params[('gamma_y', epoch)])
 
 	return
 

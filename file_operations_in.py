@@ -103,8 +103,6 @@ def ConvertKernelDictToArray(N_qubits, N_kernel_samples, kernel_choice):
 
 	return  kernel_array
 
-
-
 def ParamsFromFile(N_qubits):
 	Params = np.load('Parameters_%iQubits.npz' % (N_qubits))
 	J_i = Params['J_init']
@@ -113,3 +111,37 @@ def ParamsFromFile(N_qubits):
 	g_y_i = Params['gamma_y_init']
 	
 	return J_i, b_i, g_x_i, g_y_i
+
+
+def TrainingDataFromFile(cost_func, device_params, kernel_type,N_kernel_samples, N_data_samples, N_born_samples, batch_size, N_epochs):
+	'''This function reads in all information generated during the training process for a specified set of parameters'''
+
+	trial_name = "outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
+				%(cost_func,\
+				device_params[0],\
+				kernel_type,\
+				N_kernel_samples,\
+				N_born_samples,\
+				N_data_samples,\
+				batch_size,\
+				N_epochs)
+
+	with open('%s/info' %trial_name, 'w') as training_data_file:
+		training_data = training_data_file.readlines()
+		print(training_data)
+
+	circuit_params = {}
+	loss = {}
+	# with open('%s/loss' %trail_name, 'w'):
+	loss[('%s' %cost_func, 'Train')] = np.loadtext('%s/loss/%s/train' 	%(trial_name,cost_func),  dtype = float)
+	loss[('%s' %cost_func, 'Test')] = np.loadtext('%s/loss/%s/test' 	%(trial_name,cost_func),  dtype = float)
+
+	np.savetxt('%s/loss/%s/test' 	%(trial_name,cost_func), 	loss[('%s' %cost_func, 'Test')] )
+	for epoch in range(0, N_epochs - 1):
+		circuit_params[('J', epoch)] 		= np.loadtxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), dtype = float)
+		circuit_params[('b', epoch)] 		= np.loadtxt('%s/params/biases/epoch%s' 	%(trial_name, epoch), dtype = float)
+		circuit_params[('gamma_x', epoch)] 	= np.loadtxt('%s/params/gammaX/epoch%s' 	%(trial_name, epoch), dtype = float)
+		circuit_params[('gamma_y', epoch)] 	= np.loadtxt('%s/params/gammaY/epoch%s' 	%(trial_name, epoch), dtype = float)
+
+
+	return loss, circuit_params

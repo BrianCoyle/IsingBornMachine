@@ -8,13 +8,18 @@ import matplotlib.pyplot as plt
 from matplotlib import animation, style
 from pyquil.api import get_qc
 from param_init import NetworkParams
+<<<<<<< HEAD
 from file_operations_out import PrintFinalParamsToFile
 from file_operations_in import DataDictFromFile
+=======
+from file_operations_out import MakeDirectory, PrintFinalParamsToFile
+from file_operations_in import DataImport
+>>>>>>> f70d72f9838580e84ded791d63ee3e23ed67624b
 from train_plot import CostPlot
 from random import shuffle
 from auxiliary_functions import TrainTestPartition, FindNumQubits, SampleListToArray
 import sys
-
+import os as os
 
 ## This function gathers inputs from file
 #
@@ -116,6 +121,7 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
         axs.set_xticks(range(len(data_exact_dict)))
         axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
 
+
 ## This is the main function
 def main():
 
@@ -161,6 +167,7 @@ def main():
                         batch_size,\
                         N_kernel_samples]
 
+<<<<<<< HEAD
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
   
         loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
@@ -186,6 +193,43 @@ def main():
         PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
         sys.stdout.close()
         sys.stdout= console_output
+=======
+        if data_type == 'Quantum_Data':
+                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples, circuit_choice)
+        if data_type == 'Classical_Data':
+                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples)
+
+        #Randomise data
+        np.random.shuffle(data_samples)
+        #Split data into training/test sets
+        data_train_test = TrainTestPartition(data_samples)
+
+        plt.figure(1)
+  
+        loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
+                                                                                kernel_type,\
+                                                                                data_train_test, data_exact_dict, \
+                                                                                N_samples,\
+                                                                                cost_func, 'Onfly')
+
+        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+
+        path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
+                                                        %(cost_func,\
+                                                        device_params[0],\
+                                                        kernel_type,\
+                                                        N_kernel_samples,\
+                                                        N_born_samples,\
+                                                        N_data_samples,\
+                                                        batch_size,\
+                                                        N_epochs)
+        MakeDirectory(path_to_output)
+            
+        PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
+        # sys.stdout.close()
+        # sys.stdout= console_output
+>>>>>>> f70d72f9838580e84ded791d63ee3e23ed67624b
 
 if __name__ == "__main__":
 
