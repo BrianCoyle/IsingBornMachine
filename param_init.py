@@ -30,13 +30,7 @@ def HadamardToAll(prog, qubits):
 # @return initialised parameters
 def NetworkParams(device_params, random_seed):
 
-    '''This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained'''
-
-    device_name = device_params[0]
-    as_qvm_value = device_params[1]
-
-    qc = get_qc(device_name, as_qvm = as_qvm_value)
-
+    qc = get_qc(device_params[0], as_qvm = device_params[1])
     qubits = qc.qubits()
 
     #Initialise arrays for parameters

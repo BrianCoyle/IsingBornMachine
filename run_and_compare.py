@@ -9,10 +9,10 @@ from matplotlib import animation, style
 from pyquil.api import get_qc
 from param_init import NetworkParams
 from file_operations_out import PrintFinalParamsToFile
-from file_operations_in import DataImport
+from file_operations_in import DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, FindQubits
+from auxiliary_functions import TrainTestPartition, FindNumQubits, SampleListToArray
 import sys
 
 
@@ -67,6 +67,7 @@ def get_inputs(file_name):
 
     
     return N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value
+
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
 
         Writer = animation.writers['ffmpeg']
@@ -75,13 +76,8 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_fu
         
         ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list), fargs=(N_qubits, N_born_samples, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples), interval = 10)
         
-<<<<<<< HEAD
-        ani.save("animations/%s_%iNv_%s_%s_%iSamples_%iEpochs.mp4" \
-                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
-=======
         ani.save("animations/%s_%iQbs_%s_Kernel_%iSamples_%iEpochs.mp4" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
->>>>>>> 229632636fd4d08220708f0c853cb4b351fbba92
 
         plt.show()
 
@@ -89,13 +85,8 @@ def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data
         
         plt.legend(prop={'size': 7}, loc='best').draggable()
         
-<<<<<<< HEAD
-        plt.savefig("plots/%s_%iNv_%s_%s_%iBSamps_%iEpoch.pdf" \
-                %(cost_func[0], N_qubits, kernel_type[0][0], approx[0][0], N_born_samples, N_epochs))
-=======
         plt.savefig("plots/%s_%iQbs_%s_%iBSamps_%iEpoch.pdf" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
->>>>>>> 229632636fd4d08220708f0c853cb4b351fbba92
         
         fig, axs = plt.subplots()
         
@@ -129,18 +120,40 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
 def main():
 
     if len(sys.argv) != 2:
-        sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
+        sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values. Please see the README.md file for more details.")
     else:
         N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value = get_inputs(sys.argv[1])
        
-        
         device_params = [device_name, as_qvm_value]
-        device_name, qubits, N_qubits = FindQubits(device_params)
+        N_qubits = FindNumQubits(device_params)
+
+        circuit_type = 'QAOA'
+        
+        if data_type == 'Quantum_Data':
+            
+            data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+
+        elif data_type == 'Classical_Data':
+            
+            data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+
+        else:
+            sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
+            
+        data_samples = SampleListToArray(data_samples_orig, N_qubits)
+
+        np.random.shuffle(data_samples)
+
+        #Split data into training/test sets
+        data_train_test = TrainTestPartition(data_samples)
+
+        plt.figure(1)
+ 
+        random_seed = 0
+
         #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
         #Set random seed to 0 to initialise the actual Born machine to be trained
-        random_seed = 0
         initial_params = NetworkParams(device_params, random_seed)
-        circuit_choice = 'QAOA'
 
         '''Number of samples:'''
         N_samples =     [N_data_samples,\
@@ -148,46 +161,31 @@ def main():
                         batch_size,\
                         N_kernel_samples]
 
-        if data_type == 'Quantum_Data':
-<<<<<<< HEAD
-                data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx, circuit_choice)
-        elif data_type == 'Classical_Data':
-                data_samples, data_exact_dict = DataImport(data_type, approx, N_qubits, N_data_samples, stein_approx)
-=======
-                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples, circuit_choice)
-        if data_type == 'Classical_Data':
-                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples)
->>>>>>> 229632636fd4d08220708f0c853cb4b351fbba92
-
-    #Randomise data
-    np.random.shuffle(data_samples)
-    #Split data into training/test sets
-    data_train_test = TrainTestPartition(data_samples)
-
-    plt.figure(1)
+        data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
   
-    loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
-                                                                                kernel_type,\
-                                                                                data_train_test, data_exact_dict, \
-                                                                                N_samples,\
-                                                                                cost_func, 'Onfly')
+        loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
+                                                                                    kernel_type,\
+                                                                                    data_train_test, data_exact_dict, \
+                                                                                    N_samples,\
+                                                                                    cost_func, 'Onfly')
    
-    fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
-    SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
-    
-    console_output = sys.stdout
-    sys.stdout = open("outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
-                %(cost_func,\
-                device_params[0],\
-                kernel_type,\
-                N_kernel_samples,\
-                N_born_samples,\
-                N_data_samples,\
-                batch_size,\
-                N_epochs), 'w')
-    PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
-    sys.stdout.close()
-    sys.stdout= console_output
+        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+        
+        console_output = sys.stdout
+        sys.stdout = open("outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
+                    %(cost_func,\
+                    device_params[0],\
+                    kernel_type,\
+                    N_kernel_samples,\
+                    N_born_samples,\
+                    N_data_samples,\
+                    batch_size,\
+                    N_epochs), 'w')
+
+        PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
+        sys.stdout.close()
+        sys.stdout= console_output
 
 if __name__ == "__main__":
 
