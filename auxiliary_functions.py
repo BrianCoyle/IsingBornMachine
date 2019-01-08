@@ -247,4 +247,4 @@ def FindQubits(device_params):
     qubits = qc.qubits()
     N_qubits = len(qubits)
 
-    return qubits, N_qubits, N_qubits
+    return qubits, N_qubits
