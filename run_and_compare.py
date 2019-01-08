@@ -8,13 +8,14 @@ import matplotlib.pyplot as plt
 from matplotlib import animation, style
 from pyquil.api import get_qc
 from param_init import NetworkParams
+from file_operations_out import PrintFinalParamsToFile
 from file_operations_out import MakeDirectory, PrintFinalParamsToFile
-from file_operations_in import DataImport
+from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, FindQubits
+from auxiliary_functions import TrainTestPartition, FindQubits, SampleListToArray
 import sys
-import os as os
+import os
 
 ## This function gathers inputs from file
 #
@@ -67,6 +68,7 @@ def get_inputs(file_name):
 
     
     return N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value
+
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
 
         Writer = animation.writers['ffmpeg']
@@ -104,7 +106,6 @@ def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data
 def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_probs_list, axs, N_data_samples):
         plot_colour = ['r', 'b']
         axs.clear()
-
         x = np.arange(len(data_exact_dict))
         axs.bar(x, born_probs_list[i].values(), width=0.2, color= plot_colour[0], align='center')
         axs.bar(x-0.2, data_exact_dict.values(), width=0.2, color='b', align='center')
@@ -120,19 +121,41 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
 ## This is the main function
 def main():
 
-        if len(sys.argv) != 2:
-                sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values")
-        else:
-                N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value = get_inputs(sys.argv[1])
-
-        
+    if len(sys.argv) != 2:
+        sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values. Please see the README.md file for more details.")
+    else:
+        N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value = get_inputs(sys.argv[1])
+       
         device_params = [device_name, as_qvm_value]
-        device_name, qubits, N_qubits = FindQubits(device_params)
+        N_qubits = FindNumQubits(device_params)
+
+        circuit_type = 'QAOA'
+        
+        if data_type == 'Quantum_Data':
+            
+            data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+
+        elif data_type == 'Classical_Data':
+            
+            data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+
+        else:
+            sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
+            
+        data_samples = SampleListToArray(data_samples_orig, N_qubits)
+
+        np.random.shuffle(data_samples)
+
+        #Split data into training/test sets
+        data_train_test = TrainTestPartition(data_samples)
+
+        plt.figure(1)
+ 
+        random_seed = 0
+
         #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
         #Set random seed to 0 to initialise the actual Born machine to be trained
-        random_seed = 0
         initial_params = NetworkParams(device_params, random_seed)
-        circuit_choice = 'QAOA'
 
         '''Number of samples:'''
         N_samples =     [N_data_samples,\
@@ -140,27 +163,17 @@ def main():
                         batch_size,\
                         N_kernel_samples]
 
-        if data_type == 'Quantum_Data':
-                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples, circuit_choice)
-        if data_type == 'Classical_Data':
-                data_samples, data_exact_dict = DataImport(data_type, N_qubits, N_data_samples)
-
-        #Randomise data
-        np.random.shuffle(data_samples)
-        #Split data into training/test sets
-        data_train_test = TrainTestPartition(data_samples)
-
-        plt.figure(1)
+        data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
   
         loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
-                                                                                kernel_type,\
-                                                                                data_train_test, data_exact_dict, \
-                                                                                N_samples,\
-                                                                                cost_func, 'Onfly')
-
+                                                                                    kernel_type,\
+                                                                                    data_train_test, data_exact_dict, \
+                                                                                    N_samples,\
+                                                                                    cost_func, 'Onfly')
+   
         fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
         SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
-
+        
         path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
                                                         %(cost_func,\
                                                         device_params[0],\
@@ -170,8 +183,8 @@ def main():
                                                         N_data_samples,\
                                                         batch_size,\
                                                         N_epochs)
-        MakeDirectory(path_to_output) #Make directory for generated training information
-        
+        MakeDirectory(path_to_output)
+            
         PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
 
 if __name__ == "__main__":

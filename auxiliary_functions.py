@@ -228,13 +228,6 @@ def MiniBatchSplit(samples, batch_size):
     return batches[0]
 
 
-def FindNumQubits(device_params):
-    
-    qc = get_qc(device_params[0], as_qvm = device_params[1])
-    N_qubits = len(qc.qubits())
-
-    return N_qubits
-
 ##This function finds ouptuts the used qubits for a given quantum device, and the number of qubits#
 # @param[in] device_params list containing device_name and as_qvm_value
 #
@@ -247,4 +240,4 @@ def FindQubits(device_params):
     qubits = qc.qubits()
     N_qubits = len(qubits)
 
-    return qubits, N_qubits
+    return qubits, N_qubits, N_qubits
