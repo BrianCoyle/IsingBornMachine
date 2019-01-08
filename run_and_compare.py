@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 from matplotlib import animation, style
 from pyquil.api import get_qc
 from param_init import NetworkParams
-from file_operations_in import DataDictFromFile
+from file_operations_out import PrintFinalParamsToFile
 from file_operations_out import MakeDirectory, PrintFinalParamsToFile
-from file_operations_in import DataImport
+from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
 from auxiliary_functions import TrainTestPartition, FindNumQubits, SampleListToArray
 import sys
-import os as os
+import os
 
 ## This function gathers inputs from file
 #
@@ -174,8 +174,6 @@ def main():
         fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
         SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
-        console_output = sys.stdout
-
         path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
                                                          %(cost_func,\
                                                          device_params[0],\
@@ -186,7 +184,6 @@ def main():
                                                          batch_size,\
                                                          N_epochs)
 
-        MakeDirectory(path_to_output)
 
         PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
 

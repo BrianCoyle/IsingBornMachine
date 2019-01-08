@@ -235,7 +235,7 @@ def CheckScoreApproximationDifference(max_qubits, eta):
             stein_score_array_approx_identity = IdentitySteinScore(data_samples, kernel_type, eta, stein_sigma)
             # print('The Identity Score matrix is:\n' , stein_score_array_approx_identity)
 
-            stein_score_array_approx_spectral =  SpectralSteinScore(data_samples, J, stein_sigma)
+            stein_score_array_approx_spectral =  SpectralSteinScore(data_samples, data_samples, J, stein_sigma)
             # print('The Spectral Score matrix is:\n' , stein_score_array_approx_spectral)
 
             stein_score_array_exact_mass = MassSteinScore(data_samples, data_dict)
@@ -317,8 +317,9 @@ def ComputeWeightedKernel(device_params, kernel_dict, data_samples_list, data_pr
         stein_score_matrix_1 = IdentitySteinScore(data_samples_list, stein_kernel_choice, chi, stein_sigma)
         stein_score_matrix_2 = IdentitySteinScore(data_samples_list, stein_kernel_choice, chi, stein_sigma)
     elif (score_approx == 'Spectral_Score'):
-        stein_score_matrix_1 = SpectralSteinScore(sample_list_1, J, stein_sigma)
-        stein_score_matrix_2 = SpectralSteinScore(sample_list_2, J, stein_sigma)
+        #compute score matrix using spectral method for all samples, x and y according to the 
+        stein_score_matrix_1 = SpectralSteinScore(sample_list_1, data_samples_list, J, stein_sigma)
+        stein_score_matrix_2 = SpectralSteinScore(sample_list_2, data_samples_list, J, stein_sigma)
 
     else: raise IOError('Please enter \'Exact_Score\', \'Identity_Score\' or \'Spectral_Score\' for score_approx')
 

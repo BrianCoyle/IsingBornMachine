@@ -81,17 +81,19 @@ def SpectralSteinScoreSingleSample(new_sample, samples, largest_eigvals, largest
 
     return np.dot(beta, psi)
 
-def SpectralSteinScore(samples, J, stein_sigma):
+def SpectralSteinScore(samples1, samples2, J, stein_sigma):
     '''This function compute the Approximate Stein Score matrix for all samples '''
-
-    kernel_array_all_samples = GaussianKernelArray(samples, samples, stein_sigma)
+    #samples2 are from the distribution that we want the score function for
+    #samples1 are the samples 
+    kernel_array_all_samples = GaussianKernelArray(samples2, samples2, stein_sigma)
     largest_eigvals, largest_eigvecs = LargestEigValsVecs(kernel_array_all_samples, J)
 
-    N_qubits = len(samples[0])
-    N_samples = len(samples)
+    N_qubits = len(samples2[0])
+    N_samples = len(samples2)
 
     stein_score_array_spectral = np.zeros((N_samples, N_qubits))
     for sample_index in range(0, N_samples):
         stein_score_array_spectral[sample_index][:] = \
-            SpectralSteinScoreSingleSample(samples[sample_index][:], samples, largest_eigvals, largest_eigvecs, J, stein_sigma)
+            SpectralSteinScoreSingleSample(samples2[sample_index][:], samples2, largest_eigvals, largest_eigvecs, J, stein_sigma)
     return stein_score_array_spectral
+

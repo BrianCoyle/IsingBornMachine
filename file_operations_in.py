@@ -133,8 +133,8 @@ def TrainingDataFromFile(cost_func, device_params, kernel_type,N_kernel_samples,
 	circuit_params = {}
 	loss = {}
 	# with open('%s/loss' %trail_name, 'w'):
-	loss[('%s' %cost_func, 'Train')] = np.loadtext('%s/loss/%s/train' 	%(trial_name,cost_func),  dtype = float)
-	loss[('%s' %cost_func, 'Test')] = np.loadtext('%s/loss/%s/test' 	%(trial_name,cost_func),  dtype = float)
+	loss[('%s' %cost_func, 'Train')] = np.loadtxt('%s/loss/%s/train' 	%(trial_name,cost_func),  dtype = float)
+	loss[('%s' %cost_func, 'Test')] = np.loadtxt('%s/loss/%s/test' 	%(trial_name,cost_func),  dtype = float)
 
 	np.savetxt('%s/loss/%s/test' 	%(trial_name,cost_func), 	loss[('%s' %cost_func, 'Test')] )
 	for epoch in range(0, N_epochs - 1):
