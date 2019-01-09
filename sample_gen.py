@@ -51,10 +51,8 @@ def PlusMinusSampleGen(device_params, circuit_params,
 	qc = get_qc(device_name, as_qvm = as_qvm_value)
 
 	#probs_minus, probs_plus are the exact probabilites outputted from the circuit
-	prog_plus= StateInit(device_params, circuit_params,\
-	 												p, q, r, s, circuit_choice, control, 'POSITIVE')
-	prog_minus = StateInit(device_params, circuit_params,\
-	 												p, q, r, s, circuit_choice, control, 'NEGATIVE')
+	prog_plus= StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control, 'POSITIVE')
+	prog_minus = StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control, 'NEGATIVE')
 	# wavefunction_plus = make_wf.wavefunction(prog_plus)
 	# born_probs_dict_plus = wavefunction_plus.get_outcome_probs()
 	# wavefunction_minus = make_wf.wavefunction(prog_minus)

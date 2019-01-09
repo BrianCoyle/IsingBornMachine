@@ -5,7 +5,7 @@ from pyquil.api import get_qc
 from sample_gen import BornSampler, PlusMinusSampleGen
 from mmd_functions import MMDGrad, MMDCost
 from stein_functions import SteinGrad, SteinCost
-from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCost, MiniBatchSplit
+from auxiliary_functions import ConvertToString, EmpiricalDist, TotalVariationCost, MiniBatchSplit, FindNumQubits
 
 ################################################################################################################
 #Train Model Using Stein Discrepancy with either exact kernel and gradient or approximate one using samples
@@ -15,12 +15,7 @@ def TrainBorn(device_params, cost_func,initial_params,
                 data_train_test, data_exact_dict,
                 k_choice, flag):
             
-    device_name = device_params[0]
-    as_qvm_value = device_params[1]
-    qc = get_qc(device_name, as_qvm = as_qvm_value)
-    qubits = qc.qubits() 
-    #Initialise a 3 dim array for the graph weights, 2 dim array for biases and gamma parameters
-    N_qubits = len(qubits)
+    N_qubits = FindNumQubits(device_params)   
 
     #Import initial parameter values
     circuit_params = {}
@@ -31,9 +26,9 @@ def TrainBorn(device_params, cost_func,initial_params,
 
     batch_size = N_samples[2]
     #Initialise the gradient arrays, each element is one parameter
-    weight_grad     = np.zeros((int(qubits[-1])+1, int(qubits[-1])+1))
-    bias_grad       = np.zeros((int(qubits[-1])+1))
-    gamma_x_grad    = np.zeros((int(qubits[-1])+1))
+    weight_grad     = np.zeros((N_qubits, N_qubits))
+    bias_grad       = np.zeros((N_qubits))
+    gamma_x_grad    = np.zeros((N_qubits))
 
     loss = {('Stein', 'Train'): [], ('MMD', 'Train'): [], 'TV': [],\
             ('Stein', 'Test'): [], ('MMD', 'Test'): []}
@@ -79,7 +74,7 @@ def TrainBorn(device_params, cost_func,initial_params,
 
         
         '''Updating bias b[r], control set to 'BIAS' '''
-        for bias_index in qubits:
+        for bias_index in range(0, N_qubits):
             born_samples_plus, born_samples_minus\
                                     = PlusMinusSampleGen(device_params, circuit_params_per_epoch,\
                                                 0,0, bias_index, 0, \
@@ -115,9 +110,8 @@ def TrainBorn(device_params, cost_func,initial_params,
                                         born_samples_minus, \
                                         N_samples, k_choice, flag)
             else: raise IOError('\'cost_func\' must be either \'Stein\', or \'MMD\' ')
-
-            circuit_params[('b', epoch+1)] = circuit_params[('b', epoch)]\
-                                                - learning_rate*bias_grad
+            #Update biases for next epoch
+        circuit_params[('b', epoch+1)] = circuit_params[('b', epoch)] - learning_rate*bias_grad
 
         # if (circuit_choice == 'QAOA'):	
         # 	'''Updating finalparam gamma[s], control set to 'FINALPARAM' '''
@@ -139,13 +133,13 @@ def TrainBorn(device_params, cost_func,initial_params,
         # 	gamma_x[:, epoch + 1] = gamma_x[:, epoch] - learning_rate*gamma_x_grad
 
         '''Updating weight J[p,q], control set to 'WEIGHTS' '''
-        for q in qubits:
-            for p in qubits:
+        for q in range(0, N_qubits):
+            for p in range(0, N_qubits):
                 if (p < q):
                     ## Draw samples from +/- pi/2 shifted circuits for each weight update, J_{p, q}
                     born_samples_plus, born_samples_plus \
                                     = PlusMinusSampleGen(device_params, circuit_params_per_epoch, \
-                                                        p, q , 0, 0,\
+                                                        p, q, 0, 0,\
                                                         circuit_choice, 'WEIGHTS', N_samples)
             
                     #Shuffle all samples to avoid bias in Minibatch Training
@@ -177,9 +171,9 @@ def TrainBorn(device_params, cost_func,initial_params,
                                             born_samples_minus,\
                                             N_samples, k_choice,flag)
                     else: raise IOError('\'cost_func\' must be either \'Stein\', or \'MMD\' ')
-
-        circuit_params[('J', epoch+1)] = circuit_params[('J', epoch)]  \
-                                        - learning_rate*(weight_grad + np.transpose(weight_grad))
+        
+        #Update Weights for next epoch
+        circuit_params[('J', epoch+1)] = circuit_params[('J', epoch)] - learning_rate*(weight_grad + np.transpose(weight_grad))
 
         if cost_func == 'Stein':
             #Check Stein Discrepancy of Model Distribution with training set

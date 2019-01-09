@@ -1,10 +1,10 @@
-100
+3
 Classical_Data
-600
-600
+100
+100
 2000
-300
+20
 Gaussian
 MMD
-Aspen-1-4Q-B
+Aspen-1-2Q-B
 1

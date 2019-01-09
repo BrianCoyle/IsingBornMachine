@@ -11,6 +11,12 @@ from pyquil.api import get_qc
 
 Max_qubits = 9
 
+def MakeDirectory(path):
+	'''Makes an directory in the given \'path\', if it does not exist already'''
+	if not os.path.exists(path):
+		os.makedirs(path)
+	return
+
 def PrintParamsToFile(seed):
 
 	for qubit_index in range(2, Max_qubits):
@@ -117,7 +123,8 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 
 
 def PrintDataToFiles(data_type, *args):
-		
+		data_path = './data' #Create Folder for data if it does not exist
+		MakeDirectory(data_path)
 		N_sample_trials = [10, 20, 30, 40, 50, 80, 100, 200, 300, 400, 500, 600, 700, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
 
 		if data_type == 'Classical_Data':
@@ -193,11 +200,6 @@ def PrintCircuitParamsToFile(random_seed, circuit_choice):
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
 
-def MakeDirectory(path):
-	'''Makes an directory in the given \'path\', if it does not exist already'''
-	if not os.path.exists(path):
-		os.makedirs(path)
-	return
 
 def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples):
 	'''This function prints out all information generated during the training process for a specified set of parameters'''

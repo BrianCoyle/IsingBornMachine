@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pyquil.api import get_qc
 from cost_function_train import TrainBorn
 
+from auxiliary_functions import FindNumQubits
 import sys
 
 def CostPlot(device_params, N_epochs, initial_params, \
@@ -10,12 +11,8 @@ def CostPlot(device_params, N_epochs, initial_params, \
             data_train_test, data_exact_dict, \
             N_samples,\
             cost_func, flag):
-    device_name = device_params[0]
-    as_qvm_value = device_params[1]
-
-    qc = get_qc(device_name, as_qvm = as_qvm_value)
-    qubits = qc.qubits()
-    N_qubits = len(qubits)
+            
+    N_qubits = FindNumQubits(device_params)
     #Output MMD Loss function and parameter values, for given number of training samples
     loss, circuit_params, born_probs_list, empirical_probs_list = TrainBorn(device_params, cost_func,\
                                                                             initial_params, \

@@ -70,12 +70,15 @@ def get_inputs(file_name):
     return N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
-
+      
         Writer = animation.writers['ffmpeg']
 
         writer = Writer(fps=framespersec, metadata=dict(artist='Me'), bitrate=-1)
         
         ani = animation.FuncAnimation(fig, animate, frames=len(born_probs_list), fargs=(N_qubits, N_born_samples, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples), interval = 10)
+        
+        animations_path = './animations/'
+        MakeDirectory(animations_path)
         
         ani.save("animations/%s_%iQbs_%s_Kernel_%iSamples_%iEpochs.mp4" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
@@ -83,9 +86,11 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_fu
         plt.show()
 
 def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict):
-        
+   
         plt.legend(prop={'size': 7}, loc='best').draggable()
         
+        plots_path = './plots/'
+        MakeDirectory(plots_path)
         plt.savefig("plots/%s_%iQbs_%s_%iBSamps_%iEpoch.pdf" \
                 %(cost_func[0], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
         
@@ -182,7 +187,7 @@ def main():
                                                          N_data_samples,\
                                                          batch_size,\
                                                          N_epochs)
-
+        MakeDirectory(path_to_output)
 
         PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
 
