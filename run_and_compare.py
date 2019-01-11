@@ -144,19 +144,18 @@ def main():
     
                 with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
 
-                    data = f.read()
-
-                    print(data)
-
-                    for i in data:
-                        print(i)
+                    data_samples_orig = list(f.read())
 
                 # data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
             except:
 
                 PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+
+                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+
+                    data_samples_orig = list(f.read())
                 
-                data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+                #data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
 
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
