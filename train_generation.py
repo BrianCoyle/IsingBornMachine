@@ -64,22 +64,27 @@ def ProbDist(n_v, m_h, p, hamw):
 	return dist
 
 def TrainingData(N_v, N_h, M_h):
-	"""This function constructs example training data"""
+    """This function constructs example training data"""
+    
+    '''s_hidden/s_visible is all possible output strings of the qubits'''
+    '''s_modes is all possible output strings over the modes'''
+    
+    centre_modes = CentreModes(N_v, M_h)
+    bin_visible, bin_hidden, bin_modes = Perms(N_v, N_h, M_h)
+    hamweight = HamWeightModes(bin_visible, centre_modes, N_v, M_h)
+    jointdist = ProbDist(N_v, M_h, 0.9, hamweight)
+    data_dist = (1/M_h)*jointdist.sum(axis=1)
+    #put data in dictionary
+    data_dist_dict = {}
+    for v_string in range(0,2**N_v):
+        bin_string_visible = ConvertToString(v_string, N_v)
+        data_dist_dict[bin_string_visible] = data_dist[v_string]
+        
+    return data_dist, data_dist_dict
 
-	'''s_hidden/s_visible is all possible output strings of the qubits'''
-	'''s_modes is all possible output strings over the modes'''
 
-	centre_modes = CentreModes(N_v, M_h)
-	bin_visible, bin_hidden, bin_modes = Perms(N_v, N_h, M_h)
-	hamweight = HamWeightModes(bin_visible, centre_modes, N_v, M_h)
-	jointdist = ProbDist(N_v, M_h, 0.9, hamweight)
-	data_dist = (1/M_h)*jointdist.sum(axis=1)
-	#put data in dictionary
-	data_dist_dict = {}
-	for v_string in range(0,2**N_v):
-		bin_string_visible =ConvertToString(v_string, N_v)
-		data_dist_dict[bin_string_visible] = data_dist[v_string]
-	return data_dist, bin_visible, bin_hidden, data_dist_dict
+        # return data_dist, bin_visible, bin_hidden, data_dist_dict
+        
 
 def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
 	'''This functions generates (N_samples) samples according to the given probability distribution

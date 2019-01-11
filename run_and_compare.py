@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation, style
 from pyquil.api import get_qc
 from param_init import NetworkParams
-from file_operations_out import PrintFinalParamsToFile
-from file_operations_out import MakeDirectory, PrintFinalParamsToFile
+from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDirectory, PrintFinalParamsToFile
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
@@ -131,60 +130,71 @@ def main():
         circuit_type = 'QAOA'
         
         if data_type == 'Quantum_Data':
-            
-            data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+
+            try:
+                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+            except:
+                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+
+                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
 
         elif data_type == 'Classical_Data':
             
-            data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+            try:
+                data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+            except:
+
+                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+                
+                data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
 
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
-            
-        data_samples = SampleListToArray(data_samples_orig, N_qubits)
 
-        np.random.shuffle(data_samples)
+        # data_samples = SampleListToArray(data_samples_orig, N_qubits)
 
-        #Split data into training/test sets
-        data_train_test = TrainTestPartition(data_samples)
+        # np.random.shuffle(data_samples)
 
-        plt.figure(1)
+        # #Split data into training/test sets
+        # data_train_test = TrainTestPartition(data_samples)
+
+        # plt.figure(1)
  
-        random_seed = 0
+        # random_seed = 0
 
-        #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
-        #Set random seed to 0 to initialise the actual Born machine to be trained
-        initial_params = NetworkParams(device_params, random_seed)
+        # #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
+        # #Set random seed to 0 to initialise the actual Born machine to be trained
+        # initial_params = NetworkParams(device_params, random_seed)
 
-        '''Number of samples:'''
-        N_samples =     [N_data_samples,\
-                        N_born_samples,\
-                        batch_size,\
-                        N_kernel_samples]
+        # '''Number of samples:'''
+        # N_samples =     [N_data_samples,\
+        #                 N_born_samples,\
+        #                 batch_size,\
+        #                 N_kernel_samples]
 
-        data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
+        # data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
   
-        loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
-                                                                                    kernel_type,\
-                                                                                    data_train_test, data_exact_dict, \
-                                                                                    N_samples,\
-                                                                                    cost_func, 'Onfly')
+        # loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(device_params, N_epochs, initial_params, \
+        #                                                                             kernel_type,\
+        #                                                                             data_train_test, data_exact_dict, \
+        #                                                                             N_samples,\
+        #                                                                             cost_func, 'Onfly')
    
-        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
-        SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
-        
-        path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
-                                                         %(cost_func,\
-                                                         device_params[0],\
-                                                         kernel_type,\
-                                                         N_kernel_samples,\
-                                                         N_born_samples,\
-                                                         N_data_samples,\
-                                                         batch_size,\
-                                                         N_epochs)
+        # fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        # SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+        # 
+        # path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
+        #                                                  %(cost_func,\
+        #                                                  device_params[0],\
+        #                                                  kernel_type,\
+        #                                                  N_kernel_samples,\
+        #                                                  N_born_samples,\
+        #                                                  N_data_samples,\
+        #                                                  batch_size,\
+        #                                                  N_epochs)
 
 
-        PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
+        # PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, born_probs_list, empirical_probs_list, device_params, kernel_type, N_samples)
 
 if __name__ == "__main__":
 

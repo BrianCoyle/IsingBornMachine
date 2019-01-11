@@ -3,7 +3,7 @@ import numpy as np
 from pyquil.api import get_qc
 from numpy.linalg import inv
 
-from train_generation import TrainingData, DataSampler
+from train_generation import DataSampler
 from classical_kernel import GaussianKernelArray, GaussianKernel
 from file_operations_in import KernelDictFromFile, DataImport
 
