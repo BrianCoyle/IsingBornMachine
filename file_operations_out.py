@@ -135,26 +135,18 @@ def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubi
 
                 total = 0
 
-                for bit in range(N_qubits):
+                for bit in string:
 
-                    total += int(string[bit]) * 2**bit
-
+                    total <<= 1
+                    total += int(bit)
+                    
                 f.write(bytes([total]))
 
         data_samples_list= SampleListToArray(data_samples, N_qubits)
         emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
         DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
-
-        print(data_probs)
-    
-        #Output exact training data (not sampled)
-        with open('binary_data/Classical_Data_%iQBs_Exact' % (N_qubits), 'wb') as f:
-            for string in data_probs:
-                total = 0
-                for bit in range(N_qubits):
-                    total += int(string[bit]) * 2**bit
-                f.write(bytes([total]))
-                
+        
+        np.savetxt('data/Classical_Data_%iQBs_Exact' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
         DataDictToFile(data_type, N_qubits, exact_data_dict, 'infinite')
 
     elif data_type == 'Quantum_Data':

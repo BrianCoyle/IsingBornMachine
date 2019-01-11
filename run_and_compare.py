@@ -141,7 +141,17 @@ def main():
         elif data_type == 'Classical_Data':
             
             try:
-                data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+    
+                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+
+                    data = f.read()
+
+                    print(data)
+
+                    for i in data:
+                        print(i)
+
+                # data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
             except:
 
                 PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
