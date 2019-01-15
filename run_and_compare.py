@@ -175,10 +175,10 @@ def main():
                                                                                     N_samples,\
                                                                                     cost_func, 'Onfly')
    
-        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
-        SaveAnimation(2000, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+        fig, axs = PlotAnimate(N_qubits, 10, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        SaveAnimation(N_epochs, fig, 10, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
-        path_to_output = './outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
+        path_to_output = './outputs/Output_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
                                                          %(cost_func,\
                                                          device_params[0],\
                                                          kernel_type,\

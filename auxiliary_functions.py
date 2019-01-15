@@ -14,19 +14,20 @@ def AllBinaryStrings(N_qubits):
     #Generate Array of all binary strings of length N_qubits
     binary_strings_array = np.zeros((2**N_qubits, N_qubits))
     for integer in range(0, 2**N_qubits):
-        qubit_string = ConvertToString(integer, N_qubits)
+        qubit_string = IntegerToString(integer, N_qubits)
         for qubit in range(0, N_qubits):
             binary_strings_array[integer][qubit] = float(qubit_string[qubit])
 
     return binary_strings_array
 
-def ConvertToString(index, N_qubits):
-    if type(index) is not int:
+def IntegerToString(integer, N_qubits):
+    '''This function converts a integer to a binary string'''
+    if type(integer) is not int:
         raise TypeError('\'index\' must be an integer')
     if type(N_qubits) is not int:
         raise TypeError('\'N_qubits\' must be an integer')
 
-    return "0" * (N_qubits-len(format(index,'b'))) + format(index,'b')
+    return "0" * (N_qubits-len(format(integer,'b'))) + format(integer,'b')
 
 def StringToList(string):
     '''This kernel converts a binary string to a list of bits'''
@@ -39,18 +40,27 @@ def StringToList(string):
     return string_list
 
 def ShiftString(string, shift_index):
-    '''This function shifts the (shift_index)th element of a string by 1 (mod 2).
-        This is the shift operator ¬ for on a binary space'''
-    string_list = StringToList(string)
-    shifted_string_list = []
-    for i in range(len(string_list)):
-        if i is shift_index:
-            shifted_string_list.append(str((string_list[i]+1)%2))
-        else:
-            shifted_string_list.append(str(string_list[i]))
-
-    shifted_string = ''.join(shifted_string_list)
-
+    '''
+    This function shifts the (shift_index)th element of a string by 1 (mod 2).
+    This is the shift operator ¬ on a binary space. Returns a binary 1D array
+    '''
+    if type(string) is np.ndarray:
+        if string.ndim != 1:
+            raise IOError('If \'string\' is a numpy array, it must be one dimensional.')
+        shifted_string = string
+        
+        for i in range(len(string)):
+            if i is shift_index:
+                shifted_string[i] = (string[i]+1)%2
+    elif type(string) is str:      
+        string_list = StringToList(string)
+        shifted_string = np.ndarray((len(string_list)), dtype = int)
+        for i in range(len(string_list)):
+            if i is shift_index:
+                shifted_string[i] = (string_list[i]+1)%2
+            else:
+                shifted_string[i] = string_list[i]
+    
     return  shifted_string
     
 ## Convert string to 1D numpy array
@@ -157,8 +167,8 @@ def EmpiricalDist(samples, N_qubits, *arg):
 
     for index in range(0, 2**N_qubits):
         '''If a binary string has not been seen in samples, set its value to zero'''
-        if ConvertToString(index, N_qubits) not in counts:
-            counts[ConvertToString(index, N_qubits)] = 0
+        if IntegerToString(index, N_qubits) not in counts:
+            counts[IntegerToString(index, N_qubits)] = 0
 
     sorted_samples_dict = {}
 
@@ -229,7 +239,11 @@ def MiniBatchSplit(samples, batch_size):
 
 
 def FindNumQubits(device_params):
-    
+    if type(device_params[0]) is not str:
+        raise IOError('The device name must be a string')
+    if (device_params[1] != 0 and device_params[1] != 1):
+        raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
+
     qc = get_qc(device_params[0], as_qvm = device_params[1])
     N_qubits = len(qc.qubits())
 
@@ -242,7 +256,11 @@ def FindNumQubits(device_params):
 # @param[out] N_qubits The number of qubits
 #
 def FindQubits(device_params):
-    
+    if type(device_params[0]) is not str:
+        raise IOError('The device name must be a string')
+    if (device_params[1] != 0 and device_params[1] != 1):
+        raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
+
     qc = get_qc(device_params[0], as_qvm = device_params[1])
     qubits = qc.qubits()
     N_qubits = len(qubits)

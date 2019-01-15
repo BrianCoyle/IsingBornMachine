@@ -6,7 +6,7 @@ import numpy as np
 import ast
 import sys
 import json
-from auxiliary_functions import SampleListToArray
+from auxiliary_functions import SampleListToArray, FindNumQubits
 
 def FileLoad(file):
 	kernel = json.load(file)
@@ -79,19 +79,19 @@ def DataImport(data_type, N_qubits, N_data_samples, *args):
 	return data_samples, data_exact_dict 
 
 ## Reads kernel dictionary from file
-def KernelDictFromFile(N_qubits, N_samples, kernel_choice):
-	
-    #reads kernel dictionary from file
-    N_kernel_samples = N_samples[3]
+def KernelDictFromFile(device_params, N_samples, kernel_choice):
+	N_qubits = FindNumQubits(device_params)
+	#reads kernel dictionary from file
+	N_kernel_samples = N_samples[-1]
 
-    if (N_kernel_samples == 'infinite'):
-        with open('data/%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
-            kernel_dict, k1, v = FileLoad(f)
-    else:
-        with open('data/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits,N_kernel_samples), 'r') as f:
-            kernel_dict, k1, v = FileLoad(f)
+	if (N_kernel_samples == 'infinite'):
+		with open('data/%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
+			_, keys, values = FileLoad(f)
+	else:
+		with open('data/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_kernel_samples), 'r') as f:
+			_, keys, values = FileLoad(f)
 
-    return dict(zip(*[k1,v]))
+	return dict(zip(*[keys, values]))
 
 def ConvertKernelDictToArray(N_qubits, N_kernel_samples, kernel_choice):
 	'''This function converts a dictionary of kernels to a numpy array'''
@@ -132,11 +132,9 @@ def TrainingDataFromFile(cost_func, device_params, kernel_type,N_kernel_samples,
 
 	circuit_params = {}
 	loss = {}
-	# with open('%s/loss' %trail_name, 'w'):
 	loss[('%s' %cost_func, 'Train')] = np.loadtxt('%s/loss/%s/train' 	%(trial_name,cost_func),  dtype = float)
 	loss[('%s' %cost_func, 'Test')] = np.loadtxt('%s/loss/%s/test' 	%(trial_name,cost_func),  dtype = float)
 
-	np.savetxt('%s/loss/%s/test' 	%(trial_name,cost_func), 	loss[('%s' %cost_func, 'Test')] )
 	for epoch in range(0, N_epochs - 1):
 		circuit_params[('J', epoch)] 		= np.loadtxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), dtype = float)
 		circuit_params[('b', epoch)] 		= np.loadtxt('%s/params/biases/epoch%s' 	%(trial_name, epoch), dtype = float)

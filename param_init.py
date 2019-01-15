@@ -26,7 +26,7 @@ def HadamardToAll(prog, qubits):
 #
 # This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained
 #
-# @param[in] N_qubits The number of qubits
+# @param[in] device_params The Rigetti device that is chosen, e.g. 'Aspen-1-2Q-B'
 #
 # @return initialised parameters
 def NetworkParams(device_params, random_seed):
@@ -140,6 +140,7 @@ def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control
 				prog.inst(PHASE(-2*b[j] - pi/2, qubits[j]))
 			elif (control== 'NEITHER' or 'WEIGHTS' or 'GAMMA' and sign == 'NEITHER'):
 				prog.inst(PHASE(-2*b[j], 		qubits[j]))
+				
 		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
 		if (circuit_choice == 'IQP'):
 			#If the final 'measurement' layer is to be an IQP measurement (i.e. Hadamard on all qubits)

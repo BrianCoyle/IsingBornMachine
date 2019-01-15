@@ -6,7 +6,7 @@ from pyquil.api import get_qc, WavefunctionSimulator
 from random import *
 
 from param_init import HadamardToAll
-from auxiliary_functions import ConvertToString
+from auxiliary_functions import IntegerToString, FindNumQubits, FindQubits
 
 def EncodingFunc(N_qubits, sample):
 	'''This function defines  Non-Linear function for encoded samples for Quantum Kernel Cirucit
@@ -34,31 +34,29 @@ def TwoQubitGate(prog, two_q_arg, qubit_1, qubit_2):
 	return prog.inst(CPHASE(4*two_q_arg, qubit_1, qubit_2)).inst(PHASE(-2*two_q_arg, qubit_1)).inst(PHASE(-2*two_q_arg, qubit_2))
 
 def IQPLayer(prog, qubits, phi_Z, phi_ZZ):
-
-	for j in qubits:
+	N_qubits = len(qubits)
+	for j in range(0, N_qubits):
 		#Apply local Z rotations (b) to each qubit
 		#If the particular qubit sample == 0, apply no gate
 		if (phi_Z[j] != False):
-			prog.inst(PHASE(-2*phi_Z[j],j))
+			prog.inst(PHASE(-2*phi_Z[j],qubits[j]))
 		#Apply Control-Phase(Phi_ZZ_1) gates to each qubit
-		for i in qubits: 
-			if (qubits[i] < qubits[j]):
+		for i in range(0, N_qubits): 
+			if (i < j):
 				#If the particular qubit sample pair == 0, apply no gate
 				if (phi_ZZ[i,j] != False):
-					prog = TwoQubitGate(prog, phi_ZZ[i,j], i,j)
+					prog = TwoQubitGate(prog, phi_ZZ[i,j], qubits[i], qubits[j])
 	return prog
 	
 def KernelCircuit(device_params, sample1, sample2):
 	'''Compute Quantum kernel given samples from the Born Machine (born_samples) and the Data Distribution (data_samples)
 		This must be done for every sample from each distribution (batch gradient descent), (x, y)'''
 	'''First layer, sample from first distribution (1), parameters phi_ZZ_1, phi_Z_1'''
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
+	
+	qubits, N_qubits = FindQubits(device_params)
 
-	qc = get_qc(device_name, as_qvm = as_qvm_value)
-	qubits = qc.qubits()
 	prog = Program()
-	N_qubits = len(qubits)
+
 	kernel_circuit_params1 = EncodingFunc(N_qubits, sample1)
 	kernel_circuit_params2 = EncodingFunc(N_qubits, sample2)
 
@@ -96,22 +94,29 @@ def KernelCircuit(device_params, sample1, sample2):
 	prog = HadamardToAll(prog, qubits)
 
 	return prog
-def QuantumKernelSamplePair(device_params, N_kernel_samples, sample1, sample2):
+
+
+def QuantumKernel(device_params, N_kernel_samples, sample1, sample2):
 	'''This function computes the Quantum kernel for a single pair'''
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
+	[device_name, as_qvm_value] = device_params
+
+	if type(sample1) is np.ndarray and sample1.ndim != 1: #Check if there is only a single sample in the array of samples
+		raise IOError('sample1 must be a 1D numpy array')
+	if type(sample2) is np.ndarray and sample2.ndim != 1: #Check if there is only a single sample in the array of samples
+		raise IOError('sample2 must be a 1D numpy array')
+
 	qc = get_qc(device_name, as_qvm = as_qvm_value)
-	qubits = qc.qubits()
-	N_qubits = len(qubits)
-	make_wf = WavefunctionSimulator()
+	
+	qubits, N_qubits 	= FindQubits(device_params)
+	make_wf 			= WavefunctionSimulator()
 
 	#run quantum circuit for a single pair of encoded samples
-	prog = KernelCircuit(device_params, sample1, sample2)
+	prog 			= KernelCircuit(device_params, sample1, sample2)
 	kernel_outcomes = make_wf.wavefunction(prog).get_outcome_probs()
 
 	#Create zero string to read off probability
-	zero_string = '0'*N_qubits
-	kernel_exact = kernel_outcomes[zero_string]
+	zero_string 	= '0'*N_qubits
+	kernel_exact 	= kernel_outcomes[zero_string]
 
 	if (N_kernel_samples == 'infinite'):
 		#If the kernel is computed exactly, approximate kernel is equal to exact kernel
@@ -124,9 +129,7 @@ def QuantumKernelSamplePair(device_params, N_kernel_samples, sample1, sample2):
 		kernel_measurements_all_qubits_dict = qc.run_and_measure(prog, N_kernel_samples)
 		kernel_measurements_used_qubits = np.flip(np.vstack(kernel_measurements_all_qubits_dict[q] for q in sorted(qubits)).T, 1)
 
-		#qc.run_and_measure measures ALL (N_qubits) qubits, remove measurements which are not needed on qubits (N_qubits, 5]
-		# kernel_measurements_used_qubits = np.flip(np.delete(kernel_measurements_all_qubits, range(N_qubits, 5), axis=1), 1)
-		#m is total number of samples, n is the number of used qubits (out of 9)
+		#m is total number of samples, n is the number of used qubits
 		(m,n) = kernel_measurements_used_qubits.shape
 
 		N_zero_strings = m - np.count_nonzero(np.count_nonzero(kernel_measurements_used_qubits, 1))
@@ -135,14 +138,24 @@ def QuantumKernelSamplePair(device_params, N_kernel_samples, sample1, sample2):
 		kernel_approx = N_zero_strings/N_kernel_samples
 	return kernel_exact, kernel_approx
 
-def QuantumKernelComputation(device_params, N_samples1, N_samples2, N_kernel_samples, samples1, samples2):
+def QuantumKernelArray(device_params, N_kernel_samples, samples1, samples2):
 	'''This function computes the quantum kernel for all pairs of samples'''
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
+	
+	if type(samples1) is np.ndarray:
+		if samples1.ndim == 1: #Check if there is only a single sample in the array of samples
+			N_samples1 = 1
+		else:
+			N_samples1 = samples1.shape[0]
+	else: N_samples1 = len(samples1)
 
-	qc = get_qc(device_name, as_qvm = as_qvm_value)
-	qubits = qc.qubits()
-	N_qubits = len(qubits)
+	if type(samples2) is np.ndarray:
+		if samples2.ndim == 1:
+			N_samples2 = 1
+		else:
+			N_samples2 = samples2.shape[0]
+	else: N_samples2 = len(samples2)
+
+	N_qubits = FindNumQubits(device_params)
 
 	kernel_approx_array = np.zeros((N_samples1, N_samples2))
 	kernel_exact_array = np.zeros((N_samples1, N_samples2))
@@ -153,14 +166,14 @@ def QuantumKernelComputation(device_params, N_samples1, N_samples2, N_kernel_sam
 	for sample_index2 in range(0, N_samples2):
 		for sample_index1 in range(0, sample_index2+1):
 
-			s_temp1 = ConvertToString(sample_index1, N_qubits)
-			s_temp2 = ConvertToString(sample_index2, N_qubits)
+			s_temp1 = IntegerToString(sample_index1, N_qubits)
+			s_temp2 = IntegerToString(sample_index2, N_qubits)
 			
 			kernel_approx_array[sample_index1, sample_index2], kernel_exact_array[sample_index1, sample_index2],\
-			= QuantumKernelSamplePair(	device_params, 			\
-										N_kernel_samples, 		\
-			 							samples1[sample_index1],\
-			 							samples2[sample_index1]	)
+			= QuantumKernel(device_params, 			\
+							N_kernel_samples, 		\
+							samples1[sample_index1],\
+							samples2[sample_index1]	)
 			
 			#kernel is symmetric, k(x,y) = k(y,x)
 			kernel_approx_array[sample_index2, sample_index1] = kernel_approx_array[sample_index1, sample_index2]

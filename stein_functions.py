@@ -2,97 +2,113 @@
 import numpy as np
 
 from pyquil.api import get_qc
-from classical_kernel import GaussianKernelArray, NormaliseKernel
+from classical_kernel import GaussianKernelArray, GaussianKernel
+from quantum_kernel import  QuantumKernelArray, QuantumKernel
+
+from kernel_functions import NormaliseKernel
 from file_operations_in import KernelDictFromFile, DataDictFromFile
-from quantum_kernel import  QuantumKernelComputation
-from auxiliary_functions import SampleArrayToList, ConvertToString, EmpiricalDist
+from auxiliary_functions import ShiftString, EmpiricalDist, FindNumQubits, ToString
+ 
 import stein_score as ss
+from spectral_stein_score import SpectralSteinScore
 import json	
 
-def SteinGrad(device_params, data, data_exact_dict,
-				born_samples, born_probs_dict,
-				born_samples_plus,  
-				born_samples_minus, 
-				N_samples, k_choice, stein_params):
+def DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag):
+	'''This kernel computes the shifted *Delta* terms used in the Stein Discrepancy'''
+	N_qubits = FindNumQubits(device_params)
+	N_samples1 = len(sample_array_1)
+	N_samples2 = len(sample_array_2)
 
+	kernel_x_shifted, kernel_y_shifted, kernel_xy_shifted = [np.zeros((N_samples1, N_samples2, N_qubits)) for _ in range(3)]
+	delta_x_kernel, delta_y_kernel, delta_xy_kernel = [np.zeros((N_samples1, N_samples2, N_qubits)) for _ in range(3)]
 
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
+	for sample_index1 	in range(0, N_samples1):
+		for sample_index2 in range(0, N_samples2):
+			for qubit in range(0, N_qubits):
+            
+				if flag == 'Onfly': 
+					kernel =  kernel_array[sample_index1][sample_index2]
+					sample1 = sample_array_1[sample_index1]
+					sample2 = sample_array_2[sample_index2]
+					shiftedsample1 = ShiftString(sample1, qubit)
+					shiftedsample2 = ShiftString(sample2, qubit)
 
-	qc = get_qc(device_name, as_qvm = as_qvm_value)
-	qubits = qc.qubits()
-	N_qubits = len(qubits)
-	
-	data_samples_list= SampleArrayToList(data)
-	born_samples_list= SampleArrayToList(born_samples)
-	bornplus_samples_list= SampleArrayToList(born_samples_plus)
-	bornminus_samples_list= SampleArrayToList(born_samples_minus)
+					if (kernel_choice == 'Gaussian'):
 
-	N_born_samples = len(born_samples_list)
-	N_bornplus_samples = len(bornplus_samples_list)
-	N_bornminus_samples = len(bornminus_samples_list)
+						sigma = np.array([0.25, 10, 1000])
 
+						kernel_x_shifted[sample_index1, sample_index2, qubit]   = GaussianKernel(shiftedsample1,    sample2,        sigma)
+						kernel_y_shifted[sample_index1, sample_index2, qubit]   = GaussianKernel(sample1,           shiftedsample2, sigma)
+						kernel_xy_shifted[sample_index1, sample_index2, qubit]  = GaussianKernel(shiftedsample1,    shiftedsample2, sigma)
+
+				elif flag == 'Precompute': #Use Precomputed kernel dictionary to accelerate training
+					kernel_dict  = KernelDictFromFile(device_params, N_samples, kernel_choice)
+					kernel = kernel_dict[(sample1, sample2)]
+
+					sample1 		= ToString(sample_array_1[sample_index1])
+					sample2 		= ToString(sample_array_2[sample_index2])
+					shiftedsample1 	= ToString(ShiftString(sample1, qubit))
+					shiftedsample2 	= ToString(ShiftString(sample2, qubit))
+
+					kernel_x_shifted[sample_index1][sample_index2][qubit]    = kernel_dict[(shiftedsample1, sample2)]
+					kernel_y_shifted[sample_index1][sample_index2][qubit]    = kernel_dict[(sample1,        shiftedsample2)]
+					kernel_xy_shifted[sample_index1][sample_index2][qubit]   = kernel_dict[(shiftedsample1, shiftedsample2)]
+
+					delta_x_kernel[sample_index1][sample_index2][qubit] =  kernel - kernel_x_shifted[sample_index1, sample_index2, qubit]                                           
+					delta_y_kernel[sample_index1][sample_index2][qubit] =  kernel - kernel_y_shifted[sample_index1, sample_index2, qubit]          
+					delta_xy_kernel[sample_index1][sample_index2][qubit] = kernel - kernel_xy_shifted[sample_index1, sample_index2, qubit]                                           
+									
+				trace = N_qubits*kernel_array - kernel_x_shifted.sum(axis = 2) - kernel_y_shifted.sum(axis = 2) + kernel_xy_shifted.sum(axis = 2)
+
+	return delta_x_kernel, delta_y_kernel, trace
+
+def WeightedKernel(device_params, kernel_choice, kernel_array, N_samples, data_samples, data_probs, sample_array_1, sample_array_2, stein_params, flag, *argsv):
+	'''This kernel computes the weighted kernel for all samples from the two distributions sample_list_1, sample_list_2'''
+
+	delta_x_kernel, delta_y_kernel, trace = DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag)
+
+	#Parameters required for computing the Stein Score
+	score_approx        = stein_params[0]
+	J                   = stein_params[1]
+	chi                 = stein_params[2]
 	stein_kernel_choice = stein_params[3]
-	kernel_dict_for_stein  = KernelDictFromFile(N_qubits, N_samples, stein_kernel_choice)
-
-	# Compute the weighted kernel for each pair of samples required in the gradient of Stein Cost Function
-	kappa_q_born_bornplus = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data_samples_list,\
-													data_exact_dict, born_samples_list, bornplus_samples_list, stein_params)
-	kappa_q_bornplus_born = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data_samples_list, \
-													data_exact_dict, bornplus_samples_list,born_samples_list, stein_params)
-	kappa_q_born_bornminus = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data_samples_list,\
-													data_exact_dict, born_samples_list, bornminus_samples_list, stein_params)
-	kappa_q_bornminus_born = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data_samples_list,\
-													data_exact_dict, bornminus_samples_list, born_samples_list, stein_params)
-	
-
-	# kappa_q_born_bornplus = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data,\
-	# 												data_exact_dict, born_samples, born_samples_plus, score_approx, chi)
-	# kappa_q_bornplus_born = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data, \
-	# 												data_exact_dict, born_samples_plus, born_samples, score_approx, chi)
-	# kappa_q_born_bornminus = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data,\
-	# 												data_exact_dict, born_samples_list, born_samples_minus, score_approx, chi)
-	# kappa_q_bornminus_born = ss.ComputeWeightedKernel(device_params, kernel_dict_for_stein, data,\
-	# 												data_exact_dict, born_samples_minus, born_samples, score_approx, chi)
-	
-	L_stein_grad_1 = (1/(N_born_samples*N_bornplus_samples))*sum(kappa_q_born_bornplus)
-	L_stein_grad_2 = (1/(N_born_samples*N_bornplus_samples))*sum(kappa_q_bornplus_born)
-	L_stein_grad_3 = (1/(N_born_samples*N_bornminus_samples))*sum(kappa_q_born_bornminus)
-	L_stein_grad_4 = (1/(N_born_samples*N_bornminus_samples))*sum(kappa_q_bornminus_born)
-
-	L_stein_grad =  L_stein_grad_1 + L_stein_grad_2 + L_stein_grad_3 + L_stein_grad_4
+	stein_sigma         = stein_params[4]
 
 
-	return L_stein_grad
+	if (score_approx == 'Exact_Score'):
+		stein_score_matrix_1 = ss.MassSteinScore(sample_array_1, data_probs)
+		stein_score_matrix_2 = ss.MassSteinScore(sample_array_2, data_probs)
+	elif (score_approx == 'Identity_Score'):
+		stein_score_matrix_1 = ss.IdentitySteinScore(data_samples, stein_kernel_choice, chi, stein_sigma)
+		stein_score_matrix_2 = ss.IdentitySteinScore(data_samples, stein_kernel_choice, chi, stein_sigma)
+	elif (score_approx == 'Spectral_Score'):
+		#compute score matrix using spectral method for all samples, x and y according to the data distribution.
+		stein_score_matrix_1 = SpectralSteinScore(sample_array_1, data_samples, J, stein_sigma)
+		stein_score_matrix_2 = SpectralSteinScore(sample_array_2, data_samples, J, stein_sigma)
 
+	else: raise IOError('Please enter \'Exact_Score\', \'Identity_Score\' or \'Spectral_Score\' for score_approx')
 
+	# print('Score Matrix 1 is:', stein_score_matrix_1)
+	N_samples1 = len(sample_array_1)
+	N_samples2 = len(sample_array_2)
 
-def SteinCost(device_params, data_samples, data_exact_dict, born_samples, born_probs_dict,	
-			N_kernel_samples, kernel_choice,
-			stein_params):
-	'''This function computes the Stein Discrepancy cost function between P and Q from samples from P and Q'''
-	# sigma = [0.1, 10, 100]
-	# kernel_array = GaussianKernelArray(samples, samples, sigma)
-	
-	device_name = device_params[0]
-	as_qvm_value = device_params[1]
-	qc = get_qc(device_name, as_qvm = as_qvm_value)
-	qubits = qc.qubits()
-	N_qubits = len(qubits)
+	weighted_kernel = np.zeros((N_samples1, N_samples2))
 
-	data_samples_list= SampleArrayToList(data_samples)
-	born_samples_list= SampleArrayToList(born_samples)
-	
-	N_born_samples = len(born_samples_list)
-	#Compute the empirical data distibution given samples
+	for sample_index1 in range(0, N_samples1):
+		for sample_index2 in range(0, N_samples2):
 
-	kernel_sampled_dict  = KernelDictFromFile(N_qubits, N_kernel_samples, kernel_choice)
-	data_samples_list = SampleArrayToList(data_samples)
+			delta_x =   np.transpose(delta_x_kernel[sample_index1][sample_index2])
+			delta_y =   delta_y_kernel[sample_index1][sample_index2]
+			kernel  =   kernel_array[sample_index1][sample_index2]
 
-	kappa_q = ss.ComputeWeightedKernel(device_params, kernel_sampled_dict, data_samples_list, data_exact_dict, born_samples_list, born_samples_list, stein_params,'same')
+			if sample_index1 == sample_index2:
+				if 'same' in argsv: #if 'same' in optional args, do not contributions that are computed with themselves
+					weighted_kernel[sample_index1, sample_index2] = 0
+			else: 
+				weighted_kernel[sample_index1, sample_index2] =                                                                 \
+				np.dot(np.transpose(stein_score_matrix_1[sample_index1]), np.dot(kernel, stein_score_matrix_2[sample_index2]))  \
+				- np.dot(np.transpose(stein_score_matrix_1[sample_index1]), delta_y)                                            \
+				- np.dot(delta_x, stein_score_matrix_2[sample_index2])                                                          \
+				+ trace[sample_index1][sample_index2]
 
-	L_stein = (1/((N_born_samples)*(N_born_samples - 1)))*sum(kappa_q)
-
-	return L_stein
-
-
+	return weighted_kernel
