@@ -146,6 +146,8 @@ def main():
 
                     data_samples_orig = list(f.read())
 
+                print("print")
+
                 # data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
             except:
 
@@ -154,11 +156,15 @@ def main():
                 with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
 
                     data_samples_orig = list(f.read())
+
+                print("no print")
                 
                 #data_samples_orig = list(np.loadtxt('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
 
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
+
+        print(data_samples_orig)
 
         # data_samples = SampleListToArray(data_samples_orig, N_qubits)
 
