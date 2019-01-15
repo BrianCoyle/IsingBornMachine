@@ -115,7 +115,17 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 
         return
 
+def string_to_int_byte(string, N_qubits, byte):
 
+    total = 0
+    
+    for qubit in range(8 * byte, min(8 * (byte + 1), N_qubits)):
+
+        total <<= 1
+        total += int(string[qubit])
+
+    return total
+    
 def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubits):
 
     if data_type == 'Classical_Data':
@@ -133,16 +143,13 @@ def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubi
 
             for string in data_samples:
 
-                total = 0
+                for byte in range(N_qubit % 8):
 
-                for bit in string:
+                    total = string_to_int_byte(string, N_qubit, byte)
 
-                    total <<= 1
-                    total += int(bit)
-                    
-                f.write(bytes([total]))
+                    f.write(bytes([total]))
 
-        data_samples_list= SampleListToArray(data_samples, N_qubits)
+        data_samples_list = SampleListToArray(data_samples, N_qubits)
         emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
         DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
         
