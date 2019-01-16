@@ -7,8 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation, style
 from param_init import NetworkParams
-from file_operations_out import PrintFinalParamsToFile
-from file_operations_out import MakeDirectory, PrintFinalParamsToFile
+from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDirectory, PrintFinalParamsToFile
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
@@ -122,6 +121,38 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
         axs.set_xticks(range(len(data_exact_dict)))
         axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
 
+def bytes_to_int(bytes_list):
+
+    total = 0
+
+    for byte in bytes_list:
+
+        total *= 256
+        total += byte
+
+    return total
+
+def num_bytes_needed(num_bits):
+
+    num_bytes = num_bits // 8
+
+    if num_bits % 8 != 0:
+        num_bytes += 1
+
+    return num_bytes
+
+def read_ints_from_file(N_qubits, N_data_samples, f):
+
+    int_list = [0] * N_data_samples
+
+    bytes_list = list(f.read())
+
+    for sample in range(N_data_samples):
+
+        int_list[sample] = bytes_to_int(bytes_list[sample * num_bytes_needed(N_qubits):(sample + 1) * num_bytes_needed(N_qubits)])
+
+    return int_list
+
 
 ## This is the main function
 def main():
@@ -134,14 +165,31 @@ def main():
         qc = get_qc(device_name, as_qvm = as_qvm_value)  
         N_qubits = len(qc.qubits())
         circuit_type = 'QAOA'
-        
+ 
         if data_type == 'Quantum_Data':
-            
-            data_samples_orig = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+
+            try:
+                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+            except:
+                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+
+                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
 
         elif data_type == 'Classical_Data':
             
-            data_samples_orig = list(np.loadtxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), dtype = str))
+            try:
+    
+                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+
+                    data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
+
+            except:
+
+                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+
+                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+
+                    data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
@@ -151,7 +199,16 @@ def main():
         if (as_qvm_value != 0 and as_qvm_value != 1):
                 raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
 
-        data_samples = SampleListToArray(data_samples_orig, N_qubits)
+        data_samples = np.zeros((N_data_samples, N_qubits), dtype = int)
+
+        for sample in range(0, N_data_samples):
+            
+            temp = data_samples_orig[sample]
+
+            for outcome in range(0, N_qubits):
+
+                data_samples[sample, outcome] = temp % 2
+                temp >>= 1
 
         np.random.shuffle(data_samples)
 
