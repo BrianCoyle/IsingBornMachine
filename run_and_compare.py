@@ -3,6 +3,7 @@
 #
 # More details.
 
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation, style
@@ -165,6 +166,8 @@ def main():
         qc = get_qc(device_name, as_qvm = as_qvm_value)  
         N_qubits = len(qc.qubits())
         circuit_type = 'QAOA'
+
+        device_params = [device_name, as_qvm_value]
  
         if data_type == 'Quantum_Data':
 
@@ -215,8 +218,6 @@ def main():
         #Split data into training/test sets
         data_train_test = TrainTestPartition(data_samples)
 
-        plt.figure(1)
- 
         random_seed = 0
 
         #Parameters, J, b for epoch 0 at random, gamma = constant = pi/4
@@ -230,6 +231,10 @@ def main():
                         N_kernel_samples]
 
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
+
+        print(data_exact_dict)
+
+        plt.figure(1)
   
         loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(qc, N_epochs, initial_params, \
                                                                                     kernel_type,\

@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from auxiliary_functions import IntegerToString
 
@@ -63,25 +64,45 @@ def ProbDist(n_v, m_h, p, hamw):
 			dist[v_string][h] = ((p**(n_v - hamw[v_string][h]))*((1-p)**(hamw[v_string][h])))
 	return dist
 
+def all_binary_values(power):
+
+    binary_list = np.zeros((2**power, power))
+
+    for i in range(2**power):
+
+        temp = i
+
+        for j in range(power):
+
+                binary_list[i,power - j - 1] = temp % 2
+                temp >>= 1
+
+    return binary_list
+
 def TrainingData(N_v, N_h, M_h):
-	"""This function constructs example training data"""
+    """This function constructs example training data"""
+    
+    '''s_hidden/s_visible is all possible output strings of the qubits'''
+    '''s_modes is all possible output strings over the modes'''
+    
+    # centre_modes = CentreModes(N_v, M_h)
+    centre_modes = np.random.binomial(1, 0.5, (M_h,N_v))
+    # bin_visible, _,_ = Perms(N_v, N_h, M_h)
+    # print(bin_visible)
+    bin_visible = all_binary_values(N_v)
+    # print(bin_visible)
+    hamweight = HamWeightModes(bin_visible, centre_modes, N_v, M_h)
+    jointdist = ProbDist(N_v, M_h, 0.9, hamweight)
+    data_dist = (1/M_h)*jointdist.sum(axis=1)
+    #put data in dictionary
+    data_dist_dict = {}
+    for v_string in range(0,2**N_v):
+    	bin_string_visible = IntegerToString(v_string, N_v)
+    	data_dist_dict[bin_string_visible] = data_dist[v_string]
+    return data_dist, data_dist_dict
 
-	'''s_hidden/s_visible is all possible output strings of the qubits'''
-	'''s_modes is all possible output strings over the modes'''
-
-	centre_modes = CentreModes(N_v, M_h)
-	bin_visible, _,_ = Perms(N_v, N_h, M_h)
-	hamweight = HamWeightModes(bin_visible, centre_modes, N_v, M_h)
-	jointdist = ProbDist(N_v, M_h, 0.9, hamweight)
-	data_dist = (1/M_h)*jointdist.sum(axis=1)
-	#put data in dictionary
-	data_dist_dict = {}
-	for v_string in range(0,2**N_v):
-		bin_string_visible =IntegerToString(v_string, N_v)
-		data_dist_dict[bin_string_visible] = data_dist[v_string]
-	return data_dist, data_dist_dict
-
-def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
+# def DataSampler(N_v, N_h, M_h, N_samples, data_probs, exact_data_dict):
+def DataSampler(N_v, N_h, M_h, N_samples, data_probs):
 	'''This functions generates (N_samples) samples according to the given probability distribution
 		data_probs'''
 	

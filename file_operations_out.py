@@ -146,16 +146,17 @@ def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubi
         N_h = 0
         data_probs, exact_data_dict = TrainingData(N_qubits, N_h, M_h)
     
-        data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs, exact_data_dict)
-        print(data_samples)
+        # data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs, exact_data_dict)
+
+        data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs)
 
         with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), 'wb') as f:
 
             for string in data_samples:
 
-                for byte in range(N_qubit % 8):
+                for byte in range(N_qubits % 8):
 
-                    total = string_to_int_byte(string, N_qubit, byte)
+                    total = string_to_int_byte(string, N_qubits, byte)
 
                     f.write(bytes([total]))
 
