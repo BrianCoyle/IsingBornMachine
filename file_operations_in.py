@@ -6,7 +6,7 @@ import numpy as np
 import ast
 import sys
 import json
-from auxiliary_functions import SampleListToArray, FindNumQubits
+from auxiliary_functions import SampleListToArray
 
 def FileLoad(file):
 	kernel = json.load(file)
@@ -79,16 +79,16 @@ def DataImport(data_type, N_qubits, N_data_samples, *args):
 	return data_samples, data_exact_dict 
 
 ## Reads kernel dictionary from file
-def KernelDictFromFile(device_params, N_samples, kernel_choice):
-	N_qubits = FindNumQubits(device_params)
+def KernelDictFromFile(qc, N_samples, kernel_choice):
+	N_qubits = len(qc.qubits())
 	#reads kernel dictionary from file
 	N_kernel_samples = N_samples[-1]
 
 	if (N_kernel_samples == 'infinite'):
-		with open('data/%sKernel_Exact_Dict_%iQBs' % (kernel_choice[0], N_qubits), 'r') as f:
+		with open('kernel/%sKernel_Dict_%iQBs_Exact' % (kernel_choice[0], N_qubits), 'r') as f:
 			_, keys, values = FileLoad(f)
 	else:
-		with open('data/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_kernel_samples), 'r') as f:
+		with open('kernel/%sKernel_Dict_%iQBs_%iKernelSamples' % (kernel_choice[0], N_qubits, N_kernel_samples), 'r') as f:
 			_, keys, values = FileLoad(f)
 
 	return dict(zip(*[keys, values]))
@@ -113,12 +113,12 @@ def ParamsFromFile(N_qubits):
 	return J_i, b_i, g_x_i, g_y_i
 
 
-def TrainingDataFromFile(cost_func, device_params, kernel_type,N_kernel_samples, N_data_samples, N_born_samples, batch_size, N_epochs):
+def TrainingDataFromFile(cost_func, qc, kernel_type,N_kernel_samples, N_data_samples, N_born_samples, batch_size, N_epochs):
 	'''This function reads in all information generated during the training process for a specified set of parameters'''
 
 	trial_name = "outputs/Output_%sCost_%sDevice_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
 				%(cost_func,\
-				device_params[0],\
+				qc.name,\
 				kernel_type,\
 				N_kernel_samples,\
 				N_born_samples,\
@@ -134,6 +134,7 @@ def TrainingDataFromFile(cost_func, device_params, kernel_type,N_kernel_samples,
 	loss = {}
 	loss[('%s' %cost_func, 'Train')] = np.loadtxt('%s/loss/%s/train' 	%(trial_name,cost_func),  dtype = float)
 	loss[('%s' %cost_func, 'Test')] = np.loadtxt('%s/loss/%s/test' 	%(trial_name,cost_func),  dtype = float)
+	loss[('TV')] 					= np.loadtxt('%s/loss/TV' ,  dtype = float)
 
 	for epoch in range(0, N_epochs - 1):
 		circuit_params[('J', epoch)] 		= np.loadtxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), dtype = float)

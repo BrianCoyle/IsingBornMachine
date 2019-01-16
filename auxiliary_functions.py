@@ -238,31 +238,3 @@ def MiniBatchSplit(samples, batch_size):
     return batches[0]
 
 
-def FindNumQubits(device_params):
-    if type(device_params[0]) is not str:
-        raise IOError('The device name must be a string')
-    if (device_params[1] != 0 and device_params[1] != 1):
-        raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
-
-    qc = get_qc(device_params[0], as_qvm = device_params[1])
-    N_qubits = len(qc.qubits())
-
-    return N_qubits
-
-##This function finds ouptuts the used qubits for a given quantum device, and the number of qubits#
-# @param[in] device_params list containing device_name and as_qvm_value
-#
-# @param[out] qubits A list of the IDs of the qubits used
-# @param[out] N_qubits The number of qubits
-#
-def FindQubits(device_params):
-    if type(device_params[0]) is not str:
-        raise IOError('The device name must be a string')
-    if (device_params[1] != 0 and device_params[1] != 1):
-        raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
-
-    qc = get_qc(device_params[0], as_qvm = device_params[1])
-    qubits = qc.qubits()
-    N_qubits = len(qubits)
-
-    return qubits, N_qubits

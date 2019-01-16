@@ -1,20 +1,19 @@
 from pyquil.quil import Program
 import numpy as np
-from pyquil.api import get_qc
 
 from sample_gen import BornSampler, PlusMinusSampleGen
 from cost_functions import CostFunction, CostGrad
-from auxiliary_functions import  EmpiricalDist, TotalVariationCost, MiniBatchSplit, FindNumQubits
+from auxiliary_functions import  EmpiricalDist, TotalVariationCost, MiniBatchSplit
 
 ################################################################################################################
 #Train Model Using Stein Discrepancy with either exact kernel and gradient or approximate one using samples
 ################################################################################################################
-def TrainBorn(device_params, cost_func,initial_params,
+def TrainBorn(qc, cost_func,initial_params,
                 N_epochs,  N_samples,
                 data_train_test, data_exact_dict,
                 k_choice, flag):
             
-    N_qubits = FindNumQubits(device_params)   
+    N_qubits = len(qc.qubits())
 
     #Import initial parameter values
     circuit_params = {}
@@ -66,7 +65,7 @@ def TrainBorn(device_params, cost_func,initial_params,
         circuit_params_per_epoch['gamma_y'] = circuit_params[('gamma_y', epoch)]
 
         #generate samples, and exact probabilities for current set of parameters
-        born_samples, born_probs_approx_dict, born_probs_exact_dict = BornSampler(device_params, N_samples, circuit_params_per_epoch, circuit_choice)
+        born_samples, born_probs_approx_dict, born_probs_exact_dict = BornSampler(qc, N_samples, circuit_params_per_epoch, circuit_choice)
                 
                 
         born_probs_list.append(born_probs_approx_dict)
@@ -78,7 +77,7 @@ def TrainBorn(device_params, cost_func,initial_params,
         
         '''Updating bias b[r], control set to 'BIAS' '''
         for bias_index in range(0, N_qubits):
-            born_samples_pm = PlusMinusSampleGen(device_params, circuit_params_per_epoch,\
+            born_samples_pm = PlusMinusSampleGen(qc, circuit_params_per_epoch,\
                                                 0,0, bias_index, 0, \
                                                 circuit_choice, 'BIAS',  N_samples)
 
@@ -94,7 +93,7 @@ def TrainBorn(device_params, cost_func,initial_params,
                 born_batch = MiniBatchSplit(born_samples, batch_size)
 
     
-            bias_grad[bias_index] = CostGrad(device_params, cost_func, data_batch, data_exact_dict,
+            bias_grad[bias_index] = CostGrad(qc, cost_func, data_batch, data_exact_dict,
                                                 born_batch, born_probs_approx_dict,
                                                 born_samples_pm, 
                                                 N_samples, k_choice, stein_params, flag)
@@ -124,7 +123,7 @@ def TrainBorn(device_params, cost_func,initial_params,
             for p in range(0, N_qubits):
                 if (p < q):
                     ## Draw samples from +/- pi/2 shifted circuits for each weight update, J_{p, q}
-                    born_samples_pm = PlusMinusSampleGen(device_params, circuit_params_per_epoch, \
+                    born_samples_pm = PlusMinusSampleGen(qc, circuit_params_per_epoch, \
                                                         p, q, 0, 0,\
                                                         circuit_choice, 'WEIGHTS', N_samples)
             
@@ -140,7 +139,7 @@ def TrainBorn(device_params, cost_func,initial_params,
                         born_batch      = MiniBatchSplit(born_samples, batch_size)
 
 
-                    weight_grad[p,q] = CostGrad(device_params, cost_func, data_batch, data_exact_dict,
+                    weight_grad[p,q] = CostGrad(qc, cost_func, data_batch, data_exact_dict,
                                                 born_batch, born_probs_approx_dict,
                                                 born_samples_pm, 
                                                 N_samples, k_choice, stein_params, flag)
@@ -155,21 +154,19 @@ def TrainBorn(device_params, cost_func,initial_params,
         circuit_params[('J', epoch+1)] = circuit_params[('J', epoch)] - learning_rate_weights*(weight_grad + np.transpose(weight_grad))
 
        
-        if cost_func == 'TV':
-            #Check Total Variation Distribution using the exact output probabilities
-            loss[('TV')].append(TotalVariationCost(data_exact_dict, born_probs_exact_dict))
+        
+        #Check Total Variation Distribution using the exact output probabilities
+        loss[('TV')].append(TotalVariationCost(data_exact_dict, born_probs_exact_dict))
 
-            print("The Variation Distance for epoch ", epoch, "is", loss['TV'][epoch])
-        else:
-            #Check loss of Model Distribution with training set
-            loss[(cost_func, 'Train')].append(CostFunction(device_params, cost_func, data_train_test[0], data_exact_dict, born_samples,\
-                                                            born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
-            loss[(cost_func, 'Test')].append(CostFunction(device_params, cost_func, data_train_test[1], data_exact_dict, born_samples,\
-                                                            born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
-            # print('Train is:', data_train_test[0])
-            # print('Test is:', data_train_test[1])
+        print("The Variation Distance for epoch ", epoch, "is", loss['TV'][epoch])
 
-            print("The %s Loss for epoch " %cost_func, epoch, "is", loss[(cost_func, 'Train')][epoch])
+        #Check loss of Model Distribution with training set
+        loss[(cost_func, 'Train')].append(CostFunction(qc, cost_func, data_train_test[0], data_exact_dict, born_samples,\
+                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
+        loss[(cost_func, 'Test')].append(CostFunction(qc, cost_func, data_train_test[1], data_exact_dict, born_samples,\
+                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
+
+        print("The %s Loss for epoch " %cost_func, epoch, "is", loss[(cost_func, 'Train')][epoch])
 
     return loss, circuit_params, born_probs_list, empirical_probs_list
 
@@ -177,11 +174,12 @@ def TrainBorn(device_params, cost_func,initial_params,
 def AdamLR(learning_rate_init, timestep, gradient, m, v, beta1 = 0.9, beta2 = 0.999, epsilon = 1e-8):
     '''
     Method to compute Adam learning rate which includes momentum
+    Parameters, beta1, beta2, epsilon are as recommended in orginal Adam paper
     '''
     timestep = timestep +1
     m           = np.multiply(beta1, m) + np.multiply((1-beta1), gradient)
     v           = np.multiply(beta2, v) + np.multiply((1-beta2) , gradient**2)
     corrected_m = np.divide(m , (1- beta1**timestep))
     corrected_v = np.divide(v, (1- beta2**timestep))
-    
+
     return learning_rate_init*(np.divide(corrected_m, np.sqrt(corrected_v)+ epsilon)), m, v

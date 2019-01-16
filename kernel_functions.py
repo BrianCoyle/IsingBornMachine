@@ -1,18 +1,17 @@
 from pyquil.quil import Program
 import numpy as np
-from pyquil.api import get_qc
 
 from classical_kernel import GaussianKernelArray, GaussianKernelDict
 from quantum_kernel import QuantumKernelArray
 
-from auxiliary_functions import AllBinaryStrings, FindNumQubits
+from auxiliary_functions import AllBinaryStrings
 
-def KernelAllBinaryStrings(device_params, N_samples, kernel_choice):
+def KernelAllBinaryStrings(qc, N_samples, kernel_choice):
     '''
     This functions computes the kernel, either Gaussian or Quantum for *all* Binary strings of 
     length N_qubits
     '''
-    N_qubits = FindNumQubits(device_params)
+    N_qubits = len(qc.qubits())
     binary_strings_array = AllBinaryStrings(N_qubits)
     if (kernel_choice == 'Gaussian'):
         sigma = np.array([0.25, 10, 1000])
@@ -24,7 +23,8 @@ def KernelAllBinaryStrings(device_params, N_samples, kernel_choice):
     elif (kernel_choice ==  'Quantum'):
         #compute for all binary strings
         kernel_approx_array, kernel_exact_array, kernel_approx_dict, kernel_exact_dict =\
-            QuantumKernelArray(device_params, N_samples, binary_strings_array, binary_strings_array)
+            QuantumKernelArray(qc, N_samples, binary_strings_array, binary_strings_array)
+        print(binary_strings_array)
     else: raise IOError("Please enter either 'Gaussian' or 'Quantum' to choose a kernel")
 
     #compute the expectation values for including each binary string sample

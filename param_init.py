@@ -3,14 +3,8 @@
 # Initialise some inputted variables
 
 from pyquil.quil import Program
-from pyquil.paulis import *
 import pyquil.paulis as pl
 from pyquil.gates import *
-from pyquil.quilbase import DefGate
-from pyquil.parameters import Parameter, quil_exp, quil_cos, quil_sin
-from pyquil.api import get_qc, WavefunctionSimulator
-
-from auxiliary_functions import FindNumQubits, FindQubits
 import numpy as np
 import random as rand
 from numpy import pi,log2
@@ -26,12 +20,12 @@ def HadamardToAll(prog, qubits):
 #
 # This function computes the initial parameter values, J, b randomly chosen on interval [0, pi/4], gamma_x, gamma_y set to constant = pi/4 if untrained
 #
-# @param[in] device_params The Rigetti device that is chosen, e.g. 'Aspen-1-2Q-B'
+# @param[in] qc The Rigetti QuantumComputer Object that is chosen, e.g. 'Aspen-1-2Q-B'
 #
 # @return initialised parameters
-def NetworkParams(device_params, random_seed):
+def NetworkParams(qc, random_seed):
 
-	N_qubits = FindNumQubits(device_params)
+	N_qubits = len(qc.qubits())
 
     #Initialise arrays for parameters
 
@@ -70,10 +64,10 @@ def NetworkParams(device_params, random_seed):
 
 	return initial_params
 
-def NetworkParamsSingleQubitGates(device_params, layers):
+def NetworkParamsSingleQubitGates(qc, layers):
 	'''This function initilises single-qubit trainable parameters'''
 
-	N_qubits = FindNumQubits(device_params)
+	N_qubits = len(qc.qubits())
 	
 	#Initialise arrays for parameters
 	single_qubit_params	= np.zeros(N_qubits, N_qubits, N_qubits, layers) 
@@ -91,7 +85,7 @@ def NetworkParamsSingleQubitGates(device_params, layers):
 	return single_qubit_params
 
 #Initialise Quantum State created after application of gate sequence
-def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control, sign):
+def StateInit(qc, circuit_params, p, q, r, s, circuit_choice, control, sign):
 		'''This function computes the state produced after the given circuit, either QAOA, IQP, or IQPy,
 		depending on the value of circuit_choice.'''
 
@@ -102,7 +96,8 @@ def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control
 		#Initialise empty quantum program, with QuantumComputer Object, and Wavefunction Simulator
 		prog = Program()
 		
-		qubits, N_qubits = FindQubits(device_params)
+		qubits = qc.qubits()
+		N_qubits = len(qubits)
 		#Unpack circuit parameters from dictionary
 		J = circuit_params['J']
 		b = circuit_params['b']
@@ -153,13 +148,13 @@ def StateInit(device_params, circuit_params, p, q, r, s, circuit_choice, control
 				# elif (control == 'GAMMA' and k == s and sign == 'NEGATIVE'):
 				# 	prog.inst(pl.exponential_map(sX(k))(-float(gamma_x[k])- pi/2))
 				# elif (control == 'NEITHER' or 'WEIGHTS' or 'BIAS' and sign == 'NEITHER'):
-				H_temp = (-float(gamma_x[k]))*sX(qubits[k])
+				H_temp = (-float(gamma_x[k]))*pl.sX(qubits[k])
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 				# print('GAMMA IS:',-float(gamma_x[k]))
 		elif (circuit_choice == 'IQPy' ):
 			#If the final 'measurement' layer is to be a IQPy measurement (i.e. e^(-i(pi/4)Y_i) on all qubits)
 			for k in qubits:
-				H_temp = (-float(gamma_y[k]))*sY(qubits[k])
+				H_temp = (-float(gamma_y[k]))*pl.sY(qubits[k])
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
 		else: raise IOError("circuit_choice must be either  \

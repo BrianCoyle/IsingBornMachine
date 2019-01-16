@@ -7,15 +7,15 @@ from quantum_kernel import  QuantumKernelArray, QuantumKernel
 
 from kernel_functions import NormaliseKernel
 from file_operations_in import KernelDictFromFile, DataDictFromFile
-from auxiliary_functions import ShiftString, EmpiricalDist, FindNumQubits, ToString
+from auxiliary_functions import ShiftString, EmpiricalDist, ToString
  
 import stein_score as ss
 from spectral_stein_score import SpectralSteinScore
 import json	
 
-def DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag):
+def DeltaTerms(qc, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag):
 	'''This kernel computes the shifted *Delta* terms used in the Stein Discrepancy'''
-	N_qubits = FindNumQubits(device_params)
+	N_qubits = len(qc.qubits())
 	N_samples1 = len(sample_array_1)
 	N_samples2 = len(sample_array_2)
 
@@ -42,7 +42,7 @@ def DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_arr
 						kernel_xy_shifted[sample_index1, sample_index2, qubit]  = GaussianKernel(shiftedsample1,    shiftedsample2, sigma)
 
 				elif flag == 'Precompute': #Use Precomputed kernel dictionary to accelerate training
-					kernel_dict  = KernelDictFromFile(device_params, N_samples, kernel_choice)
+					kernel_dict  = KernelDictFromFile(qc, N_samples, kernel_choice)
 					kernel = kernel_dict[(sample1, sample2)]
 
 					sample1 		= ToString(sample_array_1[sample_index1])
@@ -62,10 +62,10 @@ def DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_arr
 
 	return delta_x_kernel, delta_y_kernel, trace
 
-def WeightedKernel(device_params, kernel_choice, kernel_array, N_samples, data_samples, data_probs, sample_array_1, sample_array_2, stein_params, flag, *argsv):
+def WeightedKernel(qc, kernel_choice, kernel_array, N_samples, data_samples, data_probs, sample_array_1, sample_array_2, stein_params, flag, *argsv):
 	'''This kernel computes the weighted kernel for all samples from the two distributions sample_list_1, sample_list_2'''
 
-	delta_x_kernel, delta_y_kernel, trace = DeltaTerms(device_params, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag)
+	delta_x_kernel, delta_y_kernel, trace = DeltaTerms(qc, kernel_choice, kernel_array, N_samples, sample_array_1, sample_array_2, flag)
 
 	#Parameters required for computing the Stein Score
 	score_approx        = stein_params[0]
