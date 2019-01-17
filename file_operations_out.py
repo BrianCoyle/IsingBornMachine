@@ -49,13 +49,13 @@ def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 
 def PrintKernel(N_kernel_samples, kernel_choice, max_qubits):
 	#print the required kernel out to a file, for all binary strings
-	devices = [get_qc('%iq-qvm' %N_qubits , True) for N_qubits in range(2, max_qubits)]
+	devices = [get_qc('%iq-qvm' %N_qubits , as_qvm = True) for N_qubits in range(2, max_qubits)]
 
 	for qc in devices:
 		N_qubits = len(qc.qubits())
 		print('This is qubit:', N_qubits)
 		#The number of samples, N_samples = infinite if the exact kernel is being computed
-		_,_, kernel_approx_dict,_ = KernelAllBinaryStrings(device_params, N_kernel_samples, kernel_choice)
+		_,_, kernel_approx_dict,_ = KernelAllBinaryStrings(qc, N_kernel_samples, kernel_choice)
 
 		KernelDictToFile(N_qubits, N_kernel_samples, kernel_approx_dict, kernel_choice)
 	return
