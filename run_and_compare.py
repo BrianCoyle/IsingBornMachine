@@ -12,7 +12,7 @@ from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDi
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, SampleListToArray
+from auxiliary_functions import TrainTestPartition, SampleListToArray, num_bytes_needed
 from pyquil.api import get_qc
 import sys
 import os
@@ -133,15 +133,6 @@ def bytes_to_int(bytes_list):
 
     return total
 
-def num_bytes_needed(num_bits):
-
-    num_bytes = num_bits // 8
-
-    if num_bits % 8 != 0:
-        num_bytes += 1
-
-    return num_bytes
-
 def read_ints_from_file(N_qubits, N_data_samples, f):
 
     int_list = [0] * N_data_samples
@@ -193,6 +184,10 @@ def main():
                 with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
 
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
+
+                print("read data =")
+
+                print(data_samples_orig)
 
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")

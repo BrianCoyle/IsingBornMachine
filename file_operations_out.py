@@ -1,5 +1,5 @@
 from train_generation import TrainingData, DataSampler
-from auxiliary_functions import EmpiricalDist, SampleListToArray, AllBinaryStrings
+from auxiliary_functions import EmpiricalDist, SampleListToArray, AllBinaryStrings, num_bytes_needed
 from kernel_functions import KernelAllBinaryStrings
 from param_init import NetworkParams
 from sample_gen import BornSampler
@@ -150,13 +150,19 @@ def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubi
 
         data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs)
 
+        print("data_written  =")
+
+        print(data_samples)
+
         with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), 'wb') as f:
 
             for string in data_samples:
 
-                for byte in range(N_qubits % 8):
+                for byte in range(num_bytes_needed(N_qubits)):
 
                     total = string_to_int_byte(string, N_qubits, byte)
+
+                    print(total)
 
                     f.write(bytes([total]))
 
