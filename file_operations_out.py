@@ -9,7 +9,7 @@ import sys
 import os
 from pyquil.api import get_qc
 
-max_qubits = 6
+max_qubits = 8
 
 def MakeDirectory(path):
 	'''Makes an directory in the given \'path\', if it does not exist already'''
@@ -17,16 +17,16 @@ def MakeDirectory(path):
 		os.makedirs(path)
 	return
 
-def PrintParamsToFile(seed):
+def PrintParamsToFile(seed, max_qubits):
 
-    for qubit_index in range(2, Max_qubits):
+    for qubit_index in range(2, max_qubits):
 
         J_init, b_init, gamma_x_init, gamma_y_init = NetworkParams(qubit_index, seed)
         np.savez('data/Parameters_%iQubits.npz' % (qubit_index), J_init = J_init, b_init = b_init, gamma_x_init = gamma_x_init, gamma_y_init = gamma_y_init)
 
         return
 
-#PrintParamsToFile()
+#PrintParamsToFile(seed, max_qubits)
 
 def KernelDictToFile(N_qubits, N_kernel_samples, kernel_dict, kernel_choice):
 	#writes kernel dictionary to file
@@ -107,18 +107,11 @@ def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
 
 	return
 
-# # #Uncomment if quantum data needs to be printed to file
-# quantum_computers = [get_qc('%iq-qvm' %N_qubits , as_qvm = True) for N_qubits in range(2, 6)]
-# circuit_choice = 'QAOA'
-# PrintDataToFiles('Quantum_Data', quantum_computers, circuit_choice)
-
-# Uncomment if classical data needs to be printed to file
-# PrintDataToFiles('Classical_Data')
 
 def PrintCircuitParamsToFile(random_seed, circuit_choice):
 	quantum_computers = [get_qc('%iq-qvm' %N_qubits , as_qvm = True) for N_qubits in range(2, 7)]
 	for qc in quantum_computers:
-		
+		device_name = qc.name
 		qubits = qc.qubits()
 		N_qubits = len(qubits)
 		circuit_params = NetworkParams(qc, random_seed)
@@ -136,65 +129,86 @@ def string_to_int_byte(string, N_qubits, byte):
 
     return total
     
-def PrintDataToFiles(data_type, N_samples, device_params, circuit_choice, N_qubits):
+def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
 
-    if data_type == 'Classical_Data':
+	binary_data_path = 'binary_data/'
+	MakeDirectory(binary_data_path)
+	if data_type == 'Classical_Data':
         
-        #Define training data along with all binary strings on the visible and hidden variables from train_generation
-        #M_h is the number of hidden Bernoulli modes in the data
-        M_h = 8
-        N_h = 0
-        data_probs, exact_data_dict = TrainingData(N_qubits, N_h, M_h)
-    
-        # data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs, exact_data_dict)
+		#Define training data along with all binary strings on the visible and hidden variables from train_generation
+		#M_h is the number of hidden Bernoulli modes in the data
+		M_h = 8
+		N_h = 0
+		data_probs, exact_data_dict = TrainingData(N_qubits, N_h, M_h)
 
-        data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs)
+		data_samples = DataSampler(N_qubits, N_h, M_h, N_samples, data_probs)
 
-        print("data_written  =")
+		#Save data as binary files
+		with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), 'wb') as f:
 
-        print(data_samples)
+			for string in data_samples:
 
-        with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), 'wb') as f:
+                            for byte in range(num_bytes_needed(N_qubits)):
+                                
+                                total = string_to_int_byte(string, N_qubits, byte)
+                                
+                                f.write(bytes([total]))
 
-            for string in data_samples:
+		data_samples_list = SampleListToArray(data_samples, N_qubits)
+		emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
+		DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
 
-                for byte in range(num_bytes_needed(N_qubits)):
+		np.savetxt('data/Classical_Data_%iQBs_Exact' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
+		DataDictToFile(data_type, N_qubits, exact_data_dict, 'infinite')
 
-                    total = string_to_int_byte(string, N_qubits, byte)
+	elif data_type == 'Quantum_Data':
 
-                    print(total)
-
-                    f.write(bytes([total]))
-
-        data_samples_list = SampleListToArray(data_samples, N_qubits)
-        emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
-        DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
-        
-        np.savetxt('data/Classical_Data_%iQBs_Exact' % (N_qubits), np.asarray(data_probs), fmt='%.10f')
-        DataDictToFile(data_type, N_qubits, exact_data_dict, 'infinite')
-
-    elif data_type == 'Quantum_Data':
-    
-        device_name = device_params[0]
-        as_qvm_value = device_params[1]
                 
-        #Set random seed differently to that which initialises the actual Born machine to be trained
-        random_seed_for_data = 13
-        N_Born_Samples = [0, N_samples] #BornSampler takes a list of sample values, the [1] entry is the important one
-        circuit_params = NetworkParams(device_params, random_seed_for_data) #Initialise a fixed instance of parameters to learn.
-        quantum_data_samples, quantum_probs_dict, quantum_probs_dict_exact = BornSampler(device_params, N_Born_Samples, circuit_params, circuit_choice)
-        print(quantum_data_samples)
-        
-        np.savetxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_samples, circuit_choice), quantum_data_samples, fmt='%s')
-        DataDictToFile(data_type, N_qubits, quantum_probs_dict, N_samples, circuit_choice)
-        np.savetxt('data/Quantum_Data_%iQBs_Exact_%sCircuit' % (N_qubits, circuit_choice), np.asarray(quantum_data_samples), fmt='%.10f')
-        DataDictToFile(data_type, N_qubits, quantum_probs_dict_exact, 'infinite', circuit_choice)
-    
-    else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
-    
-    return
+		#Set random seed differently to that which initialises the actual Born machine to be trained
+		random_seed_for_data = 13
+		N_Born_Samples = [0, N_samples] #BornSampler takes a list of sample values, the [1] entry is the important one
+		circuit_params = NetworkParams(qc, random_seed_for_data) #Initialise a fixed instance of parameters to learn.
+		quantum_data_samples, quantum_probs_dict, quantum_probs_dict_exact = BornSampler(qc, N_Born_Samples, circuit_params, circuit_choice)
+		print(quantum_data_samples)
 
-#Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
+		np.savetxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_samples, circuit_choice), quantum_data_samples, fmt='%s')
+		DataDictToFile(data_type, N_qubits, quantum_probs_dict, N_samples, circuit_choice)
+		np.savetxt('data/Quantum_Data_%iQBs_Exact_%sCircuit' % (N_qubits, circuit_choice), np.asarray(quantum_data_samples), fmt='%.10f')
+		DataDictToFile(data_type, N_qubits, quantum_probs_dict_exact, 'infinite', circuit_choice)
+
+	else: raise IOError('Please enter either \'Quantum_Data\' or \'Classical_Data\' for \'data_type\' ')
+
+	return
+
+def PrintAllDataToFiles(data_type, max_qubits):
+	'''
+	This function prints all data samples to files, for either Quantum or Classical Data
+	for all number of qubits between 2 and max_qubits.
+	'''
+	N_sample_trials = [10, 20, 30, 40, 50, 80, 100, 200, 300, 400, 500, 600, 700, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000]
+
+	for N_qubits in range(2, max_qubits):
+		for N_samples in N_sample_trials:
+			if data_type == 'Quantum_Data':
+				qc = get_qc('%iq-qvm' %N_qubits , as_qvm = True)
+				circuit_choice 	= 'QAOA'
+				print('Quantum Data is printing for %i qubits on qc %s using circuit choice %s' %(N_qubits, qc.name, circuit_choice))
+				PrintDataToFiles('Quantum_Data', N_samples, qc, circuit_choice, N_qubits)
+
+			elif data_type == 'Classical_Data':
+				qc 				= None
+				circuit_choice 	= None
+				print('Classical Data is printing for %i qubits' %N_qubits)
+				PrintDataToFiles('Classical_Data', N_samples, qc, circuit_choice, N_qubits)
+
+# #Uncomment if quantum data needs to be printed to file
+# PrintAllDataToFiles('Quantum_Data', max_qubits)
+
+# Uncomment if classical data needs to be printed to file
+PrintAllDataToFiles('Classical_Data', max_qubits)
+
+
+# #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
 
@@ -264,13 +278,3 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, data_exact
 		np.savetxt('%s/params/gammaY/epoch%s' 	%(trial_name, epoch), circuit_params[('gamma_y', epoch)])
 
 	return
-
-def QuantumSamplesToFile(device_params, N_samples, circuit_params, circuit_choice):
-    device_name = device_params[0]
-    as_qvm_value = device_params[1]
-
-    qc = get_qc(device_name, as_qvm = as_qvm_value)
-
-    N_qubits = len()
-    born_samples, born_probs_approx_dict, born_probs_exact_dict = BornSampler(device_params, N_samples, circuit_params, circuit_choice)
-    np.savetxt('data/QuantumData%iQBs_%iSamples' % (N_qubits, 10), born_samples, fmt='%s')
