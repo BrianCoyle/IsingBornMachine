@@ -98,6 +98,7 @@ def StringToArray(string):
     for bit in range(0, len(string)):
         string_array[bit] = int(string[bit])
     return string_array
+
 ## Convert list to array
 #
 # @param[in] original_samples_list The original list
@@ -237,4 +238,22 @@ def MiniBatchSplit(samples, batch_size):
 
     return batches[0]
 
+def FindNumQubits(device_params):
+    
+    qc = get_qc(device_params[0], as_qvm = device_params[1])
 
+    return len(qc.qubits())
+
+##This function finds ouptuts the used qubits for a given quantum device, and the number of qubits#
+# @param[in] device_params list containing device_name and as_qvm_value
+#
+# @param[out] qubits A list of the IDs of the qubits used
+# @param[out] N_qubits The number of qubits
+#
+def FindQubits(device_params):
+    
+    qc = get_qc(device_params[0], as_qvm = device_params[1])
+    qubits = qc.qubits()
+    N_qubits = len(qubits)
+
+    return qubits, N_qubits
