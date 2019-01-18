@@ -156,7 +156,6 @@ def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
                                 
                                 f.write(bytes([total]))
 
-
 		np.savetxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), data_samples, fmt='%s')
 		data_samples_list = SampleListToArray(data_samples, N_qubits)
 		emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)

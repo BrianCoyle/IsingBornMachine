@@ -12,7 +12,7 @@ from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDi
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, SampleListToArray, num_bytes_needed, EmpiricalDist
+from auxiliary_functions import TrainTestPartition, SampleListToArray, num_bytes_needed
 from pyquil.api import get_qc
 import sys
 import os
@@ -208,8 +208,7 @@ def main():
                 data_samples[sample, N_qubits - 1 - outcome] = temp % 2
                 temp >>= 1
 
-        emp_dist = EmpiricalDist(data_samples, N_qubits)
-        print(emp_dist)
+      
         np.random.shuffle(data_samples)
 
         #Split data into training/test sets
@@ -228,7 +227,6 @@ def main():
                         N_kernel_samples]
 
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
-        emp_dist = EmpiricalDist(data_samples, N_qubits)
 
         
         plt.figure(1)
