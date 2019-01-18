@@ -1,5 +1,5 @@
 from train_generation import TrainingData, DataSampler
-from auxiliary_functions import EmpiricalDist, SampleListToArray, AllBinaryStrings
+from auxiliary_functions import EmpiricalDist, SampleListToArray, AllBinaryStrings, num_bytes_needed
 from kernel_functions import KernelAllBinaryStrings
 from param_init import NetworkParams
 from sample_gen import BornSampler
@@ -133,6 +133,8 @@ def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
 
 	binary_data_path = 'binary_data/'
 	MakeDirectory(binary_data_path)
+	data_path = 'data/'
+	MakeDirectory(data_path)
 	if data_type == 'Classical_Data':
         
 		#Define training data along with all binary strings on the visible and hidden variables from train_generation
@@ -148,12 +150,14 @@ def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
 
 			for string in data_samples:
 
-				for byte in range(N_qubits % 8):
+                            for byte in range(num_bytes_needed(N_qubits)):
+                                
+                                total = string_to_int_byte(string, N_qubits, byte)
+                                
+                                f.write(bytes([total]))
 
-					total = string_to_int_byte(string, N_qubits, byte)
 
-					f.write(bytes([total]))
-
+		np.savetxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), data_samples, fmt='%s')
 		data_samples_list = SampleListToArray(data_samples, N_qubits)
 		emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
 		DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
@@ -205,7 +209,7 @@ def PrintAllDataToFiles(data_type, max_qubits):
 # PrintAllDataToFiles('Quantum_Data', max_qubits)
 
 # Uncomment if classical data needs to be printed to file
-PrintAllDataToFiles('Classical_Data', max_qubits)
+# PrintAllDataToFiles('Classical_Data', max_qubits)
 
 
 # #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum

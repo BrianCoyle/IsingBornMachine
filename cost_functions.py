@@ -3,7 +3,7 @@ from random import *
 from classical_kernel import GaussianKernelArray
 from quantum_kernel import QuantumKernelArray
 from kernel_functions import NormaliseKernel
-
+from numpy import linalg as LA
 from file_operations_in import KernelDictFromFile, DataDictFromFile
 import stein_functions as sf
 from auxiliary_functions import EmpiricalDist, SampleArrayToList, ToString
@@ -14,7 +14,7 @@ def KernelSum(samplearray1, samplearray2, kernel_dict):
     '''
     This function computes the contribution to the MMD from the empirical distibutions
     from two sets of samples.
-    kernel_dict contains the kernel values for all pairs of biry strings
+    kernel_dict contains the kernel values for all pairs of binary strings
     '''
 
     N_samples1 = samplearray1.shape[0]
@@ -67,6 +67,7 @@ def CostFunction(qc, cost_func, data_samples, data_exact_dict, born_samples, bor
 
         loss =  NormaliseKernel(kernel_born_born_unnorm, 'same') - 2*NormaliseKernel(kernel_born_data_unnorm)+\
                     NormaliseKernel(kernel_data_data_unnorm, 'same')
+
 
     elif cost_func == 'Stein':
 

@@ -12,7 +12,7 @@ from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDi
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, SampleListToArray
+from auxiliary_functions import TrainTestPartition, SampleListToArray, num_bytes_needed, EmpiricalDist
 from pyquil.api import get_qc
 import sys
 import os
@@ -133,15 +133,6 @@ def bytes_to_int(bytes_list):
 
     return total
 
-def num_bytes_needed(num_bits):
-
-    num_bytes = num_bits // 8
-
-    if num_bits % 8 != 0:
-        num_bytes += 1
-
-    return num_bytes
-
 def read_ints_from_file(N_qubits, N_data_samples, f):
 
     int_list = [0] * N_data_samples
@@ -194,6 +185,10 @@ def main():
 
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
+                print("read data =")
+
+                print(data_samples_orig)
+
         else:
             sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
 
@@ -210,9 +205,11 @@ def main():
 
             for outcome in range(0, N_qubits):
 
-                data_samples[sample, outcome] = temp % 2
+                data_samples[sample, N_qubits - 1 - outcome] = temp % 2
                 temp >>= 1
 
+        emp_dist = EmpiricalDist(data_samples, N_qubits)
+        print(emp_dist)
         np.random.shuffle(data_samples)
 
         #Split data into training/test sets
@@ -231,9 +228,9 @@ def main():
                         N_kernel_samples]
 
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
+        emp_dist = EmpiricalDist(data_samples, N_qubits)
 
-        print(data_exact_dict)
-
+        
         plt.figure(1)
   
         loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(qc, N_epochs, initial_params, \
@@ -242,8 +239,8 @@ def main():
                                                                                     N_samples,\
                                                                                     cost_func, 'Precompute')
    
-        fig, axs = PlotAnimate(N_qubits, 5, N_born_samples, cost_func, kernel_type, data_exact_dict)
-        SaveAnimation(N_epochs, fig, 10, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
         path_to_output = './outputs/Output_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
                                                          %(cost_func,\

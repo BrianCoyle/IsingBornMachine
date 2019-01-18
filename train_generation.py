@@ -39,11 +39,8 @@ def CentreModes(n_v, m_h):
 	for h in range(0, m_h):
 		#Fix random seed for reproducibility, for each centre mode, h
 		np.random.seed(h)
-		stemp = np.random.binomial(1, 0.5, n_v)
-		#print(stemp)
-		for v in range(0,n_v):
-			s_cent[h][v] = stemp[v]
-
+		s_cent[h] = np.random.binomial(1, 0.5, n_v)
+	
 	return s_cent
 
 """Finds the Hamming weight of each possible input relative to each of the centre points"""
@@ -85,8 +82,8 @@ def TrainingData(N_v, N_h, M_h):
     '''s_hidden/s_visible is all possible output strings of the qubits'''
     '''s_modes is all possible output strings over the modes'''
     
-    # centre_modes = CentreModes(N_v, M_h)
-    centre_modes = np.random.binomial(1, 0.5, (M_h,N_v))
+    centre_modes = CentreModes(N_v, M_h)
+    # centre_modes = np.random.binomial(1, 0.5, (M_h,N_v))
     # bin_visible, _,_ = Perms(N_v, N_h, M_h)
     # print(bin_visible)
     bin_visible = all_binary_values(N_v)

@@ -1,10 +1,10 @@
-100
+200
 Classical_Data
 500
 500
 2000
-250
+350
 Gaussian
 MMD
-4q-qvm
+5q-qvm
 1

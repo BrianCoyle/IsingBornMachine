@@ -238,6 +238,15 @@ def MiniBatchSplit(samples, batch_size):
 
     return batches[0]
 
+def num_bytes_needed(num_bits):
+
+    num_bytes = num_bits // 8
+
+    if num_bits % 8 != 0:
+        num_bytes += 1
+
+    return num_bytes
+
 def FindNumQubits(device_params):
     
     qc = get_qc(device_params[0], as_qvm = device_params[1])
