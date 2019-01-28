@@ -68,6 +68,8 @@ Where input.txt should look like:
 
 N_epochs   
 
+learning_rate
+
 data_type
 
 N_data_samples
@@ -85,6 +87,14 @@ cost_func
 device_name
 
 as_qvm_value (1) = True, (0) = False
+
+stein_score
+
+stein_eigvecs
+
+stein_eta
+
+sinkhorn_eps
 
 --------------------------------------------------------------------------------
 1. N_epochs is the number of epochs the training will run for.
@@ -105,7 +115,10 @@ as_qvm_value (1) = True, (0) = False
 9. device_name is the Rigetti chip to be used, it also determines the number of qubits to be used:
             e.g. Aspen-1-2Q-B uses a particular two qubits from the Aspen chip
 10. as_qvm_value determines whether to run on the Rigetti simulator, or the actual Quantum chip
-
+11. stein_score is the choice of method to compute the Stein Score function, either 'Exact_Score', 'Identity_Score' or           'Spectral_Score', to compute using exact probabilities, inverting Stein's identity, or the spectral method respectively
+12. stein_eigvecs is the number of Nystrom eigenvectors required to compute the Stein Score using the Spectral Method], an      integer typically =6
+13. stein_eta is the regularisation parameter required in the Identity Score method, a small number, typically 0.01
+14. sinkhorn_eps is the regularisation parameter used to compute the Sinkhorn Divergence, between (0, infinity)
 --------------------------------------------------------------------------------------------
 
 
