@@ -11,7 +11,9 @@ from auxiliary_functions import  EmpiricalDist, TotalVariationCost, MiniBatchSpl
 def TrainBorn(qc, cost_func,initial_params,
                 N_epochs,  N_samples,
                 data_train_test, data_exact_dict,
-                k_choice, flag):
+                k_choice, flag, learning_rate_init, 
+                stein_params, 
+                sinkhorn_eps):
             
     N_qubits = len(qc.qubits())
 
@@ -28,23 +30,17 @@ def TrainBorn(qc, cost_func,initial_params,
     bias_grad       = np.zeros((N_qubits))
     gamma_x_grad    = np.zeros((N_qubits))
 
-    loss = {('Stein', 'Train'): [], ('MMD', 'Train'): [], 'TV': [],\
-            ('Stein', 'Test'): [], ('MMD', 'Test'): []}
+    loss = {('MMD', 'Train'): [], ('MMD', 'Test'): [],\
+            ('Stein', 'Train'): [], ('Stein', 'Test'): [], \
+            ('Sinkhorn', 'Train'): [], ('Sinkhorn', 'Test'): [], \
+            'TV': []}
 
     born_probs_list = []
     empirical_probs_list = []
 
-    stein_params = {}
-
-    if cost_func == 'Stein':
-        stein_params[0] = 'Spectral_Score'  #Choice of method to approximate Stein Score:                   stein_score
-        stein_params[1] = 3                 #Number of Nystrom Eigenvectors, J for spectral_stein method:   J
-        stein_params[2] = 0.01              #regularization paramter for identity_stein method:             \chi
-        stein_params[3] = 'Gaussian'        #Kernel for computing Stein Score:                              stein_kernel_choice
-        stein_params[4] = [0.25, 10, 100]    #Bandwidth parameters for Gaussian Kernel:                      sigma
-
     circuit_choice ='QAOA'
 
+    
     #Initialize momentum vectors at 0 for Adam optimiser
     [m_bias, v_bias] = [np.zeros((N_qubits)) for _ in range(2)] 
     [m_weights, v_weights] = [np.zeros((N_qubits, N_qubits)) for _ in range(2)] 
@@ -73,8 +69,17 @@ def TrainBorn(qc, cost_func,initial_params,
 
         print('The Born Machine Outputs Probabilites\n', born_probs_approx_dict)
         print('The Data is\n,', data_exact_dict)
+        loss[(cost_func, 'Train')].append(CostFunction(qc, cost_func, data_train_test[0], data_exact_dict, born_samples,\
+                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag, sinkhorn_eps))
+        loss[(cost_func, 'Test')].append(CostFunction(qc, cost_func, data_train_test[1], data_exact_dict, born_samples,\
+                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag, sinkhorn_eps))
 
+        print("The %s Loss for epoch " %cost_func, epoch, "is", loss[(cost_func, 'Train')][epoch])
         
+        #Check Total Variation Distribution using the exact output probabilities
+        loss[('TV')].append(TotalVariationCost(data_exact_dict, born_probs_exact_dict))
+
+        print("The Variation Distance for epoch ", epoch, "is", loss['TV'][epoch])
         '''Updating bias b[r], control set to 'BIAS' '''
         for bias_index in range(0, N_qubits):
             born_samples_pm = PlusMinusSampleGen(qc, circuit_params_per_epoch,\
@@ -96,7 +101,7 @@ def TrainBorn(qc, cost_func,initial_params,
             bias_grad[bias_index] = CostGrad(qc, cost_func, data_batch, data_exact_dict,
                                                 born_batch, born_probs_approx_dict,
                                                 born_samples_pm, 
-                                                N_samples, k_choice, stein_params, flag)
+                                                N_samples, k_choice, stein_params, flag, sinkhorn_eps)
             #Update biases for next epoch
 
         # if (circuit_choice == 'QAOA'):	
@@ -142,31 +147,28 @@ def TrainBorn(qc, cost_func,initial_params,
                     weight_grad[p,q] = CostGrad(qc, cost_func, data_batch, data_exact_dict,
                                                 born_batch, born_probs_approx_dict,
                                                 born_samples_pm, 
-                                                N_samples, k_choice, stein_params, flag)
+                                                N_samples, k_choice, stein_params, flag, sinkhorn_eps)
         
         #Update Weights for next epoch
     
-        learning_rate_init = 0.1
         learning_rate_bias, m_bias, v_bias          = AdamLR(learning_rate_init, epoch, bias_grad, m_bias, v_bias)
         learning_rate_weights, m_weights, v_weights = AdamLR(learning_rate_init, epoch, weight_grad + np.transpose(weight_grad), m_weights, v_weights)
 
         circuit_params[('b', epoch+1)] = circuit_params[('b', epoch)] - learning_rate_bias*bias_grad
         circuit_params[('J', epoch+1)] = circuit_params[('J', epoch)] - learning_rate_weights*(weight_grad + np.transpose(weight_grad))
 
-       
-        
-        #Check Total Variation Distribution using the exact output probabilities
-        loss[('TV')].append(TotalVariationCost(data_exact_dict, born_probs_exact_dict))
+        # circuit_params[('b', epoch+1)] = circuit_params[('b', epoch)] - 0.1*bias_grad
+        # circuit_params[('J', epoch+1)] = circuit_params[('J', epoch)] - 0.1*(weight_grad + np.transpose(weight_grad))
 
-        print("The Variation Distance for epoch ", epoch, "is", loss['TV'][epoch])
+    
 
         #Check loss of Model Distribution with training set
-        loss[(cost_func, 'Train')].append(CostFunction(qc, cost_func, data_train_test[0], data_exact_dict, born_samples,\
-                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
-        loss[(cost_func, 'Test')].append(CostFunction(qc, cost_func, data_train_test[1], data_exact_dict, born_samples,\
-                                                        born_probs_approx_dict, N_samples, k_choice, stein_params, flag))
+        # loss[(cost_func, 'Train')].append(CostFunction(qc, cost_func, data_train_test[0], data_exact_dict, born_samples,\
+        #                                                 born_probs_approx_dict, N_samples, k_choice, stein_params, flag, sinkhorn_eps))
+        # loss[(cost_func, 'Test')].append(CostFunction(qc, cost_func, data_train_test[1], data_exact_dict, born_samples,\
+        #                                                 born_probs_approx_dict, N_samples, k_choice, stein_params, flag, sinkhorn_eps))
 
-        print("The %s Loss for epoch " %cost_func, epoch, "is", loss[(cost_func, 'Train')][epoch])
+        # print("The %s Loss for epoch " %cost_func, epoch, "is", loss[(cost_func, 'Train')][epoch])
 
     return loss, circuit_params, born_probs_list, empirical_probs_list
 

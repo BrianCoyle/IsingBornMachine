@@ -33,7 +33,7 @@ def BornSampler(qc, N_samples, circuit_params, circuit_choice):
 	
 	born_samples = np.flip(np.vstack(born_samples_all_qubits_dict[q] for q in sorted(qc.qubits())).T, 1) #put outcomes into array
 
-	born_probs_approx_dict = EmpiricalDist(born_samples, N_qubits) #Compute empirical distribution of the output samples
+	born_probs_approx_dict = EmpiricalDist(born_samples, N_qubits, 'full_dist') #Compute empirical distribution of the output samples
 	born_probs_exact_dict = make_wf.wavefunction(prog).get_outcome_probs()
 
 	return born_samples, born_probs_approx_dict, born_probs_exact_dict

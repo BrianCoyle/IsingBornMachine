@@ -1,5 +1,5 @@
 from train_generation import TrainingData, DataSampler
-from auxiliary_functions import EmpiricalDist, SampleListToArray, AllBinaryStrings, num_bytes_needed
+from auxiliary_functions import EmpiricalDist, AllBinaryStrings, num_bytes_needed, SampleListToArray
 from kernel_functions import KernelAllBinaryStrings
 from param_init import NetworkParams
 from sample_gen import BornSampler
@@ -157,7 +157,7 @@ def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
                                 f.write(bytes([total]))
 
 		np.savetxt('data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_samples), data_samples, fmt='%s')
-		data_samples_list = SampleListToArray(data_samples, N_qubits)
+		data_samples_list = SampleListToArray(data_samples, N_qubits, 'int')
 		emp_data_dist = EmpiricalDist(data_samples_list, N_qubits)
 		DataDictToFile(data_type, N_qubits, emp_data_dist, N_samples)
 
@@ -215,47 +215,131 @@ def PrintAllDataToFiles(data_type, max_qubits):
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, circuit_choice)
 
-def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples):
+def MakeTrialNameFile(cost_func, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
 	'''This function prints out all information generated during the training process for a specified set of parameters'''
 
 	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
-	trial_name = "outputs/Output_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs" \
-				%(cost_func,\
-				qc.name,\
-				kernel_type,\
-				N_kernel_samples,\
-				N_born_samples,\
-				N_data_samples,\
-				batch_size,\
-				N_epochs)
 
-	with open('%s/info' %trial_name, 'w') as f:
-		sys.stdout  = f
-		print("The data is:           			\n \
-				cost function:	        %s      \n \
-				chip:        	        %s      \n \
-				kernel:      		    %s      \n \
-				N kernel samples:       %i      \n \
-				N Born Samples:         %i      \n \
-				N Data samples:         %i      \n \
-				Batch size:             %i      \n \
-				Epochs:                 %i      " \
-		%(cost_func,\
-		qc.name,\
-		kernel_type,\
-		N_kernel_samples,\
-		N_born_samples,\
-		N_data_samples,\
-		batch_size,\
-		N_epochs))
+
+	if cost_func == 'MMD':
+		
+		trial_name = "outputs/Output_MMD_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR" \
+					%(qc,\
+					kernel_type,\
+					N_kernel_samples,\
+					N_born_samples,\
+					N_data_samples,\
+					batch_size,\
+					N_epochs,\
+					learning_rate)
+
+		path_to_output = './%s/' %trial_name
+		MakeDirectory(path_to_output)
+
+		with open('%s/info' %trial_name, 'w') as f:
+			sys.stdout  = f
+			print("The data is:cost function:MMD chip:%s kernel:%s N kernel samples:%i N Born Samples:%i N Data samples:%i\
+					Batch size:%i Epochs:%i Adam Learning Rate:%.3f" 
+			%(qc,\
+			kernel_type,\
+			N_kernel_samples,\
+			N_born_samples,\
+			N_data_samples,\
+			batch_size,\
+			N_epochs,\
+			learning_rate))
+					
+	elif cost_func == 'Stein':
+		stein_score		= stein_params[0]       
+		stein_eigvecs	= stein_params[1] 
+		stein_eta		= stein_params[2]    
+		
+		trial_name = "outputs/Output_Stein_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta" \
+					%(qc,\
+					kernel_type,\
+					N_kernel_samples,\
+					N_born_samples,\
+					N_data_samples,\
+					batch_size,\
+					N_epochs,\
+					learning_rate,\
+					stein_score,\
+					stein_eigvecs, 
+					stein_eta)
+		path_to_output = './%s/' %trial_name
+		MakeDirectory(path_to_output)
+
+		with open('%s/info' %trial_name, 'w') as f:
+			sys.stdout  = f
+			print("The data is: cost function: Stein, chip:%s  kernel:%s N kernel samples:%i \n N Born Samples:%i N Data samples:%i\
+			Batch size:%iEpochs:%iAdam Learning Rate:%.3fStein Score:%sN Nystrom Eigvecs:%iStein Eta:%.3f" 
+
+			%(qc,\
+			kernel_type,\
+			N_kernel_samples,\
+			N_born_samples,\
+			N_data_samples,\
+			batch_size,\
+			N_epochs,\
+			learning_rate,\
+			stein_score,\
+			stein_eigvecs, \
+			stein_eta))
+
+	elif cost_func == 'Sinkhorn':
+		trial_name = "outputs/Output_Sinkhorn_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon" \
+					%(qc,\
+					N_born_samples,\
+					N_data_samples,\
+					batch_size,\
+					N_epochs,\
+					learning_rate,\
+					sinkhorn_eps)
+
+		path_to_output = './%s/' %trial_name
+		MakeDirectory(path_to_output)
+
+		with open('%s/info' %trial_name, 'w') as f:
+			sys.stdout  = f
+			print("The data is:           	\n \
+			cost function:	        Sinkhorn\n \
+			chip:        	        %s      \n \
+			kernel:      		    %s      \n \
+			N kernel samples:       %i      \n \
+			N Born Samples:         %i      \n \
+			N Data samples:         %i      \n \
+			Batch size:             %i      \n \
+			Epochs:                 %i      \n \
+			Adam Learning Rate:     %.3f    \n \
+			Sinkhorn Epsilon:       %.3f     \n " 
+
+			%(qc,\
+			kernel_type,\
+			N_kernel_samples,\
+			N_born_samples,\
+			N_data_samples,\
+			batch_size,\
+			N_epochs,\
+			learning_rate,\
+			sinkhorn_eps))
+
+	return trial_name
+
+def PrintFinalParamsToFile(cost_func, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
+	'''This function prints out all information generated during the training process for a specified set of parameters'''
+
+	print(sinkhorn_eps)
+	  
+	trial_name = MakeTrialNameFile(cost_func, N_epochs,learning_rate, qc.name, kernel_type, N_samples, stein_params, sinkhorn_eps)
 
 	loss_path = '%s/loss/%s/' %(trial_name, cost_func)
-	
-
 	weight_path = '%s/params/weights/' %trial_name
 	bias_path = '%s/params/biases/' %trial_name
 	gammax_path = '%s/params/gammaX/'  %trial_name
 	gammay_path = '%s/params/gammaY/'  %trial_name
+
+	born_probs_path = '%s/probs/born/'  %trial_name
+	data_probs_path = '%s/probs/data/'  %trial_name
 
 	#create directories to store output training information
 	MakeDirectory(loss_path)
@@ -266,6 +350,9 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, data_exact
 	MakeDirectory(gammax_path)
 	MakeDirectory(gammay_path)
 
+	MakeDirectory(born_probs_path)
+	MakeDirectory(data_probs_path)
+
 
 	# with open('%s/loss' %trail_name, 'w'):
 	np.savetxt('%s/loss/%s/train' 	%(trial_name,cost_func),  	loss[('%s' %cost_func, 'Train')])
@@ -275,9 +362,13 @@ def PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, data_exact
 
 	data_path = '%s/data' %(trial_name)
 	for epoch in range(0, N_epochs - 1):
-		np.savetxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), circuit_params[('J', epoch)]	)
+		np.savetxt('%s/params/weights/epoch%s' 	%(trial_name, epoch), circuit_params[('J', epoch)])
 		np.savetxt('%s/params/biases/epoch%s' 	%(trial_name, epoch), circuit_params[('b', epoch)])
 		np.savetxt('%s/params/gammaX/epoch%s' 	%(trial_name, epoch), circuit_params[('gamma_x', epoch)])
 		np.savetxt('%s/params/gammaY/epoch%s' 	%(trial_name, epoch), circuit_params[('gamma_y', epoch)])
 
+		with open('%s/probs/born/epoch%s' 	%(trial_name, epoch), 'w') as f:
+				json.dump(json.dumps(empirical_probs_list[epoch], sort_keys=True),f)
+		with open('%s/probs/data/epoch%s' 	%(trial_name, epoch), 'w') as f:				
+				json.dump(json.dumps(data_exact_dict, sort_keys=True),f)
 	return

@@ -43,6 +43,6 @@ def NormaliseKernel(kernel_array, *argsv):
         #if the two sets of samples come from the same distribution
         normed_kernel = (1/(N_samples1*(N_samples2)))*kernel_array.sum()
     else:
-        normed_kernel = (1/(N_samples1*(N_samples2 - 1)))*kernel_array.sum()
+        normed_kernel = (1/(N_samples1*(N_samples2 - 1)))*(kernel_array.sum() - np.diagonal(kernel_array).sum())
     
     return normed_kernel

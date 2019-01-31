@@ -72,9 +72,10 @@ def WeightedKernel(qc, kernel_choice, kernel_array, N_samples, data_samples, dat
 	J                   = stein_params[1]
 	chi                 = stein_params[2]
 	stein_kernel_choice = stein_params[3]
-	stein_sigma         = stein_params[4]
 
-
+	if stein_kernel_choice == 'Gaussian':
+		stein_sigma = np.array([0.25, 10, 1000])
+		
 	if (score_approx == 'Exact_Score'):
 		stein_score_matrix_1 = ss.MassSteinScore(sample_array_1, data_probs)
 		stein_score_matrix_2 = ss.MassSteinScore(sample_array_2, data_probs)
@@ -93,7 +94,6 @@ def WeightedKernel(qc, kernel_choice, kernel_array, N_samples, data_samples, dat
 	N_samples2 = len(sample_array_2)
 
 	weighted_kernel = np.zeros((N_samples1, N_samples2))
-
 	for sample_index1 in range(0, N_samples1):
 		for sample_index2 in range(0, N_samples2):
 
@@ -110,5 +110,4 @@ def WeightedKernel(qc, kernel_choice, kernel_array, N_samples, data_samples, dat
 				- np.dot(np.transpose(stein_score_matrix_1[sample_index1]), delta_y)                                            \
 				- np.dot(delta_x, stein_score_matrix_2[sample_index2])                                                          \
 				+ trace[sample_index1][sample_index2]
-
 	return weighted_kernel

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from collections import Counter
 from pyquil.api import get_qc
-
+import torch
 import sys
 
 def AllBinaryStrings(N_qubits):
@@ -107,16 +107,24 @@ def StringToArray(string):
 # @param[out] sample_array The list converted into an array
 #
 # return Converted list
-def SampleListToArray(original_samples_list, N_qubits):
-    '''This function converts a list of strings, into a numpy array, where
-        each [i,j] element of the new array is the jth bit of the ith string'''
+
+
+def SampleListToArray(original_samples_list, N_qubits, array_type):
+    '''
+    This function converts a list of strings, into a numpy array, where
+    each [i,j] element of the array_type (float/int) new array is the jth bit of the ith string
+    '''
     N_data_samples = len(original_samples_list)
-
-    sample_array = np.zeros((N_data_samples, N_qubits), dtype = int)
-
-    for sample in range(0, N_data_samples):
-        for outcome in range(0, N_qubits):
-            sample_array[sample, outcome] = int(original_samples_list[sample][outcome])
+    if array_type == 'float':
+        sample_array = np.zeros((N_data_samples, N_qubits), dtype = float)
+        for sample in range(0, N_data_samples):
+            for outcome in range(0, N_qubits):
+                sample_array[sample][outcome] = float(original_samples_list[sample][outcome])
+    elif array_type == 'int':
+        sample_array = np.zeros((N_data_samples, N_qubits), dtype = int)
+        for sample in range(0, N_data_samples):
+            for outcome in range(0, N_qubits):
+                sample_array[sample][outcome] = int(original_samples_list[sample][outcome])
 
     return sample_array
 
@@ -149,7 +157,7 @@ def EmpiricalDist(samples, N_qubits, *arg):
         string_list = []
         for sample in range(0, N_samples):
             '''Convert numpy array of samples, to a list of strings of the samples to put in dict'''
-            string_list.append(''.join(map(str, samples[sample, :].tolist())))
+            string_list.append(''.join(map(str, samples[sample].tolist())))
 
     elif type(samples) is list:
         if type(samples[0]) is not str:
@@ -165,11 +173,11 @@ def EmpiricalDist(samples, N_qubits, *arg):
     for element in counts:
         '''Convert occurances to relative frequencies of binary string'''
         counts[element] = counts[element]/(N_samples)
-
-    for index in range(0, 2**N_qubits):
-        '''If a binary string has not been seen in samples, set its value to zero'''
-        if IntegerToString(index, N_qubits) not in counts:
-            counts[IntegerToString(index, N_qubits)] = 0
+    if 'full_dist' in arg:
+        for index in range(0, 2**N_qubits):
+            '''If a binary string has not been seen in samples, set its value to zero'''
+            if IntegerToString(index, N_qubits) not in counts:
+                counts[IntegerToString(index, N_qubits)] = 0
 
     sorted_samples_dict = {}
 
@@ -178,6 +186,31 @@ def EmpiricalDist(samples, N_qubits, *arg):
         sorted_samples_dict[key] = counts[key]
 
     return sorted_samples_dict
+
+def ExtractSampleInformationToTensor(samples):
+    '''
+        Converts an array of samples into the empirical distribution, and extracts empirical probabilities and 
+        corresponding sample values, and convert to pytorch tensors
+    '''
+
+    if type(samples) is np.ndarray:
+        if samples.ndim == 1:
+            N_qubits = len(samples)
+        else:    
+            N_qubits = len(samples[0])
+    else: N_qubits = len(samples[0])
+
+    emp_dist_dict = EmpiricalDist(samples, N_qubits)
+    samples        =SampleListToArray(list(emp_dist_dict.keys()), N_qubits, 'float')
+    probs         = np.asarray(list(emp_dist_dict.values())) #Empirical probabilities of samples
+
+    # pylint: disable=E1101
+    samples_tens       = torch.from_numpy(samples).view(len(samples), -1)
+    probs_tens         = torch.from_numpy(probs).view(len(probs), -1)
+    # pylint: enable=E1101
+
+    return samples_tens, probs_tens
+
 
 
 def TotalVariationCost(dict_one, dict_two):
@@ -204,7 +237,7 @@ def ConvertStringToVector(string):
     return string_vector
 
 def L2Norm(input1, input2):
-    '''This function computes the L2 norm between two binary vectors'''
+    '''This function computes the squared L2 norm between two binary vectors'''
     if (type(input1) is str) and (type(input2) is str):
         l2norm = (np.linalg.norm(np.abs(ConvertStringToVector(input1) - ConvertStringToVector(input2)), 2))**2
     elif (type(input1) is np.ndarray) and (type(input2) is np.ndarray):

@@ -12,7 +12,7 @@ from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDi
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
 from random import shuffle
-from auxiliary_functions import TrainTestPartition, SampleListToArray, num_bytes_needed
+from auxiliary_functions import TrainTestPartition, num_bytes_needed
 from pyquil.api import get_qc
 import sys
 import os
@@ -41,33 +41,48 @@ def get_inputs(file_name):
 
         N_epochs = int(input_values[0])
         
-        data_type = str(input_values[1])
+        learning_rate = float(input_values[1])
+
+        data_type = str(input_values[2])
         data_type = data_type[0:len(data_type) - 1]
 
-        N_data_samples = int(input_values[2])
+        N_data_samples = int(input_values[3])
         
-        N_born_samples = int(input_values[3])
+        N_born_samples = int(input_values[4])
 
-        N_kernel_samples = int(input_values[4])
+        N_kernel_samples = int(input_values[5])
         
-        batch_size = int(input_values[5])
+        batch_size = int(input_values[6])
         
-        kernel_type = str(input_values[6])
+        kernel_type = str(input_values[7])
         kernel_type = kernel_type[0:len(kernel_type) - 1]
         
-        cost_func = str(input_values[7])
+        cost_func = str(input_values[8])
         cost_func = cost_func[0:len(cost_func) - 1]
         
-        device_name = str(input_values[8])
+        device_name = str(input_values[9])
         device_name = device_name[0:len(device_name) - 1]
 
-        if int(input_values[9]) == 1:
+        if int(input_values[10]) == 1:
             as_qvm_value = True
         else:
             as_qvm_value = False
 
-    
-    return N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value
+        stein_score = str(input_values[11])
+        stein_score = stein_score[0:len(stein_score) - 1]
+
+        stein_eigvecs = int(input_values[12])
+        stein_eta = float(input_values[13])
+
+       
+        stein_params = {}
+        stein_params[0] = stein_score           #Choice of method to approximate Stein Score:                   stein_score
+        stein_params[1] = stein_eigvecs         #Number of Nystrom Eigenvectors, J for spectral_stein method:   J
+        stein_params[2] = stein_eta             #regularization paramter for identity_stein method:             \chi
+        stein_params[3] = kernel_type           #Kernel for computing Stein Score, set to be the same as kernel used in Stein Discrpancy                              
+   
+        sinkhorn_eps = float(input_values[14])
+    return N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
       
@@ -81,7 +96,7 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_fu
         MakeDirectory(animations_path)
         
         ani.save("animations/%s_%iQbs_%s_Kernel_%iSamples_%iEpochs.mp4" \
-                %(cost_func[0], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
+                %(cost_func[0:1], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
 
         plt.show()
 
@@ -152,7 +167,7 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values. Please see the README.md file for more details.")
     else:
-        N_epochs, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value = get_inputs(sys.argv[1])
+        N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type,cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps = get_inputs(sys.argv[1])
        
         qc = get_qc(device_name, as_qvm = as_qvm_value)  
         N_qubits = len(qc.qubits())
@@ -235,23 +250,15 @@ def main():
                                                                                     kernel_type,\
                                                                                     data_train_test, data_exact_dict, \
                                                                                     N_samples,\
-                                                                                    cost_func, 'Precompute')
+                                                                                    cost_func, 'Onfly', learning_rate, stein_params, \
+                                                                                    sinkhorn_eps)
    
         fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
         SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
-        path_to_output = './outputs/Output_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs/'  \
-                                                         %(cost_func,\
-                                                         device_name,\
-                                                         kernel_type,\
-                                                         N_kernel_samples,\
-                                                         N_born_samples,\
-                                                         N_data_samples,\
-                                                         batch_size,\
-                                                         N_epochs)
-        MakeDirectory(path_to_output)
 
-        PrintFinalParamsToFile(cost_func, N_epochs, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples)
+
+        PrintFinalParamsToFile(cost_func, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
 
 if __name__ == "__main__":
 

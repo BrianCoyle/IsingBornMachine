@@ -19,7 +19,7 @@ def ComputeInverseTerm(kernel_array, N_samples, chi):
     '''
     return inv(kernel_array - chi*np.identity(N_samples))
     
-def ComputeKernelShift(samples, kernel_choice, stein_sigma):
+def ComputeKernelShift(samples, stein_kernel, stein_sigma):
     '''
     This kernel will not be the same as the one used in the MMD, it will only be computed
     between all samples from distribution P, with every sample from the SAME distribution P
@@ -36,14 +36,10 @@ def ComputeKernelShift(samples, kernel_choice, stein_sigma):
                 sample_1        = ToString(samples[sample_1_index])
                 sample_2        = ToString(samples[sample_2_index])
                 shiftedstring2  = ShiftString(sample_2, qubit)
-                # if (sample_1, ShiftString(sample_2, qubit)) in kernel_dict.keys():
-                #     shifted_kernel_for_score[sample_1_index][sample_2_index][qubit]  = \
-                #    [sample_1, sample_2] - kernel_dict[sample_1, ShiftString(sample_2, qubit)]
-
-                # else:
-                shifted_kernel_for_score[sample_1_index][sample_2_index][qubit]  = \
-                    GaussianKernel(sample_1, sample_2, stein_sigma) - GaussianKernel(sample_1, shiftedstring2, stein_sigma)
-           
+                if stein_kernel == 'Stein_Gaussian':
+                    shifted_kernel_for_score[sample_1_index][sample_2_index][qubit]  = \
+                        GaussianKernel(sample_1, sample_2, stein_sigma) - GaussianKernel(sample_1, shiftedstring2, stein_sigma)
+            
         
     shifted_kernel_array = shifted_kernel_for_score.sum(axis = 1)/N_samples
 
@@ -56,8 +52,9 @@ def IdentitySteinScore(samples, kernel_choice, chi, stein_sigma):
     N_samples = len(samples)
 
     #compute kernel matrix between all samples
-    kernel_array = GaussianKernelArray(samples, samples, stein_sigma)
-
+    if kernel_choice == 'Gaussian':
+        kernel_array = GaussianKernelArray(samples, samples, stein_sigma)
+    else: raise IOError('\'kernel_choice\' must be \'Gaussian\' ')
     #Compute inverse term in Stein score approximation
     inverse = ComputeInverseTerm(kernel_array, N_samples, chi)
     #Compute shifted kernel term in Stein Score Approximation
@@ -78,7 +75,7 @@ def MassSteinScoreSingleSample(sample, data_dict):
     sample_string = ToString(sample)
     stein_score_sample_mass = np.zeros((N_qubits))
     for bit_index in range(0, N_qubits):
-        shifted_string = ShiftString(sample_string, bit_index)
+        shifted_string = ToString(ShiftString(sample_string, bit_index))
         stein_score_sample_mass[bit_index] = 1 - data_dict[shifted_string]/data_dict[sample_string]
 
     return stein_score_sample_mass
@@ -92,8 +89,7 @@ def MassSteinScore(samples, data_dict):
         raise TypeError('\'samples\' must be a numpy array or a list')
 
     for sample_index in range(0, N_samples):
-        stein_score_mass_array[sample_index][:] =\
-                MassSteinScoreSingleSample(samples[sample_index][:], data_dict)
+        stein_score_mass_array[sample_index] = MassSteinScoreSingleSample(samples[sample_index], data_dict)
     return stein_score_mass_array
 
 

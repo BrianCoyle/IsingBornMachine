@@ -9,7 +9,7 @@ def CostPlot(qc, N_epochs, initial_params, \
             kernel_type,\
             data_train_test, data_exact_dict, \
             N_samples,\
-            cost_func, flag):
+            cost_func, flag, learning_rate, stein_params, sinkhorn_eps):
             
     N_qubits = len(qc.qubits())
     #Output MMD Loss function and parameter values, for given number of training samples
@@ -17,7 +17,8 @@ def CostPlot(qc, N_epochs, initial_params, \
                                                                             initial_params, \
                                                                             N_epochs, N_samples, \
                                                                             data_train_test, data_exact_dict, \
-                                                                            kernel_type, flag)
+                                                                            kernel_type, flag, learning_rate, \
+                                                                            stein_params, sinkhorn_eps)
     plot_colour = ['r', 'b']
 
     if kernel_type == 'Quantum':
@@ -45,10 +46,15 @@ def CostPlot(qc, N_epochs, initial_params, \
                                         %(len(data_train_test[0]), N_samples[1], kernel_type[0]))
             plt.plot(loss[('Stein', 'Test')],'%sx-' %(plot_colour[1]) , label ='Stein, %i Test Points,  %i Born Samples for a %s kernel.' \
                                         %(len(data_train_test[1]), N_samples[1], kernel_type[0]))
+        elif (cost_func == 'Sinkhorn'):
+            plt.plot(loss[('Sinkhorn', 'Train')],'%so-' %(plot_colour[1]) , label ='Sinkhorn, %i Training Points,  %i Born Samples for a Hamming cost.' \
+                                        %(len(data_train_test[0]), N_samples[1]))
+            plt.plot(loss[('Sinkhorn', 'Test')],'%sx-' %(plot_colour[1]) , label ='Sinkhorn, %i Test Points,  %i Born Samples for a Hamming cost.' \
+                                        %(len(data_train_test[1]), N_samples[1]))
         elif (cost_func == 'TV'):
             plt.plot(loss['TV'], '%so-' %(plot_colour[1]), label ='TV, %i Data Samples,  %i Born Samples for a %s kernel.' \
                                     %(N_samples[0], N_samples[1], kernel_type[0]))
-   
+    
     plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
     plt.xlabel("Epochs")
