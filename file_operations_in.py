@@ -10,14 +10,17 @@ from auxiliary_functions import SampleListToArray
 import matplotlib.pyplot as plt
 
 
-def FileLoad(file):
+def FileLoad(file, *args):
 	file_info = json.load(file)
 	file_dict = json.loads(file_info)
-	print(file_dict)
 	dict_keys = file_dict.keys()
 	dict_values = file_dict.values()
-	# keys = [eval(key) for key in dict_keys]
-	return file_dict, dict_keys, dict_values
+	if 'probs_input' in args: 
+		keys = file_dict.keys()
+	else:
+		dict_keys = file_dict.keys()
+		keys = [eval(key) for key in dict_keys]
+	return file_dict, keys, dict_values
 
 ## Reads data dictionary from file
 #
@@ -187,10 +190,10 @@ def TrainingDataFromFile(cost_func, N_epochs, learning_rate, qc, kernel_type, N_
 		circuit_params[('gamma_y', epoch)] 	= np.loadtxt('%s/params/gammaY/epoch%s' 	%(trial_name, epoch), dtype = float)
 
 		with open('%s/probs/born/epoch%s' 	%(trial_name, epoch), 'r') as f:
-			born_probs_dict, _, _ = FileLoad(f)
+			born_probs_dict, _, _ = FileLoad(f, 'probs_input')
 			born_probs.append(born_probs_dict)
 		with open('%s/probs/data/epoch%s' 	%(trial_name, epoch), 'r') as g:
-			data_probs_dict, _, _ = FileLoad(g)
+			data_probs_dict, _, _ = FileLoad(g, 'probs_input')
 			data_probs.append(data_probs_dict)
 
 	return loss, circuit_params, born_probs, data_probs
@@ -199,12 +202,12 @@ def TrainingDataFromFile(cost_func, N_epochs, learning_rate, qc, kernel_type, N_
 # N_epochs1 = 200
 # learning_rate1 =  0.1
 # data_type1 = 'Classical_Data'
-# N_born_samples1 = 200
-# N_data_samples1 = 200
+# N_born_samples1 = 300
+# N_data_samples1 = 300
 # N_kernel_samples1 = 2000
-# batch_size1 = 100
-# kernel_type1 ='Gaussian'
-# cost_func1 = 'Sinkhorn'
+# batch_size1 = 150
+# kernel_type1 ='Quantum'
+# cost_func1 = 'MMD'
 # qc1 = '4q-qvm'
 # stein_score1 = 'Spectral_Score' 
 # stein_eigvecs1 = 3                 
@@ -231,17 +234,17 @@ def TrainingDataFromFile(cost_func, N_epochs, learning_rate, qc, kernel_type, N_
 # N_epochs2 = 200
 # learning_rate2 =  0.1
 # data_type2 = 'Classical_Data'
-# N_born_samples2 = 200
-# N_data_samples2 = 200
+# N_born_samples2 = 300
+# N_data_samples2 = 300
 # N_kernel_samples2 = 2000
-# batch_size2 = 100
-# kernel_type2 ='Gaussian'
+# batch_size2 = 150
+# kernel_type2 ='Quantum'
 # cost_func2 = 'Sinkhorn'
-# qc2 = '3q-qvm'
+# qc2 = '4q-qvm'
 # stein_score2 = 'Spectral_Score' 
 # stein_eigvecs2 = 3                 
 # stein_eta2 = 0.01      
-# sinkhorn_eps2 = 0.05
+# sinkhorn_eps2 = 0.1
 
 # N_samples2 =     [N_data_samples2,\
 # 				N_born_samples2,\
@@ -298,16 +301,17 @@ def TrainingDataFromFile(cost_func, N_epochs, learning_rate, qc, kernel_type, N_
 # N_qubits = int(qc2[0])
 # plot_colour = ['r', 'b', 'g']
 
-# # plt.plot(loss1[('TV')],  '%so-' %(plot_colour[0]), label ='MMD, %i Data Points,  %i Born Samples for a %s kernel.' \
-# # 							%(N_samples1[0], N_samples1[1], kernel_type1))
+# plt.plot(loss1[('TV')],  '%so-' %(plot_colour[0]), label ='MMD, %i Data Points,  %i Born Samples for a %s kernel.' \
+# 							%(N_samples1[0], N_samples1[1], kernel_type1))
 # # plt.plot(loss1[('TV')],  '%so-' %(plot_colour[0]), label ='Sinkhorn, %i Data Points,  %i Born Samples epsilon = %.3f.' \
 # # 							%(N_samples1[0], N_samples1[1], sinkhorn_eps1))
 
 # plt.plot(loss2[('TV')],  '%sx-' %(plot_colour[1]), label ='Sinkhorn, %i Data Points,  %i Born Samples for a Hamming Cost, with epsilon %.3f' \
 # 							%(N_samples2[0], N_samples2[1], sinkhorn_eps2))
-
-# plt.plot(loss3[('TV')],  '%so-' %(plot_colour[2]), label ='MMD, %i Data Points,  %i Born Samples for a %s kernel.' \
-# 							%(N_samples3[0], N_samples3[1], kernel_type3))	
+# # plt.plot(loss2[('TV')],  '%so-' %(plot_colour[2]), label ='MMD, %i Data Points,  %i Born Samples for a %s kernel.' \
+# # 							%(N_samples2[0], N_samples2[1], kernel_type2))	
+# # plt.plot(loss3[('TV')],  '%so-' %(plot_colour[2]), label ='MMD, %i Data Points,  %i Born Samples for a %s kernel.' \
+# # 							%(N_samples3[0], N_samples3[1], kernel_type3))	
 # # plt.plot(loss3[('TV')],  '%sx-' %(plot_colour[2]), label ='Sinkhorn, %i Data Points,  %i Born Samples for a Hamming Cost, with epsilon %.3f' \
 # # 							%(N_samples3[0], N_samples3[1], sinkhorn_eps3))
 
@@ -330,12 +334,14 @@ def TrainingDataFromFile(cost_func, N_epochs, learning_rate, qc, kernel_type, N_
 # axs.bar(x, data_probs_final.values(), width=0.2, color= plot_colour[0], align='center')
 # axs.bar(x-0.2, final_probs1.values(), width=0.2, color='b', align='center')
 # axs.bar(x-0.4, final_probs2.values(), width=0.2, color='g', align='center')
-# axs.bar(x-0.6, final_probs3.values(), width=0.2, color='y', align='center')
+# # axs.bar(x-0.6, final_probs3.values(), width=0.2, color='y', align='center')
 # # axs.set_title("%i Qbs, %s Kernel, %i Data Samps, %i Born Samps" \
 # # 		%(N_qubits, kernel_type[0][0], N_data_samples, N_born_samples))
 # axs.set_xlabel("Outcomes")
 # axs.set_ylabel("Probability")
-# axs.legend(('Born Probs_1','Born Probs_2','Born_probs_3', 'Data Probs'))
+# axs.legend(('Born Probs_1','Born Probs_2', 'Data Probs'))
+
+# # axs.legend(('Born Probs_1','Born Probs_2','Born_probs_3', 'Data Probs'))
 # axs.set_xticks(range(len(data_probs_final)))
 # axs.set_xticklabels(list(data_probs_final.keys()),rotation=70)
 

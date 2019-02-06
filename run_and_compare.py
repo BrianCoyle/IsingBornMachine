@@ -98,8 +98,9 @@ def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_fu
         ani.save("animations/%s_%iQbs_%s_Kernel_%iSamples_%iEpochs.mp4" \
                 %(cost_func[0:1], N_qubits, kernel_type[0][0], N_born_samples, N_epochs))
 
-        plt.show()
-
+        plt.show(block=False)       
+        plt.pause(1)
+        plt.close()
 def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict):
    
         plt.legend(prop={'size': 7}, loc='best').draggable()
@@ -120,7 +121,7 @@ def PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data
                 %(N_qubits, kernel_type[0][0], N_born_samples))
         
         plt.tight_layout()
-
+        
         return fig, axs
 
 def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_probs_list, axs, N_data_samples):
@@ -136,7 +137,7 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
         axs.legend(('Born Probs','Data Probs'))
         axs.set_xticks(range(len(data_exact_dict)))
         axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
-
+      
 def bytes_to_int(bytes_list):
 
     total = 0
@@ -250,13 +251,12 @@ def main():
                                                                                     kernel_type,\
                                                                                     data_train_test, data_exact_dict, \
                                                                                     N_samples,\
-                                                                                    cost_func, 'Onfly', learning_rate, stein_params, \
+                                                                                    cost_func, 'Precompute', learning_rate, stein_params, \
                                                                                     sinkhorn_eps)
    
         fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
         SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
-
 
         PrintFinalParamsToFile(cost_func, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
 

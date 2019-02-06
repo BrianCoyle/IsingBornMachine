@@ -28,7 +28,7 @@ def KernelSum(samplearray1, samplearray2, kernel_dict):
         for sample2_index in range(0, N_samples2):
             sample1 = ToString(samplearray1[sample1_index])
             sample2 = ToString(samplearray2[sample2_index])
-
+            # print(kernel_dict)
             kernel_array[sample1_index, sample2_index] = kernel_dict[(sample1, sample2)]
 
     return kernel_array

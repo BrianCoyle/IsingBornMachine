@@ -61,6 +61,10 @@ def CostPlot(qc, N_epochs, initial_params, \
     plt.ylabel("Loss")
     plt.title("Loss for %i qubits" % N_qubits)
 
+
+    plt.show(block=False)
+    plt.pause(1)
+    plt.close()
     return loss, circuit_params, born_probs_list, empirical_probs_list
 
 ###FIXXX

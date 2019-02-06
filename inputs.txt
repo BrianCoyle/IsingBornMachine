@@ -1,4 +1,4 @@
-200
+10
 0.1
 Classical_Data
 200
@@ -6,8 +6,8 @@ Classical_Data
 2000
 100
 Gaussian
-MMD
-3q-qvm
+Sinkhorn
+2q-qvm
 1
 Exact_Score
 3
