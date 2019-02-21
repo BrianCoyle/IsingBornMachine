@@ -16,13 +16,15 @@ import auxiliary_functions as aux
 
 
 
-def FeydySink(born_samples, data_samples, epsilon):
+def FeydySink(born_samples_all, data_samples_all, epsilon):
     '''
     Converts sample vectors to required format, first to the empirical distribution,
     then into torch tensors to feed into Feydy Implementation of the Sinkhorn Divergence
     '''
-    born_samples_tens, born_probs_tens = aux.ExtractSampleInformationToTensor(born_samples)
-    data_samples_tens, data_probs_tens = aux.ExtractSampleInformationToTensor(data_samples)
+    #Extract samples (unrepeated) as array, along with corresponding empirical probabilities
+    # Convert everything to pytorch tensors to be compatible with Feydy library
+    _, _, born_samples_tens, born_probs_tens = aux.ExtractSampleInformation(born_samples_all)
+    _, _, data_samples_tens, data_probs_tens = aux.ExtractSampleInformation(data_samples_all)
 
     sinkhorn_feydy = feydy_sink.sinkhorn_divergence(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens)
 
@@ -37,10 +39,10 @@ def SinkGrad(born_samples, born_samples_pm, data_samples, epsilon):
 
     #The following extracts the empirical probabilities, and corresponding sample values from the 
     #arrays of samples. These are then converted into pytorch tensors to be compatable with functions in feydy_sinkhorn
-    born_samples_tens,       born_probs_tens          = aux.ExtractSampleInformationToTensor(born_samples)
-    born_plus_samples_tens,  born_plus_probs_tens     = aux.ExtractSampleInformationToTensor(born_samples_plus)
-    born_minus_samples_tens, born_minus_probs_tens    = aux.ExtractSampleInformationToTensor(born_samples_minus)
-    data_samples_tens,       data_probs_tens          = aux.ExtractSampleInformationToTensor(data_samples)
+    _, _, born_samples_tens,       born_probs_tens          = aux.ExtractSampleInformation(born_samples)
+    _, _, born_plus_samples_tens,  born_plus_probs_tens     = aux.ExtractSampleInformation(born_samples_plus)
+    _, _, born_minus_samples_tens, born_minus_probs_tens    = aux.ExtractSampleInformation(born_samples_minus)
+    _, _, data_samples_tens,       data_probs_tens          = aux.ExtractSampleInformation(data_samples)
 
 
     g_data  , f_born = feydy_sink.sink(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens)# Compute optimal dual vectors between born samples and data
@@ -61,9 +63,9 @@ def SinkGrad(born_samples, born_samples_pm, data_samples, epsilon):
     f_minus = -epsilon*feydy_sink.lse((g_data  + data_probs_tens.log().view(1, -1)).view(1, -1)     - cost_matrix_minus_data)
     s_minus = -epsilon*feydy_sink.lse((s_born + born_probs_tens.log().view(1, -1)).view(1, -1)      - cost_matrix_minus_born)
    
-    feydy_sink_grad2 =feydy_sink.scal(born_minus_probs_tens, f_minus - s_minus) -  feydy_sink.scal(born_plus_probs_tens, f_plus - s_plus)
+    feydy_sink_grad =feydy_sink.scal(born_minus_probs_tens, f_minus - s_minus) -  feydy_sink.scal(born_plus_probs_tens, f_plus - s_plus)
 
-    return feydy_sink_grad2
+    return feydy_sink_grad
 
 
 

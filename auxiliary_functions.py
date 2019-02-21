@@ -187,7 +187,7 @@ def EmpiricalDist(samples, N_qubits, *arg):
 
     return sorted_samples_dict
 
-def ExtractSampleInformationToTensor(samples):
+def ExtractSampleInformation(samples):
     '''
         Converts an array of samples into the empirical distribution, and extracts empirical probabilities and 
         corresponding sample values, and convert to pytorch tensors
@@ -204,12 +204,16 @@ def ExtractSampleInformationToTensor(samples):
     samples        =SampleListToArray(list(emp_dist_dict.keys()), N_qubits, 'float')
     probs         = np.asarray(list(emp_dist_dict.values())) #Empirical probabilities of samples
 
+    #convert to numpy tensors if necessary
     # pylint: disable=E1101
     samples_tens       = torch.from_numpy(samples).view(len(samples), -1)
     probs_tens         = torch.from_numpy(probs).view(len(probs), -1)
     # pylint: enable=E1101
 
-    return samples_tens, probs_tens
+    samples_int        =SampleListToArray(list(emp_dist_dict.keys()), N_qubits, 'int')
+    probs_int         = np.asarray(list(emp_dist_dict.values())) #Empirical probabilities of samples
+
+    return samples_int, probs_int, samples_tens, probs_tens
 
 
 
@@ -280,22 +284,3 @@ def num_bytes_needed(num_bits):
 
     return num_bytes
 
-def FindNumQubits(device_params):
-    
-    qc = get_qc(device_params[0], as_qvm = device_params[1])
-
-    return len(qc.qubits())
-
-##This function finds ouptuts the used qubits for a given quantum device, and the number of qubits#
-# @param[in] device_params list containing device_name and as_qvm_value
-#
-# @param[out] qubits A list of the IDs of the qubits used
-# @param[out] N_qubits The number of qubits
-#
-def FindQubits(device_params):
-    
-    qc = get_qc(device_params[0], as_qvm = device_params[1])
-    qubits = qc.qubits()
-    N_qubits = len(qubits)
-
-    return qubits, N_qubits

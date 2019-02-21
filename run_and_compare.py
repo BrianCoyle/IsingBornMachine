@@ -11,12 +11,14 @@ from param_init import NetworkParams
 from file_operations_out import PrintFinalParamsToFile, PrintDataToFiles, MakeDirectory, PrintFinalParamsToFile
 from file_operations_in import DataImport, DataDictFromFile
 from train_plot import CostPlot
+from cost_function_train import TrainBorn
+
 from random import shuffle
 from auxiliary_functions import TrainTestPartition, num_bytes_needed
 from pyquil.api import get_qc
 import sys
 import os
-
+import time
 ## This function gathers inputs from file
 #
 # @param[in] file_name name of file to gather inputs from
@@ -40,26 +42,17 @@ def get_inputs(file_name):
         input_values = input_file.readlines()
 
         N_epochs = int(input_values[0])
-        
         learning_rate = float(input_values[1])
-
         data_type = str(input_values[2])
         data_type = data_type[0:len(data_type) - 1]
-
         N_data_samples = int(input_values[3])
-        
         N_born_samples = int(input_values[4])
-
         N_kernel_samples = int(input_values[5])
-        
         batch_size = int(input_values[6])
-        
         kernel_type = str(input_values[7])
         kernel_type = kernel_type[0:len(kernel_type) - 1]
-        
         cost_func = str(input_values[8])
         cost_func = cost_func[0:len(cost_func) - 1]
-        
         device_name = str(input_values[9])
         device_name = device_name[0:len(device_name) - 1]
 
@@ -74,15 +67,20 @@ def get_inputs(file_name):
         stein_eigvecs = int(input_values[12])
         stein_eta = float(input_values[13])
 
-       
         stein_params = {}
         stein_params[0] = stein_score           #Choice of method to approximate Stein Score:                   stein_score
         stein_params[1] = stein_eigvecs         #Number of Nystrom Eigenvectors, J for spectral_stein method:   J
         stein_params[2] = stein_eta             #regularization paramter for identity_stein method:             \chi
         stein_params[3] = kernel_type           #Kernel for computing Stein Score, set to be the same as kernel used in Stein Discrpancy                              
    
+        '''Number of samples:'''
+        N_samples =     [N_data_samples,\
+                        N_born_samples,\
+                        batch_size,\
+                        N_kernel_samples]
         sinkhorn_eps = float(input_values[14])
-    return N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type, cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps
+
+    return N_epochs, learning_rate, data_type, N_samples, kernel_type, cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
       
@@ -168,63 +166,61 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values. Please see the README.md file for more details.")
     else:
-        N_epochs, learning_rate, data_type, N_data_samples, N_born_samples, N_kernel_samples, batch_size, kernel_type,cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps = get_inputs(sys.argv[1])
-       
+        N_epochs, learning_rate, data_type, N_samples, kernel_type,cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps = get_inputs(sys.argv[1])
+        
+        if type(device_name) is not str:
+                raise ValueError('The device name must be a string')
+        if (as_qvm_value is not True and as_qvm_value is not False):
+                raise ValueError('\'as_qvm_value\' must be an integer, either 0, or 1')
+
         qc = get_qc(device_name, as_qvm = as_qvm_value)  
         N_qubits = len(qc.qubits())
-        circuit_type = 'QAOA'
+        data_circuit_choice = 'IQP'
 
-        device_params = [device_name, as_qvm_value]
- 
+        N_data_samples = N_samples[0]
+        N_born_samples = N_samples[1]
+
         if data_type == 'Quantum_Data':
 
             try:
-                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+                data_samples= list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, data_circuit_choice), dtype = str))
             except:
-                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+                PrintDataToFiles(data_type, N_data_samples, qc, data_circuit_choice, N_qubits)
 
-                data_samples_orig = list(np.loadtxt('binary_data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, circuit_type), dtype = str))
+                data_samples = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, data_circuit_choice), dtype = str))
 
-        elif data_type == 'Classical_Data':
+        elif data_type == 'Bernoulli_Data':
             
             try:
     
-                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+                with open('binary_data/Bernoulli_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
 
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
             except:
 
-                PrintDataToFiles(data_type, N_data_samples, device_params, circuit_type, N_qubits)
+                PrintDataToFiles(data_type, N_data_samples, qc, data_circuit_choice, N_qubits)
 
-                with open('binary_data/Classical_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
+                with open('binary_data/Bernoulli_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
 
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
-                print("read data =")
+            print("read data =")
+            data_samples_orig
+            data_samples = np.zeros((N_data_samples, N_qubits), dtype = int)
 
-                print(data_samples_orig)
+            for sample in range(0, N_data_samples):
+            
+                temp = data_samples_orig[sample]
+
+                for outcome in range(0, N_qubits):
+
+                    data_samples[sample, N_qubits - 1 - outcome] = temp % 2
+                    temp >>= 1
 
         else:
-            sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Classical_Data'")
-
-        if type(device_name) is not str:
-                raise IOError('The device name must be a string')
-        if (as_qvm_value != 0 and as_qvm_value != 1):
-                raise IOError('\'as_qvm_value\' must be an integer, either 0, or 1')
-
-        data_samples = np.zeros((N_data_samples, N_qubits), dtype = int)
-
-        for sample in range(0, N_data_samples):
-            
-            temp = data_samples_orig[sample]
-
-            for outcome in range(0, N_qubits):
-
-                data_samples[sample, N_qubits - 1 - outcome] = temp % 2
-                temp >>= 1
-
-      
+            sys.exit("[ERROR] : data_type should be either 'Quantum_Data' or 'Bernoulli_Data'")
+    
         np.random.shuffle(data_samples)
 
         #Split data into training/test sets
@@ -236,29 +232,25 @@ def main():
         #Set random seed to 0 to initialise the actual Born machine to be trained
         initial_params = NetworkParams(qc, random_seed)
 
-        '''Number of samples:'''
-        N_samples =     [N_data_samples,\
-                        N_born_samples,\
-                        batch_size,\
-                        N_kernel_samples]
 
-        data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', N_data_samples, circuit_type)
+        data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', data_circuit_choice)
 
-        
-        plt.figure(1)
   
-        loss, circuit_params, born_probs_list, empirical_probs_list  = CostPlot(qc, N_epochs, initial_params, \
-                                                                                    kernel_type,\
-                                                                                    data_train_test, data_exact_dict, \
-                                                                                    N_samples,\
-                                                                                    cost_func, 'Precompute', learning_rate, stein_params, \
-                                                                                    sinkhorn_eps)
-   
+        loss, circuit_params, born_probs_list, empirical_probs_list = TrainBorn(qc, cost_func, initial_params, \
+                                                                            N_epochs, N_samples, data_train_test, data_exact_dict, \
+                                                                            kernel_type, 'Precompute', learning_rate, \
+                                                                            stein_params, sinkhorn_eps)
+                                                                    
+        plt.figure(1)    
+
+        CostPlot(N_qubits, kernel_type, data_train_test, N_samples, cost_func, loss, circuit_params, born_probs_list, empirical_probs_list)
+        
+
         fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
         SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
 
-        PrintFinalParamsToFile(cost_func, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
+        PrintFinalParamsToFile(cost_func, data_type, data_circuit_choice, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
 
 if __name__ == "__main__":
 

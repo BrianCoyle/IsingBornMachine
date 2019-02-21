@@ -21,14 +21,15 @@ def TrainBorn(qc, cost_func,initial_params,
     circuit_params = {}
     circuit_params[('J', 0)] = initial_params['J']
     circuit_params[('b', 0)] = initial_params['b']
-    circuit_params[('gamma_x', 0)] = initial_params['gamma_x']
-    circuit_params[('gamma_y', 0)] = initial_params['gamma_y']
+    circuit_params[('gamma', 0)] = initial_params['gamma']
+    circuit_params[('delta', 0)] = initial_params['delta']
+    circuit_params[('sigma', 0)] = initial_params['sigma']
 
     batch_size = N_samples[2]
     #Initialise the gradient arrays, each element is one parameter
     weight_grad     = np.zeros((N_qubits, N_qubits))
     bias_grad       = np.zeros((N_qubits))
-    gamma_x_grad    = np.zeros((N_qubits))
+    gamma_grad    = np.zeros((N_qubits))
 
     loss = {('MMD', 'Train'): [], ('MMD', 'Test'): [],\
             ('Stein', 'Train'): [], ('Stein', 'Test'): [], \
@@ -47,9 +48,9 @@ def TrainBorn(qc, cost_func,initial_params,
 
     for epoch in range(0, N_epochs-1):
 
-        #gamma_x/gamma_y is not to be trained, set gamma values to be constant at each epoch
-        circuit_params[('gamma_x', epoch+1)] = circuit_params[('gamma_x', epoch)]
-        circuit_params[('gamma_y', epoch+1)] = circuit_params[('gamma_y', epoch)]
+        #gamma/delta is not to be trained, set gamma values to be constant at each epoch
+        circuit_params[('gamma', epoch+1)] = circuit_params[('gamma', epoch)]
+        circuit_params[('delta', epoch+1)] = circuit_params[('delta', epoch)]
 
         print("\nThis is Epoch number: ", epoch)
      
@@ -57,8 +58,8 @@ def TrainBorn(qc, cost_func,initial_params,
 
         circuit_params_per_epoch['J'] = circuit_params[('J', epoch)]
         circuit_params_per_epoch['b'] = circuit_params[('b', epoch)]
-        circuit_params_per_epoch['gamma_x'] =  circuit_params[('gamma_x', epoch)]
-        circuit_params_per_epoch['gamma_y'] = circuit_params[('gamma_y', epoch)]
+        circuit_params_per_epoch['gamma'] =  circuit_params[('gamma', epoch)]
+        circuit_params_per_epoch['delta'] = circuit_params[('delta', epoch)]
 
         #generate samples, and exact probabilities for current set of parameters
         born_samples, born_probs_approx_dict, born_probs_exact_dict = BornSampler(qc, N_samples, circuit_params_per_epoch, circuit_choice)
@@ -66,7 +67,7 @@ def TrainBorn(qc, cost_func,initial_params,
                 
         born_probs_list.append(born_probs_approx_dict)
         empirical_probs_list.append(born_probs_approx_dict)
-
+        # print('The Empirical Data is:', EmpiricalDist(data_train_test[0], N_qubits ))
         print('The Born Machine Outputs Probabilites\n', born_probs_approx_dict)
         print('The Data is\n,', data_exact_dict)
         loss[(cost_func, 'Train')].append(CostFunction(qc, cost_func, data_train_test[0], data_exact_dict, born_samples,\
@@ -114,14 +115,14 @@ def TrainBorn(qc, cost_func,initial_params,
         # 											circuit_choice, 'GAMMA',\
         # 											N_samples)
         # 		##If the exact MMD is to be computed approx == 'Exact', if only approximate version using samples, approx == 'Sampler'
-        # 		gamma_x_grad[gammaindex] = SteinGrad(device_params, data_train_test[0], data_exact_dict,\
+        # 		gamma_grad[gammaindex] = SteinGrad(device_params, data_train_test[0], data_exact_dict,\
         # 								born_samples, born_probs_dict,\
         # 								born_samples_plus, born_plus_exact_dict, \
         # 								born_samples_minus, born_minus_exact_dict,\
         # 								N_samples, k_choice, approx, score_approx, chi, stein_kernel_choice)
             
-        # 	# print('gamma_x_grad is:', gamma_x_grad)
-        # 	gamma_x[:, epoch + 1] = gamma_x[:, epoch] - learning_rate*gamma_x_grad
+        # 	# print('gamma_grad is:', gamma_grad)
+        # 	gamma[:, epoch + 1] = gamma[:, epoch] - learning_rate*gamma_grad
 
         '''Updating weight J[p,q], control set to 'WEIGHTS' '''
         for q in range(0, N_qubits):
