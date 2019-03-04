@@ -51,7 +51,7 @@ def NetworkParams(qc, random_seed):
 		for i in range(0, N_qubits):	
 			if i < j:
 				J[i][j] = rand.uniform(0, pi/4)
-		J = J + np.transpose(J)
+				J[j][i] = J[i][j]
 
 	initial_params = {'J': J, 'b': b, 'gamma': gamma, 'delta': delta, 'sigma': sigma}
 

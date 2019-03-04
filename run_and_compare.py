@@ -61,14 +61,14 @@ def get_inputs(file_name):
         else:
             as_qvm_value = False
 
-        stein_score = str(input_values[11])
-        stein_score = stein_score[0:len(stein_score) - 1]
+        score = str(input_values[11])
+        score = score[0:len(score) - 1]
 
         stein_eigvecs = int(input_values[12])
         stein_eta = float(input_values[13])
 
         stein_params = {}
-        stein_params[0] = stein_score           #Choice of method to approximate Stein Score:                   stein_score
+        stein_params[0] = score           #Choice of method to approximate Stein Score:                   score
         stein_params[1] = stein_eigvecs         #Number of Nystrom Eigenvectors, J for spectral_stein method:   J
         stein_params[2] = stein_eta             #regularization paramter for identity_stein method:             \chi
         stein_params[3] = kernel_type           #Kernel for computing Stein Score, set to be the same as kernel used in Stein Discrpancy                              
@@ -79,8 +79,9 @@ def get_inputs(file_name):
                         batch_size,\
                         N_kernel_samples]
         sinkhorn_eps = float(input_values[14])
+        run = int(input_values[15])
 
-    return N_epochs, learning_rate, data_type, N_samples, kernel_type, cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps
+    return N_epochs, learning_rate, data_type, N_samples, kernel_type, cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps, run
 
 def SaveAnimation(framespersec, fig, N_epochs, N_qubits, N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples):
       
@@ -166,7 +167,7 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("[ERROR] : There should be exactly one input. Namely, a txt file containing the input values. Please see the README.md file for more details.")
     else:
-        N_epochs, learning_rate, data_type, N_samples, kernel_type,cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps = get_inputs(sys.argv[1])
+        N_epochs, learning_rate, data_type, N_samples, kernel_type,cost_func, device_name, as_qvm_value, stein_params, sinkhorn_eps, run = get_inputs(sys.argv[1])
         
         if type(device_name) is not str:
                 raise ValueError('The device name must be a string')
@@ -234,7 +235,6 @@ def main():
 
 
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', data_circuit_choice)
-
   
         loss, circuit_params, born_probs_list, empirical_probs_list = TrainBorn(qc, cost_func, initial_params, \
                                                                             N_epochs, N_samples, data_train_test, data_exact_dict, \
@@ -250,7 +250,9 @@ def main():
         SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
 
-        PrintFinalParamsToFile(cost_func, data_type, data_circuit_choice, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
+        PrintFinalParamsToFile(cost_func, data_type, data_circuit_choice, N_epochs, \
+                                learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, \
+                                qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run)
 
 if __name__ == "__main__":
 

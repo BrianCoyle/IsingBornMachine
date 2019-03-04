@@ -9,7 +9,23 @@ import sys
 import os
 from pyquil.api import get_qc
 
+import argparse
+
 max_qubits = 8
+
+
+def ParseInputArguments():
+	'''
+	This function returns optional input arguments in order to print various things to files, i.e. kernels, data.
+	'''
+	parser = argparse.ArgumentParser()
+
+	parser.add_argument("Data", help = "Argument specifying which data should be printed", type = str)
+	parser.add_argument("Qubits", help = "Argument specifying maximum number of qubits to be printed", type = int)
+	parser.add_argument("Kernel", help = "Argument specifying which kernel should be printed", type = str)
+	args = parser.parse_args()
+	return args
+
 
 def MakeDirectory(path):
 	'''Makes an directory in the given \'path\', if it does not exist already'''
@@ -74,12 +90,6 @@ def PrintSomeKernels(kernel_type, max_qubits):
 	print("Exact Kernel is Printing")
 	PrintKernel('infinite', kernel_type, max_qubits)
 	return
-
-#Uncomment if Gaussian Kernel needed to be printed to file
-# PrintSomeKernels('Gaussian', max_qubits)
-
-#Uncomment if Quantum Kernel needed to be printed to file
-# PrintSomeKernels('Quantum', max_qubits)
 
 
 def DataDictToFile(data_type, N_qubits, data_dict, N_data_samples, *args):
@@ -167,7 +177,6 @@ def PrintDataToFiles(data_type, N_samples, qc, circuit_choice, N_qubits):
 		N_Born_Samples = [0, N_samples] #BornSampler takes a list of sample values, the [1] entry is the important one
 		circuit_params = NetworkParams(qc, random_seed_for_data) #Initialise a fixed instance of parameters to learn.
 		quantum_data_samples, quantum_probs_dict, quantum_probs_dict_exact = BornSampler(qc, N_Born_Samples, circuit_params, circuit_choice)
-		print(quantum_data_samples)
 
 		np.savetxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_samples, circuit_choice), quantum_data_samples, fmt='%s')
 		DataDictToFile(data_type, N_qubits, quantum_probs_dict, N_samples, circuit_choice)
@@ -200,42 +209,31 @@ def PrintAllDataToFiles(data_type, max_qubits, *args):
 				print('Bernoulli Data is printing for %i qubits' %N_qubits)
 				PrintDataToFiles('Bernoulli_Data', N_samples, qc, circuit_choice, N_qubits)
 
-# #Uncomment if quantum data needs to be printed to file
-# PrintAllDataToFiles('Quantum_Data', max_qubits, 'IQP')
-
-# Uncomment if classical data needs to be printed to file
-# PrintAllDataToFiles('Bernoulli_Data', max_qubits)
 
 
 # #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
 # random_seed_for_data = 13
 # PrintCircuitParamsToFile(random_seed_for_data, 'IQP')
 
-def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
+def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run):
 	'''This function prints out all information generated during the training process for a specified set of parameters'''
 
 	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
 	if data_type == 'Quantum_Data':
 		if cost_func == 'MMD':
-			trial_name = "outputs/Output_MMD_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR" \
-						%(qc,\
-						data_type,\
-						data_circuit,\
-						kernel_type,\
-						N_kernel_samples,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate)
+			score			= stein_params[0]       
+
+			trial_name = "outputs/Output_MMD_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_Run%s" \
+						%(qc,data_type, data_circuit, kernel_type,N_kernel_samples,N_born_samples, N_data_samples,batch_size,N_epochs,\
+						learning_rate, score[0:5], str(run))
 
 			path_to_output = './%s/' %trial_name
 			MakeDirectory(path_to_output)
 
 			with open('%s/info' %trial_name, 'w') as f:
 				sys.stdout  = f
-				print("The data is:cost function:MMD chip:%s Data_type: %s Data Circuit: %s kernel:%s N kernel samples:%i N Born Samples:%i N Data samples:%i\
-						Batch size:%i Epochs:%i Adam Learning Rate:%.3f" 
+				print("The data is:cost function:MMD chip:%s Data_type: %s Data Circuit: %s kernel:%s N kernel samples:%i N Born Samples:%i N Data samples:%s\
+						Batch size:%i Epochs:%i Adam Learning Rate:%.3f_%s Run: %i" 
 				%(qc,\
 				data_type,\
 				data_circuit,\
@@ -245,34 +243,26 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 				N_data_samples,\
 				batch_size,\
 				N_epochs,\
-				learning_rate))
+				learning_rate,\
+				score[0:5],\
+				str(run)))
 						
 		elif cost_func == 'Stein':
-			stein_score		= stein_params[0]       
+			score			= stein_params[0]       
 			stein_eigvecs	= stein_params[1] 
 			stein_eta		= stein_params[2]    
 			
-			trial_name = "outputs/Output_Stein_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta" \
-						%(qc,\
-						data_type,\
-						data_circuit,\
-						kernel_type,\
-						N_kernel_samples,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate,\
-						stein_score,\
-						stein_eigvecs, 
-						stein_eta)
+			trial_name = "outputs/Output_Stein_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta_Run%s" \
+						%(qc, data_type, data_circuit, kernel_type, N_kernel_samples, N_born_samples, N_data_samples, batch_size,\
+							N_epochs, learning_rate, score, stein_eigvecs, stein_eta, str(run))
+
 			path_to_output = './%s/' %trial_name
 			MakeDirectory(path_to_output)
 
 			with open('%s/info' %trial_name, 'w') as f:
 				sys.stdout  = f
-				print("The data is: cost function: Stein, chip:%s Data_type: %s Data Circuit: %s kernel:%s N kernel samples:%i \n N Born Samples:%i N Data samples:%i\
-				Batch size:%iEpochs:%iAdam Learning Rate:%.3fStein Score:%sN Nystrom Eigvecs:%iStein Eta:%.3f" 
+				print("The data is: cost function: Stein, chip:%s Data_type: %s Data Circuit: %s kernel:%s N kernel samples:%i \n N Born Samples:%i N Data samples:%s\
+				Batch size:%iEpochs:%iAdam Learning Rate:%.3fStein Score:%sN Nystrom Eigvecs:%iStein Eta:%.3f Run: %i" 
 
 				%(qc,\
 				data_type,\
@@ -284,12 +274,13 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 				batch_size,\
 				N_epochs,\
 				learning_rate,\
-				stein_score,\
+				score,\
 				stein_eigvecs, \
-				stein_eta))
+				stein_eta,\
+				str(run)))
 
 		elif cost_func == 'Sinkhorn':
-			trial_name = "outputs/Output_Sinkhorn_%s_%s_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon" \
+			trial_name = "outputs/Output_Sinkhorn_%s_%s_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon_Run%s" \
 						%(qc,\
 						data_type,\
 						data_circuit,\
@@ -298,7 +289,8 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 						batch_size,\
 						N_epochs,\
 						learning_rate,\
-						sinkhorn_eps)
+						sinkhorn_eps, \
+						str(run))
 
 			path_to_output = './%s/' %trial_name
 			MakeDirectory(path_to_output)
@@ -306,7 +298,7 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 			with open('%s/info' %trial_name, 'w') as f:
 				sys.stdout  = f
 				print("The data is: cost function:Sinkhorn Data_type: %s Data Circuit: %s chip: %s kernel: %s N kernel samples: %i \
-				N Born Samples: %i N Data samples: %i Batch size: %i Epochs: %i Adam Learning Rate: %.3f Sinkhorn Epsilon: %.3f" 
+				N Born Samples: %i N Data samples: %i Batch size: %i Epochs: %i Adam Learning Rate: %.3f Sinkhorn Epsilon: %.3f Run: %s" 
 
 				%(qc,\
 				data_type,\
@@ -318,41 +310,13 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 				batch_size,\
 				N_epochs,\
 				learning_rate,\
-				sinkhorn_eps))
+				sinkhorn_eps,\
+				str(run)))
+
 	elif data_type == 'Bernoulli_Data': 
 		if cost_func == 'MMD':
-			trial_name = "outputs/Output_MMD_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR" \
-						%(qc,\
-						kernel_type,\
-						N_kernel_samples,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate)
-
-			path_to_output = './%s/' %trial_name
-			MakeDirectory(path_to_output)
-
-			with open('%s/info' %trial_name, 'w') as f:
-				sys.stdout  = f
-				print("The data is:cost function:MMD chip:%s kernel:%s N kernel samples:%i N Born Samples:%i N Data samples:%i\
-						Batch size:%i Epochs:%i Adam Learning Rate:%.3f" 
-				%(qc,\
-				kernel_type,\
-				N_kernel_samples,\
-				N_born_samples,\
-				N_data_samples,\
-				batch_size,\
-				N_epochs,\
-				learning_rate))
-						
-		elif cost_func == 'Stein':
-			stein_score		= stein_params[0]       
-			stein_eigvecs	= stein_params[1] 
-			stein_eta		= stein_params[2]    
-			
-			trial_name = "outputs/Output_Stein_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta" \
+			score		= stein_params[0]       
+			trial_name = "outputs/Output_MMD_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_Run%s" \
 						%(qc,\
 						kernel_type,\
 						N_kernel_samples,\
@@ -361,16 +325,52 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 						batch_size,\
 						N_epochs,\
 						learning_rate,\
-						stein_score,\
+						score,\
+						str(run))
+
+			path_to_output = './%s/' %trial_name
+			MakeDirectory(path_to_output)
+
+			with open('%s/info' %trial_name, 'w') as f:
+				sys.stdout  = f
+				print("The data is:cost function:MMD chip:%s kernel:%s N kernel samples:%i N Born Samples:%i N Data samples:%s\
+						Batch size:%i Epochs:%i Adam Learning Rate:%.3f, Data Form: %s  Run: %s" 
+				%(qc,\
+				kernel_type,\
+				N_kernel_samples,\
+				N_born_samples,\
+				N_data_samples,\
+				batch_size,\
+				N_epochs,\
+				learning_rate, \
+				score,\
+				str(run)))
+						
+		elif cost_func == 'Stein':
+			score			= stein_params[0]       
+			stein_eigvecs	= stein_params[1] 
+			stein_eta		= stein_params[2]    
+			
+			trial_name = "outputs/Output_Stein_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta_Run%s" \
+						%(qc,\
+						kernel_type,\
+						N_kernel_samples,\
+						N_born_samples,\
+						N_data_samples,\
+						batch_size,\
+						N_epochs,\
+						learning_rate,\
+						score,\
 						stein_eigvecs, 
-						stein_eta)
+						stein_eta,\
+						str(run))
 			path_to_output = './%s/' %trial_name
 			MakeDirectory(path_to_output)
 
 			with open('%s/info' %trial_name, 'w') as f:
 				sys.stdout  = f
 				print("The data is: cost function: Stein, chip:%s  kernel:%s N kernel samples:%i \n N Born Samples:%i N Data samples:%i\
-				Batch size:%iEpochs:%iAdam Learning Rate:%.3fStein Score:%sN Nystrom Eigvecs:%iStein Eta:%.3f" 
+				Batch size:%iEpochs:%iAdam Learning Rate:%.3fStein Score:%sN Nystrom Eigvecs:%iStein Eta:%.3f Run: %s" 
 
 				%(qc,\
 				kernel_type,\
@@ -380,19 +380,21 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 				batch_size,\
 				N_epochs,\
 				learning_rate,\
-				stein_score,\
+				score,\
 				stein_eigvecs, \
-				stein_eta))
+				stein_eta,\
+				str(run)))
 
 		elif cost_func == 'Sinkhorn':
-			trial_name = "outputs/Output_Sinkhorn_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon" \
+			trial_name = "outputs/Output_Sinkhorn_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon_Run%s" \
 						%(qc,\
 						N_born_samples,\
 						N_data_samples,\
 						batch_size,\
 						N_epochs,\
 						learning_rate,\
-						sinkhorn_eps)
+						sinkhorn_eps,\
+						str(run))
 
 			path_to_output = './%s/' %trial_name
 			MakeDirectory(path_to_output)
@@ -400,7 +402,7 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 			with open('%s/info' %trial_name, 'w') as f:
 				sys.stdout  = f
 				print("The data is: cost function: Sinkhorn chip: %s kernel: %sN kernel samples: %i N Born Samples: %iN Data samples: %i Batch size: %i  \n \
-				Epochs: %i Adam Learning Rate:  %.3f Sinkhorn Epsilon:  %.3f" 
+				Epochs: %i Adam Learning Rate:  %.3f Sinkhorn Epsilon:  %.3f Run: %s" 
 
 				%(qc,\
 				kernel_type,\
@@ -410,21 +412,25 @@ def MakeTrialNameFile(cost_func,data_type, data_circuit, N_epochs,learning_rate,
 				batch_size,\
 				N_epochs,\
 				learning_rate,\
-				sinkhorn_eps))
+				sinkhorn_eps,\
+				str(run)))
 
 
 	else: raise ValueError('\'data_type\' must be either \'Quantum_Data\' or  \'Bernoulli_Data\'')
 	return trial_name
 
-def PrintFinalParamsToFile(cost_func, data_type, data_circuit, N_epochs, learning_rate, loss, circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
+def PrintFinalParamsToFile(cost_func, data_type, data_circuit, N_epochs, learning_rate, loss,
+							circuit_params, data_exact_dict, born_probs_list, empirical_probs_list, qc,
+							kernel_type, N_samples, stein_params, sinkhorn_eps, run):
 	'''This function prints out all information generated during the training process for a specified set of parameters'''
 
 	  
-	trial_name = MakeTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc.name, kernel_type, N_samples, stein_params, sinkhorn_eps)
+	trial_name = MakeTrialNameFile(cost_func, data_type, data_circuit, \
+									N_epochs,learning_rate, qc.name, kernel_type, N_samples, stein_params, sinkhorn_eps, run)
 
-	loss_path = '%s/loss/%s/' %(trial_name, cost_func)
+	loss_path 	= '%s/loss/%s/' %(trial_name, cost_func)
 	weight_path = '%s/params/weights/' %trial_name
-	bias_path = '%s/params/biases/' %trial_name
+	bias_path 	= '%s/params/biases/' %trial_name
 	gammax_path = '%s/params/gammaX/'  %trial_name
 	gammay_path = '%s/params/gammaY/'  %trial_name
 
@@ -462,3 +468,36 @@ def PrintFinalParamsToFile(cost_func, data_type, data_circuit, N_epochs, learnin
 		with open('%s/probs/data/epoch%s' 	%(trial_name, epoch), 'w') as f:				
 				json.dump(json.dumps(data_exact_dict, sort_keys=True),f)
 	return
+
+def main():
+	args = ParseInputArguments()
+	data = args.Data
+	max_qubits = args.Qubits
+	kernel = args.Kernel
+
+	if data.lower() == 'bernoulli':
+		
+		# Bernoulli data needs to be printed to file
+		PrintAllDataToFiles('Bernoulli_Data', max_qubits)
+
+	elif data.lower() == 'quantum':
+
+		#quantum data needs to be printed to file
+		PrintAllDataToFiles('Quantum_Data', max_qubits, 'IQP')
+
+	if kernel.lower() == 'gaussian':
+
+		#Gaussian Kernel needed to be printed to file
+		PrintSomeKernels('Gaussian', max_qubits)
+
+	elif kernel.lower() == 'quantum':
+
+		#Quantum Kernel needed to be printed to file
+		PrintSomeKernels('Quantum', max_qubits)
+
+# #Uncomment to print circuit parameters to file, corresponding to the data, if the data is quantum
+# random_seed_for_data = 13
+# PrintCircuitParamsToFile(random_seed_for_data, 'IQP')
+
+if __name__ == '__main__':
+	main()

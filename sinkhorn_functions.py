@@ -68,6 +68,13 @@ def SinkGrad(born_samples, born_samples_pm, data_samples, epsilon):
     return feydy_sink_grad
 
 
+def _gamma_(f, p, g, q,  M, sinkhorn_eps=.01):
+    '''
+    This function computes the optimal coupling between the two input distributions, p, q
+    From the dual vectors, f, g
+    '''
+    return ((f.view(-1, 1) + g.view(1, -1))/sinkhorn_eps - M/sinkhorn_eps + p.log().view(-1, 1)
+            + q.log().view(1, -1)).exp()
 
 
 

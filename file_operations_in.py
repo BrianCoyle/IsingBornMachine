@@ -122,17 +122,17 @@ def ParamsFromFile(N_qubits, circuit_choice, device_name):
 	
 	return J, b, gamma, delta
 
-def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
+def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run):
 	'''This function creates the file neame to be found with the given parameters'''
 
 	[N_data_samples, N_born_samples, batch_size, N_kernel_samples] = N_samples
-	stein_score		= stein_params[0]       
+	score			= stein_params[0]       
 	stein_eigvecs	= stein_params[1] 
 	stein_eta		= stein_params[2]    
 
-	if data_type == 'Quantum_Data':
-		if cost_func == 'MMD':
-			trial_name = "outputs/Output_MMD_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR" \
+	if data_type.lower() == 'quantum_data':
+		if cost_func.lower() == 'mmd':
+			trial_name = "outputs/Output_MMD_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_Run%s" \
 						%(qc,\
 						data_type,\
 						data_circuit,\
@@ -142,11 +142,13 @@ def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate
 						N_data_samples,\
 						batch_size,\
 						N_epochs,\
-						learning_rate)
+						learning_rate, \
+						score,\
+						str(run))
 
 
-		elif cost_func == 'Stein':
-			trial_name = "outputs/Output_Stein_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta" \
+		elif cost_func.lower() == 'stein':
+			trial_name = "outputs/Output_Stein_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta_Run%s" \
 						%(qc,\
 						data_type,\
 						data_circuit,\
@@ -157,69 +159,74 @@ def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate
 						batch_size,\
 						N_epochs,\
 						learning_rate,\
-						stein_score,\
+						score,\
+						stein_eigvecs, \
+						stein_eta,\
+						str(run))
+		
+
+		elif cost_func.lower() == 'sinkhorn':
+			trial_name = "outputs/Output_Sinkhorn_%s_%s_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon_Run%s" \
+						%(qc,\
+						data_type,\
+						data_circuit,\
+						N_born_samples,\
+						N_data_samples,\
+						batch_size,\
+						N_epochs,\
+						learning_rate,\
+						sinkhorn_eps,\
+						str(run))
+	elif data_type.lower() == 'bernoulli_data':
+		if cost_func.lower() == 'mmd':
+			trial_name = "outputs/Output_MMD_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_Run%s" \
+						%(qc,\
+						kernel_type,\
+						N_kernel_samples,\
+						N_born_samples,\
+						N_data_samples,\
+						batch_size,\
+						N_epochs,\
+						learning_rate,\
+						score, \
+						str(run))
+
+
+		elif cost_func.lower() == 'stein':
+			trial_name = "outputs/Output_Stein_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta_Run%s" \
+						%(qc,\
+						kernel_type,\
+						N_kernel_samples,\
+						N_born_samples,\
+						N_data_samples,\
+						batch_size,\
+						N_epochs,\
+						learning_rate,\
+						score,\
 						stein_eigvecs, 
-						stein_eta)
+						stein_eta, \
+						str(run))
 		
 
 
-		elif cost_func == 'Sinkhorn':
-			trial_name = "outputs/Output_Sinkhorn_%s_%s_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon" \
-						%(qc,\
-						data_type,\
-						data_circuit,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate,\
-						sinkhorn_eps)
-	elif data_type == 'Bernoulli_Data':
-		if cost_func == 'MMD':
-			trial_name = "outputs/Output_MMD_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR" \
-						%(qc,\
-						kernel_type,\
-						N_kernel_samples,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate)
-
-
-		elif cost_func == 'Stein':
-			trial_name = "outputs/Output_Stein_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_%iEigvecs_%.3fEta" \
-						%(qc,\
-						kernel_type,\
-						N_kernel_samples,\
-						N_born_samples,\
-						N_data_samples,\
-						batch_size,\
-						N_epochs,\
-						learning_rate,\
-						stein_score,\
-						stein_eigvecs, 
-						stein_eta)
-		
-
-
-		elif cost_func == 'Sinkhorn':
-			trial_name = "outputs/Output_Sinkhorn_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon" \
+		elif cost_func.lower() == 'sinkhorn':
+			trial_name = "outputs/Output_Sinkhorn_%s_HammingCost_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%.3fEpsilon_Run%s" \
 						%(qc,\
 						N_born_samples,\
 						N_data_samples,\
 						batch_size,\
 						N_epochs,\
 						learning_rate,\
-						sinkhorn_eps)
+						sinkhorn_eps,\
+						str(run))
 
 	else: raise IOError('\'data_type\' must be either \'Quantum_Data\' or  \'Bernoulli_Data\'')
 	return trial_name
 
-def TrainingDataFromFile(cost_func, data_type, data_circuit, N_epochs, learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps):
+def TrainingDataFromFile(cost_func, data_type, data_circuit, N_epochs, learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run):
 	'''This function reads in all information generated during the training process for a specified set of parameters'''
 
-	trial_name = FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
+	trial_name = FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run)
 
 	with open('%s/info' %trial_name, 'r') as training_data_file:
 		training_data = training_data_file.readlines()
@@ -250,41 +257,128 @@ def TrainingDataFromFile(cost_func, data_type, data_circuit, N_epochs, learning_
 
 def ReadFromFile(N_epochs, learning_rate, data_type, data_circuit,	
 				N_born_samples, N_data_samples, N_kernel_samples,
-				batch_size, kernel_type, cost_func, qc, stein_score,
-				stein_eigvecs, stein_eta, sinkhorn_eps):
+				batch_size, kernel_type, cost_func, qc, score,
+				stein_eigvecs, stein_eta, sinkhorn_eps, runs):
+
 	if type(N_epochs) is not list:
 		#If the Inputs are not a list, there is only one trial
 		N_trials = 1	
 	else:		
 		N_trials = len(N_epochs) #Number of trials to be compared is the number of elements in each input list
-	
 
-		
+	if type(runs) is int:
+		N_runs = 1
+	elif all(run == 0 for run in runs):
+		#If the runs are equal to zero, there is only a single run to be considered
+		N_runs = 1	
+	else:		
+		N_runs = len(runs) #Number of trials to be compared is the maximum value in runs list
+
+		 
 	if N_trials == 1:
-		N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
-		stein_params 	= {}
-		stein_params[0] = stein_score      
-		stein_params[1] = stein_eigvecs      
-		stein_params[2] = stein_eta  
-		stein_params[3] = kernel_type 
-		loss, circuit_params, born_probs, data_probs = TrainingDataFromFile(cost_func,\
-																								data_type, data_circuit, N_epochs, learning_rate, \
-																								qc, kernel_type, N_samples, stein_params, sinkhorn_eps)
-	else:	
-		[loss, circuit_params, born_probs_final, data_probs_final] = [[] for _ in range(4)]
-		for trial in range(N_trials):	
-			N_samples 		= [N_data_samples[trial], N_born_samples[trial], batch_size[trial], N_kernel_samples[trial]]
+		if N_runs == 1:
+			N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
 			stein_params 	= {}
-			stein_params[0] = stein_score[trial]       
-			stein_params[1] = stein_eigvecs[trial]        
-			stein_params[2] = stein_eta[trial]   
-			stein_params[3] = kernel_type[trial] 
-			loss_per_trial, circuit_params_per_trial, born_probs_per_trial, data_probs_per_trial = TrainingDataFromFile(cost_func[trial],\
-																								data_type[trial], data_circuit[trial], N_epochs[trial], learning_rate[trial], \
-																									qc[trial], kernel_type[trial], N_samples, stein_params, sinkhorn_eps[trial])
-			loss.append(loss_per_trial)
-			circuit_params.append(circuit_params_per_trial)
-			born_probs_final.append(born_probs_per_trial[-1])
-			data_probs_final.append(data_probs_per_trial[-1])
+			stein_params[0] = score      
+			stein_params[1] = stein_eigvecs      
+			stein_params[2] = stein_eta  
+			stein_params[3] = kernel_type 
+			loss, circuit_params, born_probs, data_probs = TrainingDataFromFile(cost_func,\
+																				data_type, data_circuit, N_epochs, learning_rate, \
+																				qc, kernel_type, N_samples, stein_params, sinkhorn_eps, 0)
+		
+			born_probs_final = born_probs[-1]
+			data_probs_final= data_probs[-1]
+		else:
+			for run in runs:
+				N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
+
+				[loss, circuit_params, born_probs_final, data_probs_final] = [[] for _ in range(4)]
+
+				stein_params 	= {}
+				stein_params[0] = score      
+				stein_params[1] = stein_eigvecs      
+				stein_params[2] = stein_eta  
+				stein_params[3] = kernel_type 
+				loss_per_run, circuit_params_per_run, born_probs_per_run, data_probs_per_run = TrainingDataFromFile(cost_func,\
+																							data_type, data_circuit, N_epochs, learning_rate, \
+																							qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run)
+			
+				loss.append(loss_per_run)
+				born_probs_final.append(born_probs[-1])
+				data_probs_final.append(data_probs_per_run[-1])
+	else:	
+
+		[loss, circuit_params, born_probs_final, data_probs_final] = [[] for _ in range(4)]
+		if N_runs == 1:
+			for trial in range(N_trials):	
+				N_samples 		= [N_data_samples[trial], N_born_samples[trial], batch_size[trial], N_kernel_samples[trial]]
+				stein_params 	= {}
+				stein_params[0] = score[trial]       
+				stein_params[1] = stein_eigvecs[trial]        
+				stein_params[2] = stein_eta[trial]   
+				stein_params[3] = kernel_type[trial] 
+				loss_per_trial, circuit_params_per_trial, born_probs_per_trial, data_probs_per_trial = TrainingDataFromFile(cost_func[trial],\
+																									data_type[trial], data_circuit[trial], N_epochs[trial], learning_rate[trial], \
+																									qc[trial], kernel_type[trial], N_samples, stein_params, sinkhorn_eps[trial], 0)
+				loss.append(loss_per_trial)
+				circuit_params.append(circuit_params_per_trial)
+				born_probs_final.append(born_probs_per_trial[-1])
+				data_probs_final.append(data_probs_per_trial[-1])
+		else:
+			for run in range(N_runs):
+				print('Runs', run)
+				# for trial in range(N_trials):	
+				N_samples 		= [N_data_samples[run], N_born_samples[run], batch_size[run], N_kernel_samples[run]]
+				stein_params 	= {}
+				stein_params[0] = score[run]       
+				stein_params[1] = stein_eigvecs[run]        
+				stein_params[2] = stein_eta[run]   
+				stein_params[3] = kernel_type[run] 
+				loss_per_run, circuit_params_per_run, born_probs_per_run, data_probs_per_run = TrainingDataFromFile(cost_func[run],\
+																									data_type[run], data_circuit[run], N_epochs[run], learning_rate[run], \
+																									qc[run], kernel_type[run], N_samples, stein_params, sinkhorn_eps[run], runs[run])
+				loss.append(loss_per_run)
+				circuit_params.append(circuit_params_per_run)
+				born_probs_final.append(born_probs_per_run[-1])
+				data_probs_final.append(data_probs_per_run[-1])
 
 	return loss, born_probs_final, data_probs_final
+
+def AverageCostsFromFile(N_epochs, learning_rate, data_type, data_circuit,	
+							N_born_samples, N_data_samples, N_kernel_samples,
+							batch_size, kernel_type, cost_func, qc, score,
+							stein_eigvecs, stein_eta, sinkhorn_eps):
+	'''
+	This function reads the average cost functions, and upper and lower errors from fiel with given parameters
+	'''
+	N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
+	stein_params 	= {}
+	stein_params[0] = score      
+	stein_params[1] = stein_eigvecs      
+	stein_params[2] = stein_eta  
+	stein_params[3] = kernel_type 
+	trial_name = FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, 'Average')
+
+	with open('%s/info' %trial_name, 'r') as training_data_file:
+		training_data = training_data_file.readlines()
+		print(training_data)
+
+	[average_loss, upper_error, lower_error] = [{} for _ in range(3)]
+
+	average_loss[('%s' %cost_func, 'Train')] 	= np.loadtxt('%s/loss/%s/train_avg' 	%(trial_name,cost_func),  dtype = float)
+	average_loss[('%s' %cost_func, 'Test')]  	= np.loadtxt('%s/loss/%s/test_avg' 	%(trial_name,cost_func),  dtype = float)
+	average_loss[('TV')] 						= np.loadtxt('%s/loss/TV/average' 	%(trial_name) ,  dtype = float)
+
+	upper_error[('%s' %cost_func, 'Train')] 	= np.loadtxt('%s/loss/%s/upper_error/train' 	%(trial_name,cost_func),  dtype = float)
+	upper_error[('%s' %cost_func, 'Test')]  	= np.loadtxt('%s/loss/%s/upper_error/test' 	%(trial_name,cost_func),  dtype = float)
+	upper_error[('TV')] 						= np.loadtxt('%s/loss/TV/upper_error' 	%(trial_name) ,  dtype = float)
+
+	lower_error[('%s' %cost_func, 'Train')] 	= np.loadtxt('%s/loss/%s/lower_error/train' 	%(trial_name,cost_func),  dtype = float)
+	lower_error[('%s' %cost_func, 'Test')]  	= np.loadtxt('%s/loss/%s/lower_error/test' 	%(trial_name,cost_func),  dtype = float)
+	lower_error[('TV')] 						= np.loadtxt('%s/loss/TV/lower_error' 	%(trial_name) ,  dtype = float)
+
+	return average_loss, upper_error, lower_error
+
+
+	
