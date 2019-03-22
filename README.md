@@ -1,8 +1,8 @@
 # IsingBornMachine
 Implementation of Quantum Ising Born Machine using Rigetti Forest Platform, with two approaches: 
 1. Training using MMD as a Cost function.
-2. Training using Stein Discrepancy as a Cost function
-
+2. Training using the Stein Discrepancy as a Cost Function
+3. Traing using the Sinkhorn Divergence as a Cost Function.
 Both of the above have the option to run using a 'Quantum-Hard' Kernel function
 
 To run the, PyQuil is needed, plus a user code which can be gotten by signing up to use the Rigetti simulator online:
