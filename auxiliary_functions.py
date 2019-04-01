@@ -20,6 +20,7 @@ def AllBinaryStrings(N_qubits):
 
     return binary_strings_array
 
+
 def IntegerToString(integer, N_qubits):
     '''This function converts a integer to a binary string'''
     if type(integer) is not int:
@@ -28,6 +29,7 @@ def IntegerToString(integer, N_qubits):
         raise TypeError('\'N_qubits\' must be an integer')
 
     return "0" * (N_qubits-len(format(integer,'b'))) + format(integer,'b')
+
 
 def StringToList(string):
     '''This kernel converts a binary string to a list of bits'''
@@ -72,7 +74,7 @@ def ShiftString(string, shift_index):
 # return Converted String
 
 def ToString(input_object):
-    '''This converts an input to string'''
+    '''This converts an input (integer, list, numpy array) to string'''
     if type(input_object) is np.ndarray:
         if input_object.ndim != 1:
             raise IOError('If \'input\' is numpy array it must be 1D')
@@ -82,6 +84,8 @@ def ToString(input_object):
         input_as_string = ''.join([str(bit) for bit in input_object])
     elif type(input_object) is str:
         input_as_string = input_object
+    elif type(input_object) is int:
+        input_as_string = bin(input_object)[2:]
     return input_as_string
 
 ## Convert 1D numpy array to string 
@@ -176,7 +180,7 @@ def EmpiricalDist(samples, N_qubits, *arg):
     if 'full_dist' in arg:
         for index in range(0, 2**N_qubits):
             '''If a binary string has not been seen in samples, set its value to zero'''
-            if IntegerToString(index, N_qubits) not in counts:
+            if IntegerToString(index, N_qubits)  not in counts:
                 counts[IntegerToString(index, N_qubits)] = 0
 
     sorted_samples_dict = {}

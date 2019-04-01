@@ -129,7 +129,6 @@ def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate
 	score			= stein_params[0]       
 	stein_eigvecs	= stein_params[1] 
 	stein_eta		= stein_params[2]    
-
 	if data_type.lower() == 'quantum_data':
 		if cost_func.lower() == 'mmd':
 			trial_name = "outputs/Output_MMD_%s_%s_%s_%skernel_%ikernel_samples_%iBorn_Samples%iData_samples_%iBatch_size_%iEpochs_%.3fLR_%s_Run%s" \

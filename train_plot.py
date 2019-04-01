@@ -43,14 +43,14 @@ def CostPlot(N_qubits, kernel_type, data_train_test, N_samples,\
             plt.plot(loss['TV'], '%so-' %(plot_colour[1]), label ='TV, %i Data Samples,  %i Born Samples for a %s kernel.' \
                                     %(N_samples[0], N_samples[1], kernel_type[0]))
     
-    plt.rc('text', usetex=True)
-    plt.rc('font', family='serif')
+    # plt.rc('text', usetex=True)
+    # plt.rc('font', family='serif')
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
     plt.title("Loss for %i qubits" % N_qubits)
 
 
-    plt.show(block=False)
-    plt.pause(1)
-    plt.close()
+    # plt.show(block=False)
+    # plt.pause(1)
+    # plt.close()
     return loss, circuit_params, born_probs_list, empirical_probs_list

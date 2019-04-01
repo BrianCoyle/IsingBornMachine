@@ -68,7 +68,7 @@ def get_inputs(file_name):
         stein_eta = float(input_values[13])
 
         stein_params = {}
-        stein_params[0] = score           #Choice of method to approximate Stein Score:                   score
+        stein_params[0] = score                 #Choice of method to approximate Stein Score:                   score
         stein_params[1] = stein_eigvecs         #Number of Nystrom Eigenvectors, J for spectral_stein method:   J
         stein_params[2] = stein_eta             #regularization paramter for identity_stein method:             \chi
         stein_params[3] = kernel_type           #Kernel for computing Stein Score, set to be the same as kernel used in Stein Discrpancy                              
@@ -138,24 +138,17 @@ def animate(i, N_qubits, N_born_samples, kernel_type,  data_exact_dict, born_pro
         axs.set_xticklabels(list(data_exact_dict.keys()),rotation=70)
       
 def bytes_to_int(bytes_list):
-
     total = 0
-
     for byte in bytes_list:
-
         total *= 256
         total += byte
 
     return total
 
 def read_ints_from_file(N_qubits, N_data_samples, f):
-
     int_list = [0] * N_data_samples
-
     bytes_list = list(f.read())
-
     for sample in range(N_data_samples):
-
         int_list[sample] = bytes_to_int(bytes_list[sample * num_bytes_needed(N_qubits):(sample + 1) * num_bytes_needed(N_qubits)])
 
     return int_list
@@ -187,23 +180,17 @@ def main():
                 data_samples= list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, data_circuit_choice), dtype = str))
             except:
                 PrintDataToFiles(data_type, N_data_samples, qc, data_circuit_choice, N_qubits)
-
                 data_samples = list(np.loadtxt('data/Quantum_Data_%iQBs_%iSamples_%sCircuit' % (N_qubits, N_data_samples, data_circuit_choice), dtype = str))
 
         elif data_type == 'Bernoulli_Data':
             
             try:
-    
                 with open('binary_data/Bernoulli_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
-
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
             except:
-
                 PrintDataToFiles(data_type, N_data_samples, qc, data_circuit_choice, N_qubits)
-
                 with open('binary_data/Bernoulli_Data_%iQBs_%iSamples' % (N_qubits, N_data_samples), 'rb') as f:
-
                     data_samples_orig = read_ints_from_file(N_qubits, N_data_samples, f)
 
             print("read data =")
@@ -233,21 +220,23 @@ def main():
         #Set random seed to 0 to initialise the actual Born machine to be trained
         initial_params = NetworkParams(qc, random_seed)
 
-
         data_exact_dict = DataDictFromFile(data_type, N_qubits, 'infinite', data_circuit_choice)
-  
+        t0 = time.time()
         loss, circuit_params, born_probs_list, empirical_probs_list = TrainBorn(qc, cost_func, initial_params, \
                                                                             N_epochs, N_samples, data_train_test, data_exact_dict, \
                                                                             kernel_type, 'Precompute', learning_rate, \
                                                                             stein_params, sinkhorn_eps)
-                                                                    
-        plt.figure(1)    
 
-        CostPlot(N_qubits, kernel_type, data_train_test, N_samples, cost_func, loss, circuit_params, born_probs_list, empirical_probs_list)
+
+        t1 = time.time()
+        print('Execution Time is:', t1-t0)                                              
+        # plt.figure(1)    
+
+        # CostPlot(N_qubits, kernel_type, data_train_test, N_samples, cost_func, loss, circuit_params, born_probs_list, empirical_probs_list)
         
 
-        fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
-        SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
+        # fig, axs = PlotAnimate(N_qubits, N_epochs, N_born_samples, cost_func, kernel_type, data_exact_dict)
+        # SaveAnimation(5, fig, N_epochs, N_qubits,  N_born_samples, cost_func, kernel_type, data_exact_dict, born_probs_list, axs, N_data_samples)
         
 
         PrintFinalParamsToFile(cost_func, data_type, data_circuit_choice, N_epochs, \

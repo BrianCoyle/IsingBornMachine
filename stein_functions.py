@@ -71,16 +71,18 @@ def WeightedKernel(qc, kernel_choice, kernel_array, N_samples, data_samples, dat
     chi                 = stein_params[2]
     stein_kernel_choice = stein_params[3]
 
-    if stein_kernel_choice == 'Gaussian':
+    if stein_kernel_choice.lower() == 'gaussian':
         stein_sigma = np.array([0.25, 10, 1000])
-
-    if (score_approx == 'Exact'):
+    else:
+        raise IOError('Stein kernel must be Gaussian for now.')
+        
+    if (score_approx.lower() == 'exact'):
         score_matrix_1 = ss.MassSteinScore(sample_array_1, data_probs)
         score_matrix_2 = ss.MassSteinScore(sample_array_2, data_probs)
-    elif (score_approx == 'Identity_Score'):
+    elif (score_approx.lower() == 'identity'):
         score_matrix_1 = ss.IdentitySteinScore(data_samples, stein_kernel_choice, chi, stein_sigma)
         score_matrix_2 = ss.IdentitySteinScore(data_samples, stein_kernel_choice, chi, stein_sigma)
-    elif (score_approx == 'Spectral_Score'):
+    elif (score_approx.lower() == 'spectral'):
         #compute score matrix using spectral method for all samples, x and y according to the data distribution.
         score_matrix_1 = ss.SpectralSteinScore(sample_array_1, data_samples, J, stein_sigma)
         score_matrix_2 = ss.SpectralSteinScore(sample_array_2, data_samples, J, stein_sigma)

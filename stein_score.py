@@ -1,7 +1,7 @@
 from pyquil.quil import Program
 import numpy as np
 from pyquil.api import get_qc
-from numpy.linalg import inv
+import numpy.linalg as LA
 
 from train_generation import DataSampler
 from classical_kernel import GaussianKernelArray, GaussianKernel
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 def ComputeInverseTerm(kernel_array, N_samples, chi):
     '''This function computes the inverse matrix required by the Stein Score Approximator'''
-    return inv(kernel_array - chi*np.identity(N_samples))
+    return LA.inv(kernel_array - chi*np.identity(N_samples))
     
 def ComputeKernelShift(samples, stein_kernel, stein_sigma):
     '''

@@ -19,18 +19,19 @@ def BornSampler(qc, N_samples, circuit_params, circuit_choice):
 	This Program generates samples from the output distribution of the IQP/QAOA/IQPy circuit according to the Born Rule:
 	P(z) = |<z|U|s>|^2, where |s> is the uniform superposition
 	'''
-	
+
 	make_wf = WavefunctionSimulator()
 	#final_layer = ('IQP'for IQP), = ('QAOA' for QAOA), = ('IQPy' for Y-Rot)
 	#control = 'BIAS' for updating biases, = 'WEIGHTS' for updating weights, ='GAMMA' for gamma params, ='NEITHER' for neither
 	#sign = 'POSITIVE' to run the positive circuit, = 'NEGATIVE' for the negative circuit, ='NEITHER' for neither
 
 	prog = StateInit(qc, circuit_params, 0, 0, 0, 0, circuit_choice , 'NEITHER', 'NEITHER')
+	# print(prog)
 	N_born_samples = N_samples[1]
 
 	'''Generate (N_born_samples) samples from output distribution on (N_qubits) visible qubits'''
 	born_samples_all_qubits_dict = qc.run_and_measure(prog, N_born_samples)
-	
+	# print(born_samples_all_qubits_dict)	
 	born_samples = np.flip(np.vstack(born_samples_all_qubits_dict[q] for q in sorted(qc.qubits())).T, 1) #put outcomes into array
 
 	born_probs_approx_dict = EmpiricalDist(born_samples, len(qc.qubits()), 'full_dist') #Compute empirical distribution of the output samples
