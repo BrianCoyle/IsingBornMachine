@@ -117,5 +117,26 @@ Where:
 13. stein_eta is the regularisation parameter required in the Identity Score method, a small number, typically 0.01
 14. sinkhorn_eps is the regularisation parameter used to compute the Sinkhorn Divergence, between (0, infinity)
 --------------------------------------------------------------------------------------------
+Generate Data & Kernels
+--------------------------------------------------------------------------------------------
+To Generate Classical (Mixture of Gaussians) kernels for all qubits up to 8:
 
+```shell
+python3 file_operations_out.py None Gaussian 8
+```
+To Generate Quantum kernels for all qubits up to 8:
 
+```shell
+python3 file_operations_out.py None Quantum 8
+```
+To Generate Classical Data (Mixture of Bernoulli Modes) for all qubits up to 8:
+
+```shell
+python3 file_operations_out.py Bernoulli None 8
+```
+
+To Generate Quantum Data (from a fully connected IQP circuit particularly) for all qubits up to 8:
+
+```shell
+python3 file_operations_out.py Quantum None 8
+```
