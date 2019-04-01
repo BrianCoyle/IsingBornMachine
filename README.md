@@ -11,10 +11,9 @@ Follow instructions online:
 http://docs.rigetti.com/en/stable/start.html
 This will allow you to download the Rigetti SDK which includes a compiler and a Quantum Virtual Machine
 
-Also the standard packages, numpy, matplotlib, etc.
+Also numpy, matplotlib are required etc.
 
-In the current form of the above codes, it is necessary to run some functions in
-file_operations_out.py to generate the data and pre-compute the quantum kernel etc.
+Finally, pytorch will need to be installed to run the tensor operations in feydy_sink.py
 
 ---------------------------------------------------------------------------------------------
 Maximum Mean Discrepancy (MMD)
@@ -57,7 +56,7 @@ INSTRUCTIONS FOR USE
 run using:
 
 ```shell
-python run_and_compare.py input.txt
+python3 run_and_compare.py inputs.txt
 ```
 
 Where input.txt should look like:
