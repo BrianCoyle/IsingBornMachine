@@ -4,10 +4,20 @@ import sys
 import json
 from auxiliary_functions import SampleListToArray
 import matplotlib
-matplotlib.rcParams['text.usetex'] = True
-matplotlib.rcParams['text.latex.unicode'] = True
-matplotlib.rc('xtick', labelsize=20)     
-matplotlib.rc('ytick', labelsize=20) 
+
+# matplotlib.rcParams['text.usetex'] = True
+# matplotlib.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+
+# matplotlib.rcParams['text.latex.unicode'] = True
+
+from matplotlib import rc
+## for Palatino and other serif fonts use:
+#rc('font',**{'family':'serif','serif':['Palatino']})
+rc('text', usetex=True)
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+
+matplotlib.rc('xtick', labelsize=22)     
+matplotlib.rc('ytick', labelsize=22) 
 import matplotlib.pyplot as plt
 from file_operations_in import ReadFromFile, AverageCostsFromFile
 from file_operations_out import MakeTrialNameFile, MakeDirectory
@@ -70,14 +80,14 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
             axs.bar(x-(0.2*(0+2)), born_final_probs[-3].values(), width=0.2, color='%s' %(bar_plot_colour[1]), align='center')
             axs.bar(x-(0.2*(0+3)), born_final_probs[-1].values(), width=0.2, color='%s' %(bar_plot_colour[2]), align='center')
 
-        axs.set_xlabel("Outcomes", fontsize=20)
-        axs.set_ylabel("Probability", fontsize=20)
+        # axs.set_xlabel("Outcomes", fontsize=20)
+        # axs.set_ylabel("Probability", fontsize=20)
         if legend == True:
             # axs.set_title(r'Outcome Distributions')
             if qc[0][0].lower() == '3':
-                axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn', r'Exact Stein',  r'Spectral Stein' ), fontsize = 20)
+                axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn', r'Exact Stein',  r'Spectral Stein' ), fontsize = 20).draggable()
             elif qc[0][0].lower() == '4':
-                axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn',  r'Spectral Stein' ), fontsize = 20)
+                axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn',  r'Spectral Stein' ), fontsize = 20).draggable()
 
         axs.set_xticks(range(len(data_probs_final[0])))
         axs.set_xticklabels(list(data_probs_final[0].keys()),rotation=70)
@@ -104,12 +114,12 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
                 if cost_func[trial].lower() == 'mmd':
                     try:
                         plt.errorbar(x, average_loss['TV'], cost_error, None,\
-                                                '%s' %(plot_colour[trial]), label =r'%s, %i Data Samples for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                    %(cost_func[trial], N_data_samples[trial], kernel_type[trial][0], learning_rate[trial]),\
+                                                '%s' %(plot_colour[trial]), label =r'%s for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                    %(cost_func[trial], kernel_type[trial][0], learning_rate[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     except:
-                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'MMD %i Data Samples for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                        %(N_data_samples[trial], kernel_type[trial][0], learning_rate[trial]))
+                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                        %(kernel_type[trial][0], learning_rate[trial]))
                 elif  cost_func[trial].lower() == 'stein':
 
                     x_stein = np.arange(0, len(average_loss['TV']))
@@ -117,40 +127,38 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
                         try:
                         
                             plt.errorbar(x_stein, average_loss['TV'], cost_error, None,\
-                                                        '%s' %(plot_colour[trial]), label =r'Stein %i Data Samples using Exact Score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                        %(N_data_samples[trial], kernel_type[trial][0], learning_rate[trial]),\
+                                                        '%s' %(plot_colour[trial]), label =r'Stein using Exact score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                        %( kernel_type[trial][0], learning_rate[trial]),\
                                                             capsize=1, elinewidth=1, markeredgewidth=2)
                     
                         except:
-                            plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'Stein %i Data Samples using Exact Score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                        %(N_data_samples[trial], kernel_type[trial][0], learning_rate[trial]))
+                            plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'Stein using Exact score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                        %( kernel_type[trial][0], learning_rate[trial]))
                     elif score[trial].lower() == 'spectral':
                        
                         plot_colour  = 'm'
 
-                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour), label =r'Stein %i Data Samples using Spectral Score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                        %(N_data_samples[trial], kernel_type[trial][0], learning_rate[trial]))
+                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour), label =r'Stein using Spectral score for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                        %( kernel_type[trial][0], learning_rate[trial]))
                 elif cost_func[trial].lower() == 'sinkhorn':
-                    # plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'%s, %i Data $\&$ Born Samples with $\epsilon$ = %.3f.' \
-                    #                             %(cost_func[trial], N_data_samples[trial], sinkhorn_eps[trial]))
+                    # plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'%s with $\epsilon$ = %.3f.' \
+                    #                             %(cost_func[trial] sinkhorn_eps[trial]))
                     
                     try:
                         plt.errorbar(x, average_loss['TV'], cost_error, None,\
-                                                    '%s' %(plot_colour[trial]), label =r'Sinkhorn, %i Data Samples using Hamming Cost, $\eta_{init}$ = %.3f.' \
-                                                        %(N_data_samples[trial], learning_rate[trial]),\
+                                                    '%s' %(plot_colour[trial]), label =r'Sinkhorn using Hamming cost, $\eta_{init}$ = %.3f.' \
+                                                        %( learning_rate[trial]),\
                                                         capsize=1, elinewidth=1, markeredgewidth=2)
                     except:
-                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'Stein, %i Data Samples using Spectral Score, $\eta_{init}$ = %.3f.' \
-                                                %( N_data_samples[trial], learning_rate[trial]))
+                        plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]), label =r'Stein using Spectral score, $\eta_{init}$ = %.3f.' \
+                                                %( learning_rate[trial]))
             elif legend == False:
                 """WITHOUT LEGEND"""
                 plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]))
-                
-        plt.xlabel("Epochs", fontsize=20)
-        plt.ylabel("TV", fontsize=20)
 
+        plt.legend(loc='best', prop={'size': 20})
+        # plt.legend(loc='best', prop={'size': 20}).draggable()
 
-        plt.legend(loc='best', prop={'size': 20}).draggable()
         plt.show()       
 
 
@@ -179,21 +187,19 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
                 x_mmd = np.arange(0, len(average_loss['MMD', 'Train']))
 
                 plt.errorbar(x_mmd, average_loss[('MMD', 'Train')], train_error, None,\
-                                                '%so' %(plot_colour[trial]), label =r'MMD, %i Train Points using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(round(N_data_samples[trial]*0.8), kernel_type[trial][0], learning_rate[trial]),\
+                                                '%so' %(plot_colour[trial]), label =r'MMD on training set using $\eta_{init}$ = %.3f.' \
+                                                %(learning_rate[trial]),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 plt.errorbar(x_mmd, average_loss[('MMD', 'Test')], test_error, None,\
-                                                '%s-' %(plot_colour[trial]), label =r'MMD, %i Test Points using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(N_data_samples[trial] - round(N_data_samples[trial]*0.8),kernel_type[trial][0], learning_rate[trial]),\
+                                                '%s-' %(plot_colour[trial]), label =r'MMD on test set using $\eta_{init}$ = %.3f.' \
+                                                %( learning_rate[trial]),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 # except:
                 #     plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, %i Train Points using Exact Score.' \
                 #                                 %(round(N_data_samples[trial]*0.8)))
                 #     plt.plot(loss[trial][('Stein', 'Test')],  '%s--' %(plot_colour), label =r'Stein, %i Test Points using Exact Score .' \
                                                 # %(N_data_samples[trial] - round(N_data_samples[trial]*0.8)))
-    
-                plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
-            
+                
             elif cost_func[trial].lower() == 'stein':
                 if score[trial].lower() == 'exact':
                     plot_colour  = 'r'
@@ -202,53 +208,48 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
                         x_stein = np.arange(0, len(average_loss['Stein', 'Train']))
 
                         plt.errorbar(x_stein, average_loss[('Stein', 'Train')], train_error, None,\
-                                                    '%so-' %(plot_colour), label =r'Stein, %i Train Points using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(round(N_data_samples[trial]*0.8), learning_rate[trial]),\
+                                                    '%so-' %(plot_colour), label =r'Stein on training set using Exact score, $\eta_{init}$ = %.3f.' \
+                                                    %(learning_rate[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                         plt.errorbar(x_stein, average_loss[('Stein', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour), label =r'Stein, %i Test Points using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]),\
+                                                    '%s-' %(plot_colour), label =r'Stein on test set using Exact score, $\eta_{init}$ = %.3f.' \
+                                                    %(learning_rate[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     except:
-                        plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, %i Train Points using Exact Score.' \
-                                                    %(round(N_data_samples[trial]*0.8)))
-                        plt.plot(loss[trial][('Stein', 'Test')],  '%s--' %(plot_colour), label =r'Stein, %i Test Points using Exact Score .' \
-                                                    %(N_data_samples[trial] - round(N_data_samples[trial]*0.8)))
+                        plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein on training set using Exact score.' )
+                        plt.plot(loss[trial][('Stein', 'Test')],  '%s--' %(plot_colour), label =r'Stein on test set using Exact score .')
+
                 elif score[trial].lower() == 'spectral':
                     plot_colour  = 'm'
                     
 
-                    plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, %i Train Points using Spectral Score, $\eta_{init}$ = %.3f.' \
-                                                %(round(N_data_samples[trial]*0.8), learning_rate[trial] ))
+                    plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein on training set using Spectral score, $\eta_{init}$ = %.3f.' \
+                                                %(learning_rate[trial] ))
 
-                    plt.plot(loss[trial][('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Stein, %i Test Points using Spectral Score, $\eta_{init}$ = %.3f.' \
-                                                %(N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]))
+                    plt.plot(loss[trial][('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Stein on test set using Spectral score, $\eta_{init}$ = %.3f.' \
+                                                %( learning_rate[trial]))
 
-                plt.ylabel(r'Stein Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize = 20)
+                # plt.ylabel(r'Stein Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize = 20)
             elif cost_func[trial].lower() == 'sinkhorn':
                 plot_colour  = 'b'
                 try:
                     x_sink = np.arange(0, len(average_loss['Sinkhorn', 'Train']))
 
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Train')], train_error, None,\
-                                                    '%so' %(plot_colour[trial]), label =r'Sinkhorn, %i Train Points using Hamming Cost, $\eta_{init}$ = %.3f.' \
-                                                    %(round(N_data_samples[trial]*0.8), learning_rate[trial]),\
+                                                    '%so' %(plot_colour[trial]), label =r'Sinkhorn on training set using Hamming cost, $\eta_{init}$ = %.3f.' \
+                                                    %(learning_rate[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour[trial]), label =r'Sinkhorn, %i Test Points using Hamming Cost, $\eta_{init}$ = %.3f.' \
-                                                    %(N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]),\
+                                                    '%s-' %(plot_colour[trial]), label =r'Sinkhorn on test set using Hamming cost, $\eta_{init}$ = %.3f.' \
+                                                    %( learning_rate[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[trial][('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, %i Train Points using Exact Score.' \
-                                                %(round(N_data_samples[trial]*0.8)))
-                    plt.plot(loss[trial][('Sinkhorn', 'Test')],  '%s--' %(plot_colour), label =r'Sinkhorn, %i Test Points using Exact Score .' \
-                                                %(N_data_samples[trial] - round(N_data_samples[trial]*0.8)))
+                    plt.plot(loss[trial][('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn using Exact score.')
+                    plt.plot(loss[trial][('Sinkhorn', 'Test')],  '%s--' %(plot_colour), label =r'Sinkhorn using Exact score.' )
     
-                plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
-        plt.xlabel("Epochs", fontsize = 20)
-        plt.legend(loc='best', prop={'size': 20}).draggable()
+        # plt.legend(loc='best', prop={'size': 20}).draggable()
+        plt.legend(loc='best', prop={'size': 20})
                     
-  
         plt.show()
     return
 
@@ -258,22 +259,56 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 
 '''THREE QUBITS'''
 
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('MMD')
-# qc.append('3q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                
-# stein_eta.append(0.01)    
-# sinkhorn_eps.append(0.05)
-# runs.append(0)
+N_epochs.append(200)
+learning_rate.append(0.05)
+data_type.append('Bernoulli_Data')
+data_circuit.append('IQP')
+N_born_samples.append(500)
+N_data_samples.append(500)
+N_kernel_samples.append(2000)
+batch_size.append(250)
+kernel_type.append('Gaussian')
+cost_func.append('MMD')
+qc.append('3q-qvm')
+score.append('Approx') 
+stein_eigvecs.append(3)                
+stein_eta.append(0.01)    
+sinkhorn_eps.append(0.1)
+runs.append(0)
+
+N_epochs.append(200)
+learning_rate.append(0.05)
+data_type.append('Bernoulli_Data')
+data_circuit.append('IQP')
+N_born_samples.append(500)
+N_data_samples.append(500)
+N_kernel_samples.append(2000)
+batch_size.append(250)
+kernel_type.append('Gaussian')
+cost_func.append('Sinkhorn')
+qc.append('3q-qvm')
+score.append('Approx') 
+stein_eigvecs.append(3)                
+stein_eta.append(0.01)    
+sinkhorn_eps.append(0.01)
+runs.append(0)
+
+N_epochs.append(200)
+learning_rate.append(0.1)
+data_type.append('Bernoulli_Data')
+data_circuit.append('IQP')
+N_born_samples.append(500)
+N_data_samples.append(500)
+N_kernel_samples.append(2000)
+batch_size.append(250)
+kernel_type.append('Gaussian')
+cost_func.append('MMD')
+qc.append('3q-qvm')
+score.append('Approx') 
+stein_eigvecs.append(3)                
+stein_eta.append(0.01)    
+sinkhorn_eps.append(0.05)
+runs.append(0)
 
 
 # N_epochs.append(200)
@@ -454,10 +489,10 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 # runs.append(0)
 
 
-# CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
-#                         N_born_samples, N_data_samples, N_kernel_samples,
-#                         batch_size, kernel_type, cost_func, qc, score,
-#                         stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'cost',  legend =True)
+CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
+                        N_born_samples, N_data_samples, N_kernel_samples,
+                        batch_size, kernel_type, cost_func, qc, score,
+                        stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'tv',  legend =True)
 
 ###################################################################################################################
 # #Compute MMD Averages and error bars over certain number of runs
@@ -572,8 +607,8 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 
     return 
 
-# N_epochs.append(100)
-# learning_rate.append(0.1)
+# N_epochs.append(200)
+# learning_rate.append(0.05)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -581,16 +616,16 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
-# cost_func.append('Sinkhorn')
-# qc.append('Aspen-4-4Q-A-qvm')
+# cost_func.append('MMD')
+# qc.append('3q-qvm')
 # score.append('Approx') 
 # stein_eigvecs.append(3)                 
 # stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.1)
+# sinkhorn_eps.append(0.01)
 # runs.append(0)
 
-# N_epochs.append(100)
-# learning_rate.append(0.1)
+# N_epochs.append(200)
+# learning_rate.append(0.05)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -598,16 +633,16 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
-# cost_func.append('Sinkhorn')
-# qc.append('Aspen-4-4Q-A-qvm')
+# cost_func.append('MMD')
+# qc.append('3q-qvm')
 # score.append('Approx') 
 # stein_eigvecs.append(3)                
 # stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.1)
+# sinkhorn_eps.append(0.01)
 # runs.append(1)
 
-# N_epochs.append(100)
-# learning_rate.append(0.1)
+# N_epochs.append(200)
+# learning_rate.append(0.05)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -615,16 +650,16 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
-# cost_func.append('Sinkhorn')
-# qc.append('Aspen-4-4Q-A-qvm')
+# cost_func.append('MMD')
+# qc.append('3q-qvm')
 # score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.1)
+# stein_eigvecs.append(3)                
+# stein_eta.append(0.01)      
+# sinkhorn_eps.append(0.01)
 # runs.append(2)
 
-# N_epochs.append(100)
-# learning_rate.append(0.1)
+# N_epochs.append(200)
+# learning_rate.append(0.05)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -632,16 +667,16 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
-# cost_func.append('Sinkhorn')
-# qc.append('Aspen-4-4Q-A-qvm')
+# cost_func.append('MMD')
+# qc.append('3q-qvm')
 # score.append('Approx') 
 # stein_eigvecs.append(3)                
 # stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.1)
+# sinkhorn_eps.append(0.01)
 # runs.append(3)
 
-# N_epochs.append(100)
-# learning_rate.append(0.1)
+# N_epochs.append(200)
+# learning_rate.append(0.05)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -649,12 +684,12 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
-# cost_func.append('Sinkhorn')
-# qc.append('Aspen-4-4Q-A-qvm')
+# cost_func.append('MMD')
+# qc.append('3q-qvm')
 # score.append('Approx') 
 # stein_eigvecs.append(3)                
 # stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.1)
+# sinkhorn_eps.append(0.01)
 # runs.append(4)
 
 # PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,
@@ -692,7 +727,7 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
             
                 try:
                     train_error = np.vstack((lower_error[('MMD', 'Train')], upper_error[('MMD', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('MMD', 'Train')], upper_error[('MMD', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('MMD', 'Test')], upper_error[('MMD', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
                 plot_colour  = 'r'
@@ -702,72 +737,63 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 # plt.plot(loss[('MMD', 'Test')],  '%sx--' %(plot_colour), label =r'MMD, %i Test Points,  %i Born Samples with $\kappa_%s$.' \
                 #                             %(N_data_samples - round(N_data_samples*0.8), N_born_samples, kernel_type[0]))
                
-                try:
-                    plt.errorbar(x, average_loss[('MMD', 'Train')], train_error, None,\
-                                            '%sx-' %(plot_colour), label =r'%s, %i Train Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(cost_func,  round(N_data_samples*0.8), kernel_type[0], learning_rate),\
-                                                capsize=1, elinewidth=1, markeredgewidth=2)
-                    plt.errorbar(x, average_loss[('MMD', 'Test')], test_error, None,\
-                                            '%s-' %(plot_colour), label =r'%s, %i Test Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(cost_func, N_data_samples - round(N_data_samples*0.8), kernel_type[0], learning_rate),\
-                                                capsize=1, elinewidth=1, markeredgewidth=2)
-                except:
-                    plt.plot(loss[('MMD', 'Train')],  '%so-' %(plot_colour), label =r' %i Train Points using Exact Score wit' \
-                                            %(round(N_data_samples*0.8)))
-                    plt.plot(loss[('MMD', 'Test')],  '%sx--' %(plot_colour), label =r', %i Test Points using Exact Score with.' \
-                                            %(N_data_samples - round(N_data_samples*0.8)))
-                plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
+                # try:
+                plt.errorbar(x, average_loss[('MMD', 'Train')], train_error, None,\
+                                        '%sx-' %(plot_colour), label =r'%s on training set for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                            %(cost_func,  kernel_type[0], learning_rate),\
+                                            capsize=1, elinewidth=1, markeredgewidth=2)
+                plt.errorbar(x, average_loss[('MMD', 'Test')], test_error, None,\
+                                        '%s-' %(plot_colour), label =r'%s  on test set for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                            %(cost_func, kernel_type[0], learning_rate),\
+                                            capsize=1, elinewidth=1, markeredgewidth=2)
+                # except:
+                #     plt.plot(loss[('MMD', 'Train')],  '%so-' %(plot_colour), label =r' %i Train Points using Exact Score wit' \
+                #                             %(round(N_data_samples*0.8)))
+                #     plt.plot(loss[('MMD', 'Test')],  '%sx--' %(plot_colour), label =r', %i Test Points using Exact Score with.' \
+                #                             %(N_data_samples - round(N_data_samples*0.8)))
+                # # plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
 
             elif cost_func.lower() == 'sinkhorn':
 
                 try:
                     train_error = np.vstack((lower_error[('Sinkhorn', 'Train')], upper_error[('Sinkhorn', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('Sinkhorn', 'Train')], upper_error[('Sinkhorn', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('Sinkhorn', 'Test')], upper_error[('Sinkhorn', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
                 plot_colour  = 'b'
                 plt.errorbar(x, average_loss[('Sinkhorn', 'Train')], train_error, None,\
-                                            '%sx-' %(plot_colour),  label =r'%s, %i Train Points using Hamming Cost' %(cost_func, N_data_samples - round(N_data_samples*0.8))\
-                                                +'\n'+\
-                                                r'$\eta_{init}$ = %.3f.' %learning_rate,\
+                                            '%sx-' %(plot_colour),  label =r'Sinkhorn, on training set ' +\
+                                                r'with $\eta_{init}$ = %.3f.' %learning_rate,\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 plt.errorbar(x, average_loss[('Sinkhorn', 'Test')], test_error, None,\
-                                            '%s-' %(plot_colour), label =r'%s, %i Test Points using Hamming Cost' %(cost_func, N_data_samples - round(N_data_samples*0.8))\
-                                                +'\n'+\
-                                                r'$\eta_{init}$ = %.3f.' %learning_rate,\
+                                            '%s-' %(plot_colour), label =r'Sinkhorn, on test set '+\
+                                                r'with $\eta_{init}$ = %.3f.' %learning_rate,\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 # plt.plot(loss[('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, %i Train Points with $\epsilon = %.3f $.' \
                 #                             %(round(N_data_samples*0.8), sinkhorn_eps))
                 # plt.plot(loss[('Sinkhorn', 'Test')],  '%sx--' %(plot_colour), label =r'Sinkhorn, %i Test Points with $\epsilon = %.3f$.' \
                 #                             %(N_data_samples - round(N_data_samples*0.8), sinkhorn_eps))
 
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize = 20)
+                # plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize = 20)
             elif cost_func.lower() == 'stein':
 
                 try:
                     train_error = np.vstack((lower_error[('Stein', 'Train')], upper_error[('Stein', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('Stein', 'Train')], upper_error[('Stein', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('Stein', 'Test')], upper_error[('Stein', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
 
                 if score.lower() == 'exact':
                     plot_colour  = 'c'
 
-                    plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, %i Train Points using Exact Score' \
-                                                %(round(N_data_samples*0.8)))
-                    plt.plot(loss[('Stein', 'Test')],  '%sx--' %(plot_colour), label =r'Sinkhorn, %i Test Points using Exact Score ' \
-                                                %(N_data_samples - round(N_data_samples*0.8)))
+                    plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, on training set using Exact score' )
+                    plt.plot(loss[('Stein', 'Test')],  '%sx--' %(plot_colour), label =r'Stein, on test set using Exact score ' )
                 elif score.lower() == 'spectral':
                     plot_colour  = 'm'
                     
-                    plt.plot(loss[('Stein', 'Train')],  '%sx-' %(plot_colour), label =r'Sinkhorn, %i Train Points using Spectral Score' \
-                                                %(round(N_data_samples*0.8)))
-                    plt.plot(loss[('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Sinkhorn, %i Test Points using Spectral Score.' \
-                                                %(N_data_samples - round(N_data_samples*0.8)))
+                    plt.plot(loss[('Stein', 'Train')],  '%sx-' %(plot_colour), label =r'Stein, on training set using Spectral score' )
+                    plt.plot(loss[('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Stein, on test set using Spectral score.' )
 
-                plt.ylabel(r'Stein Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize = 20)
-            
-            plt.xlabel("Epochs", fontsize = 20)
             plt.legend(loc='best', prop={'size': 20}).draggable()
 
             plt.show()
@@ -779,9 +805,6 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 plt.plot(loss[('MMD', 'Train')],  '%so-' %plot_colour)
                 plt.plot(loss[('MMD', 'Test')],  '%sx--' %plot_colour)
 
-                plt.ylabel(r'MMD Loss $\mathcal{L}^\theta_{\mathsf{MMD}}$')
-                plt.title("MMD")
-
             elif cost_func.lower() == 'sinkhorn':
 
                 plot_colour  = 'b'
@@ -789,18 +812,11 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 plt.plot(loss[('Sinkhorn', 'Train')],  '%so-' %plot_colour)
                 plt.plot(loss[('Sinkhorn', 'Test')],  '%sx--' %plot_colour)
 
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}^\theta_{\mathsf{SH}}$')
-                plt.title("Sinkhorn Divergence" )
-
             elif cost_func.lower() == 'stein':
                 plot_colour  = 'g'
 
                 plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour))
                 plt.plot(loss[('Stein', 'Test')],  '%sx--' %(plot_colour))
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SD}}$')
-                plt.title("Stein Discrepancy")
-
-            plt.xlabel("Epochs")
 
             plt.show()
     elif comparison.lower() == 'tv':
@@ -826,7 +842,7 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 x = np.arange(0, N_epochs-1, 1)
                 try:
                     train_error = np.vstack((lower_error[('MMD', 'Train')], upper_error[('MMD', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('MMD', 'Train')], upper_error[('MMD', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('MMD', 'Test')], upper_error[('MMD', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
                 if legend == True:
@@ -834,24 +850,23 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                     try:
                         x_mmd = np.arange(0, len(average_loss['TV']))
                         plt.errorbar(x_mmd, average_loss[('TV')], train_error, None,\
-                                                '%sx-' %(plot_colour), label =r'%s, %i Train Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                    %(cost_func,  round(N_data_samples*0.8), kernel_type[0], learning_rate),\
+                                                '%sx-' %(plot_colour), label =r'%s for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                    %(cost_func, kernel_type[0], learning_rate),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                         plt.errorbar(x_mmd, average_loss[('TV')], test_error, None,\
-                                                '%s-' %(plot_colour), label =r'%s, %i Test Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                    %(cost_func, N_data_samples - round(N_data_samples*0.8), kernel_type[0], learning_rate),\
+                                                '%s-' %(plot_colour), label =r'%s for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                    %(cost_func, kernel_type[0], learning_rate),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     except:
                         plt.plot(loss[('TV')],  '%so-' %(plot_colour), label =r' %i Train Points using Exact Score with' \
                                                 %(round(N_data_samples*0.8)))
                         plt.plot(loss[('TV')],  '%sx--' %(plot_colour), label =r', %i Test Points using Exact Score with.' \
                                                 %(N_data_samples - round(N_data_samples*0.8)))
-                plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
 
             elif cost_func.lower() == 'sinkhorn':
                 try:
                     train_error = np.vstack((lower_error[('Sinkhorn', 'Train')], upper_error[('Sinkhorn', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('Sinkhorn', 'Train')], upper_error[('Sinkhorn', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('Sinkhorn', 'Test')], upper_error[('Sinkhorn', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
                 plot_colour  = 'b'
@@ -859,12 +874,12 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 x_sink = np.arange(0, len(average_loss['TV']))
 
                 plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Train')], train_error, None,\
-                                            '%sx-' %(plot_colour), label =r'%s, %i Train Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(cost_func,  round(N_data_samples*0.8), kernel_type[0], learning_rate),\
+                                            '%sx-' %(plot_colour), label =r'%s, on training set using $\eta_{init}$ = %.3f.' \
+                                                %(cost_func, learning_rate),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Test')], test_error, None,\
-                                            '%s-' %(plot_colour), label =r'%s, %i Test Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(cost_func, N_data_samples - round(N_data_samples*0.8), kernel_type[0], learning_rate),\
+                                            '%s-' %(plot_colour), label =r'%s, on test set using $\eta_{init}$ = %.3f.' \
+                                                %(cost_func, learning_rate),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                 # except:
                 #     plt.plot(loss[('Sinkhorn', 'Train')],  '%sx-' %(plot_colour), label =r'Sinkhorn, %i Train Points with $\epsilon = %.3f $.' \
@@ -872,27 +887,24 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 #     plt.plot(loss[('Sinkhorn', 'Test')],  '%s-' %(plot_colour), label =r'Sinkhorn, %i Test Points with $\epsilon = %.3f$.' \
                 #                                 %(N_data_samples - round(N_data_samples*0.8), sinkhorn_eps))
 
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize = 20)
             elif cost_func.lower() == 'stein':
                 try:
                     train_error = np.vstack((lower_error[('Stein', 'Train')], upper_error[('Stein', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-                    test_error = np.vstack((lower_error[('Stein', 'Train')], upper_error[('Stein', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
+                    test_error = np.vstack((lower_error[('Stein', 'Test')], upper_error[('Stein', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
                 except:
                     pass
                 if score.lower() == 'exact':
                     plot_colour  = 'c'
 
-                    plt.plot(loss['TV'],  '%so-' %(plot_colour), label =r'Stein, %i Train Points using Exact Score.' \
-                                                %(round(N_data_samples*0.8)))
+                    plt.plot(loss['TV'],  '%so-' %(plot_colour), label =r'Stein using Exact score.')
                 elif score.lower() == 'spectral':
                     plot_colour  = 'm'
                     
-                    plt.plot(loss['TV'],  '%so-' %(plot_colour), label =r'Stein, %i Train Points using Spectral Score.' \
-                                                %(round(N_data_samples*0.8)))
+                    plt.plot(loss['TV'],  '%so-' %(plot_colour), label =r'Stein using Spectral score.')
 
                 plt.ylabel(r'$\mathsf{TV}$', fontsize = 20)
             
-            plt.xlabel("Epochs", fontsize = 20)
+            # plt.xlabel("Epochs", fontsize = 20)
             plt.legend(loc='best', prop={'size': 20}).draggable()
                         
 
@@ -905,8 +917,8 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 plt.plot(loss[('MMD', 'Train')],  '%so-' %plot_colour)
                 plt.plot(loss[('MMD', 'Test')],  '%sx--' %plot_colour)
 
-                plt.ylabel(r'MMD Loss $\mathcal{L}^\theta_{\mathsf{MMD}}$')
-                plt.title("MMD")
+                # plt.ylabel(r'MMD Loss $\mathcal{L}^\theta_{\mathsf{MMD}}$')
+                # plt.title("MMD")
 
             elif cost_func.lower() == 'sinkhorn':
 
@@ -915,18 +927,18 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
                 plt.plot(loss[('Sinkhorn', 'Train')],  '%so-' %plot_colour)
                 plt.plot(loss[('Sinkhorn', 'Test')],  '%sx--' %plot_colour)
 
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}^\theta_{\mathsf{SH}}$')
-                plt.title("Sinkhorn Divergence" )
+                # plt.ylabel(r'Sinkhorn Loss $\mathcal{L}^\theta_{\mathsf{SH}}$')
+                # plt.title("Sinkhorn Divergence" )
 
             elif cost_func.lower() == 'stein':
                 plot_colour  = 'g'
 
                 plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour))
                 plt.plot(loss[('Stein', 'Test')],  '%sx--' %(plot_colour))
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SD}}$')
-                plt.title("Stein Discrepancy")
+                # plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SD}}$')
+                # plt.title("Stein Discrepancy")
 
-            plt.xlabel("Epochs")
+            # plt.xlabel("Epochs")
 
             plt.show()
     elif comparison.lower() == 'probs':
@@ -952,8 +964,8 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
         # axs.bar(x-(0.2*(0+1.5)), born_final_probs[-2].values(), width=0.1, color='%s' %(bar_plot_colour[2]), align='center')
         # axs.bar(x-(0.2*(0+2)), born_final_probs[-1].values(), width=0.1, color='%s' %(bar_plot_colour[3]), align='center')
 
-        axs.set_xlabel("Outcomes", fontsize=20)
-        axs.set_ylabel("Probability", fontsize=20)
+        # axs.set_xlabel("Outcomes", fontsize=20)
+        # axs.set_ylabel("Probability", fontsize=20)
         if legend == True:
             # axs.set_title(r'Outcome Distributions')
             axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn', r'Exact Stein',  r'Spectral Stein' ), fontsize = 20)
@@ -1040,14 +1052,17 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
                                                                 stein_eigvecs, stein_eta, sinkhorn_eps, runs)
     # print(len(N_epochs), loss)
     if all(x.lower() == 'mmd' for x in cost_func) is False:
-        #If all cost functions to be compared are the mmd, 
+        #If all cost functions to be compared are the mmd
         raise  ValueError('All cost functions must be MMD')
     else:
         if comparison.lower() == 'tv':
-            plot_colour = ['rx-', 'r+-', 'ro-', 'bx-', 'b+-', 'bo-']
+            if qc[0][0].lower() == '2':
+                plot_colour = ['rs-', 'r+-', 'ro-', 'bs-', 'b+-', 'bo-']
+            elif qc[0][0].lower() == '4':
+                plot_colour = ['rx-', 'bx-', 'c+-', 'mo-']
         elif comparison.lower() == 'mmd':
             if qc[0][0].lower() == '2':
-                plot_colour = ['rx-', 'r+-', 'ro-', 'bx-', 'b+-', 'bo-']
+                plot_colour = ['rs-', 'r+-', 'ro-', 'bs-', 'b+-', 'bo-']
             elif qc[0][0].lower() == '4':
                 plot_colour = ['rx-', 'bx-']
         
@@ -1059,12 +1074,12 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 
         axs.clear()
         x = np.arange(len(data_probs_final[0]))
-        axs.bar(x, data_probs_final[0].values(), width=0.2, color= 'g' , align='center')
+        axs.bar(x, data_probs_final[0].values(), width=0.2, color= 'k' , align='center')
         axs.bar(x-(0.2*(0+1)), born_final_probs[2].values(), width=0.2, color='b', align='center')
         axs.bar(x-(0.2*(0+2)), born_final_probs[-1].values(), width=0.2, color='r', align='center')
 
-        axs.set_xlabel("Outcomes", fontsize=20)
-        axs.set_ylabel("Probability", fontsize=20)
+        # axs.set_xlabel("Outcomes", fontsize=20)
+        # axs.set_ylabel("Probability", fontsize=20)
 
         if legend == True:
             # axs.set_title(r'\textsf{IBM} and data distribution with $\kappa_G$ vs. $\kappa_Q$ for %i qubits' %(N_qubits))
@@ -1103,12 +1118,13 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
                         plt.errorbar(x, average_loss['TV'], tv_error, None,'%s' %(plot_colour[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)	
 
-                plt.ylabel("TV", fontsize=20)
+                # plt.ylabel("TV", fontsize=20)
+
         
             elif comparison.lower() == 'mmd':
                 if legend == True:  
                     if qc[trial].lower()[0] == '2':
-                        plot_markers = ['x', '+', 'o', 'x', '+', 'o'] 
+                        plot_markers = ['s', '+', 'o', 's', '+', 'o'] 
                     elif qc[trial].lower()[0] == '4':
                         plot_markers = ['x', 'x', 'x', 'x', 'x', 'x'] 
                     """WITH LEGENDS"""		
@@ -1116,18 +1132,16 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
                     #             %(round(N_data_samples[trial]*0.8), kernel_type[trial][0], learning_rate[trial]), 
                     #             capsize=0, elinewidth=0.5, markeredgewidth=2)
                     if kernel_type[trial][0].lower() == 'q': 
-                        plt.errorbar(x, average_loss[('MMD', 'Train')], mmd_train_error, None, 'r%s-' %plot_markers[trial], label =r'MMD, %i Train Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                    %(round(N_data_samples[trial]*0.8), kernel_type[trial][0], learning_rate[trial]), 
+                        plt.errorbar(x, average_loss[('MMD', 'Train')], mmd_train_error, None, 'r%s-' %plot_markers[trial], label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                    %( kernel_type[trial][0], learning_rate[trial]), 
                                     capsize=0, elinewidth=0.5, markeredgewidth=2)
-                        plt.errorbar(x, average_loss[('MMD', 'Test')], mmd_train_error, None, 'r-', label =r'MMD, %i Test Points' \
-                                    %(N_data_samples[trial] - round(N_data_samples[trial]*0.8)), 
+                        plt.errorbar(x, average_loss[('MMD', 'Test')], mmd_test_error, None, 'r-', 
                                     capsize=0, elinewidth=0.5, markeredgewidth=2)
                     elif kernel_type[trial][0].lower() == 'g': 
-                        plt.errorbar(x, average_loss[('MMD', 'Train')], mmd_train_error, None, 'b%s-' %plot_markers[trial], label =r'MMD, %i Train Points for $\kappa_{%s}$, $\eta_{init}$ = %.3f.'\
-                                    %(round(N_data_samples[trial]*0.8) ,kernel_type[trial][0], learning_rate[trial] ), 
+                        plt.errorbar(x, average_loss[('MMD', 'Train')], mmd_train_error, None, 'b%s-' %plot_markers[trial], label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.'\
+                                    %(kernel_type[trial][0], learning_rate[trial] ), 
                                     capsize=0, elinewidth=0.5, markeredgewidth=2) 
-                        plt.errorbar(x, average_loss[('MMD', 'Test')], mmd_train_error, None, 'b-', label =r'MMD, %i Test Points.' \
-                                    %(N_data_samples[trial] - round(N_data_samples[trial]*0.8)), 
+                        plt.errorbar(x, average_loss[('MMD', 'Test')], mmd_test_error, None, 'b-', 
                                     capsize=0, elinewidth=0.5, markeredgewidth=2) 
                    
                     plt.legend(loc='best', prop={'size': 20}).draggable()
@@ -1146,9 +1160,9 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
                     elif kernel_type[trial][0].lower() == 'g':
                         plt.errorbar(x, average_loss[('MMD', 'Test')], mmd_test_error, None,'b-',\
                                                         capsize=0, elinewidth=1, markeredgewidth=2)	
-                plt.ylabel("MMD", fontsize=20)
+            #     plt.ylabel("MMD", fontsize=20)
 
-            plt.xlabel("Epochs", fontsize=20)
+            # plt.xlabel("Epochs", fontsize=20)
         plt.show()
 
     
@@ -1157,6 +1171,9 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 [N_epochs, learning_rate, data_type, data_circuit, N_born_samples, N_data_samples, N_kernel_samples, batch_size, kernel_type, \
     cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ in range(16)] 
 
+'''
+TWO QUBITS
+'''
 
 # N_epochs.append(200)
 # learning_rate.append(0.01)
@@ -1210,24 +1227,41 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 # runs.append(0)
 
 # N_epochs.append(200)
-# learning_rate.append(0.1)
+# learning_rate.append(0.01)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
 # N_data_samples.append(500)
 # N_kernel_samples.append(2000)
 # batch_size.append(250)
-# kernel_type.append('Quantum')
+# kernel_type.append('Gaussian')
 # cost_func.append('MMD')
-# qc.append('4q-qvm')
+# qc.append('2q-qvm')
 # score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.05)
+# stein_eigvecs.append(3)                
+# stein_eta.append(0.01)      
+# sinkhorn_eps.append(0.08)
 # runs.append(0)
 
 # N_epochs.append(200)
-# learning_rate.append(0.01)
+# learning_rate.append(0.05)
+# data_type.append('Bernoulli_Data')
+# data_circuit.append('IQP')
+# N_born_samples.append(500)
+# N_data_samples.append(500)
+# N_kernel_samples.append(2000)
+# batch_size.append(250)
+# kernel_type.append('Gaussian')
+# cost_func.append('MMD')
+# qc.append('2q-qvm')
+# score.append('Approx') 
+# stein_eigvecs.append(3)                
+# stein_eta.append(0.01)      
+# sinkhorn_eps.append(0.08)
+# runs.append(0)
+
+# N_epochs.append(200)
+# learning_rate.append(0.08)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1243,8 +1277,29 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 # sinkhorn_eps.append(0.05)
 # runs.append(0)
 
+'''
+FOUR QUBITS
+'''
+
 # N_epochs.append(200)
-# learning_rate.append(0.05)
+# learning_rate.append(0.1)
+# data_type.append('Bernoulli_Data')
+# data_circuit.append('IQP')
+# N_born_samples.append(500)
+# N_data_samples.append(500)
+# N_kernel_samples.append(2000)
+# batch_size.append(250)
+# kernel_type.append('Quantum')
+# cost_func.append('MMD')
+# qc.append('4q-qvm')
+# score.append('Approx') 
+# stein_eigvecs.append(3)                 
+# stein_eta.append(0.01) 
+# sinkhorn_eps.append(0.08)
+# runs.append(0)
+
+# N_epochs.append(200)
+# learning_rate.append(0.1)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1278,7 +1333,7 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 # runs.append(0)
 
 # N_epochs.append(200)
-# learning_rate.append(0.1)
+# learning_rate.append(0.13)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1293,6 +1348,7 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 # stein_eta.append(0.01) 
 # sinkhorn_eps.append(0.08)
 # runs.append(0)
+
 
 # N_qubits = int(qc[0][0])
 
@@ -1337,26 +1393,24 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
                 plot_colour = 'g'
                 try:
                     plt.errorbar(x, average_loss['TV'], cost_error, None,\
-                                            '%s' %(plot_colour), label =r'MMD, %i Data Samples for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(N_data_samples, kernel_type[0], learning_rate),\
+                                            '%s' %(plot_colour), label =r'MMD,  for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                %( kernel_type[0], learning_rate),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'MMD, %i Data Samples, $\eta_{init}$ = %.3f.' \
-                                        %( N_data_samples,learning_rate))
+                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'MMD$\eta_{init}$ = %.3f.' \
+                                        %(learning_rate))
          
             elif cost_func.lower() == 'sinkhorn':
                 plot_colour = 'b'
 
                 try:
                     plt.errorbar(x, average_loss['TV'], cost_error, None,\
-                                                '%s' %(plot_colour), label =r'Sinkhorn, %i Data Samples with Hamming Cost' %(N_data_samples)+ \
-                                                '\n'\
+                                                '%s' %(plot_colour), label =r'Sinkhorn with Hamming cost'+ '\n'\
                                                 + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
                     print('Average File Not Found')
-                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'Sinkhorn, %i Data Samples with Hamming Cost' %(N_data_samples)+ \
-                                                '\n'\
+                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'Sinkhorn with Hamming cost' + '\n'\
                                                 + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %(learning_rate, sinkhorn_eps))
          
             elif cost_func.lower() == 'stein':
@@ -1364,16 +1418,16 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
 
                 try:
                     plt.errorbar(x, average_loss['TV'], cost_error, None,\
-                                            '%s' %(plot_colour), label =r'Stein, %i Data Samples, using %s Score,$\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(N_data_samples, score, kernel_type[0], learning_rate),\
+                                            '%s' %(plot_colour), label =r'Stein using %s score,$\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                %(score, kernel_type[0], learning_rate),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'Stein, %i Data Samples, using %s Score, $\kappa_{%s}$, $\eta_{init}$ = %.3f. ' \
-                                        %( N_data_samples, score, kernel_type[0], learning_rate))
+                    plt.plot(loss[('TV')],  '%so-' %(plot_colour[0]), label =r'Stein using %s score, $\kappa_{%s}$, $\eta_{init}$ = %.3f. ' \
+                                        %(score, kernel_type[0], learning_rate))
 
 
-            plt.xlabel("Epochs", fontsize  =20)
-            plt.ylabel("TV", fontsize  =20)
+            # plt.xlabel("Epochs", fontsize  =20)
+            # plt.ylabel("TV", fontsize  =20)
             plt.legend(loc='best', prop={'size': 15}).draggable()
                     
         elif legend == False:
@@ -1405,43 +1459,37 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
                 try:
                     x_mmd = np.arange(0, len(average_loss['MMD', 'Train']))
                     plt.errorbar(x_mmd, average_loss[('MMD', 'Train')], train_error, None,\
-                                                '%so' %(plot_colour), label =r'MMD, %i Train Points using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(round(N_data_samples*0.8), kernel_type[0], learning_rate),\
+                                                '%so-' %(plot_colour), label =r'MMD on training set using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                %(kernel_type[0], learning_rate),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_mmd, average_loss[('MMD', 'Test')], test_error, None,\
-                                                '%s-' %(plot_colour), label =r'MMD, %i Test Points using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
-                                                %(N_data_samples - round(N_data_samples*0.8),kernel_type[0], learning_rate),\
+                                                '%s-' %(plot_colour), label =r'MMD using $\kappa_{%s}$, $\eta_{init}$ = %.3f.' \
+                                                %(kernel_type[0], learning_rate),\
                                                 capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[('MMD', 'Train')],  '%so-' %(plot_colour[0]), label =r'%s, %i Train Points,   $\eta_{init}$ = %.3f.' \
-                                                %(cost_func, N_data_samples, learning_rate))
-                    plt.plot(loss[('MMD', 'Test')],  '%so-' %(plot_colour[0]), label =r'%s, %i Test Points,  $\eta_{init}$ = %.3f.' \
-                                                %(cost_func, N_data_samples, learning_rate))
-                plt.ylabel(r'$\mathsf{MMD}$ Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize  =20)
+                    plt.plot(loss[('MMD', 'Train')],  '%so-' %(plot_colour[0]), label =r'%s, on training set,  $\eta_{init}$ = %.3f.' \
+                                                %(cost_func, learning_rate))
+                    plt.plot(loss[('MMD', 'Test')],  '%so-' %(plot_colour[0]), label =r'%s, on test set,  $\eta_{init}$ = %.3f.' \
+                                                %(cost_func, learning_rate))
+                # plt.ylabel(r'$\mathsf{MMD}$ Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize  =20)
+
+
+
             elif cost_func.lower() == 'sinkhorn':
                 plot_colour = 'b'
                 try:
                     x_sink = np.arange(0, len(average_loss['Sinkhorn', 'Train']))
 
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Train')], train_error, None,\
-                                                    '%so' %(plot_colour), label =r'Sinkhorn, %i Train Samples with Hamming Cost' %(round(N_data_samples*0.8))+ \
-                                                    '\n'\
-                                                    + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps),\
+                                                    '%so-' %(plot_colour), label =r'Sinkhorn on training set',\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour), label =r'Sinkhorn, %i Test Samples with Hamming Cost' %(N_data_samples - round(N_data_samples*0.8))+ \
-                                                    '\n'\
-                                                    + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps),\
+                                                    '%s-' %(plot_colour), label =r'Sinkhorn on test set',\
                                                    capsize=1, elinewidth=1, markeredgewidth=2)
                  
                 except:
-                    plt.plot(loss[('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, %i Train Samples with Hamming Cost' %(round(N_data_samples*0.8))+ \
-                                                    '\n'\
-                                                    + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps))
-                    plt.plot(loss[('Sinkhorn', 'Test')],  '%s-' %(plot_colour),label =r'Sinkhorn, %i Test Samples with Hamming Cost' %(N_data_samples - round(N_data_samples*0.8))+ \
-                                                    '\n'\
-                                                    + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps))
-                plt.ylabel(r'$\mathsf{Sinkhorn}$ Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize  =20)
+                    plt.plot(loss[('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn on training set')
+                    plt.plot(loss[('Sinkhorn', 'Test')],  '%s-' %(plot_colour),label =r'Sinkhorn on test set')
 
             elif cost_func.lower() == 'stein':
                 plot_colour = 'r'
@@ -1449,28 +1497,25 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
                     x_sink = np.arange(0, len(average_loss['Stein', 'Train']))
 
                     plt.errorbar(x_sink, average_loss[('Stein', 'Train')], train_error, None,\
-                                                    '%so' %(plot_colour), label =r'Stein, %i Train Samples with  $\kappa_{%s}$' %(round(N_data_samples*0.8),kernel_type[0])+ \
+                                                    '%so-' %(plot_colour), label =r'Stein on training set with $\kappa_{%s}$' %(kernel_type[0])+ \
                                                     '\n'\
                                                     + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_sink, average_loss[('Stein', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour), label =r'Stein, %i Test Samples with  $\kappa_{%s}$' %(N_data_samples - round(N_data_samples*0.8),kernel_type[0])+ \
+                                                    '%s-' %(plot_colour), label =r'Stein on test set with $\kappa_{%s}$' %(kernel_type[0])+ \
                                                     '\n'\
                                                     + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, %i Train Samples with  $\kappa_{%s}$' %(round(N_data_samples*0.8),kernel_type[0])+ \
+                    plt.plot(loss[('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein on training set with  $\kappa_{%s}$' %(kernel_type[0])+ \
                                                     '\n'\
                                                     + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps))
-                    plt.plot(loss[('Stein', 'Test')],  '%so-' %(plot_colour), label =r'Stein, %i Test Samples with  $\kappa_{%s}$' %(N_data_samples - round(N_data_samples*0.8),kernel_type[0])+ \
+                    plt.plot(loss[('Stein', 'Test')],  '%so-' %(plot_colour), label =r'Stein on test set with $\kappa_{%s}$' %(kernel_type[0])+ \
                                                     '\n'\
                                                     + r'$\eta_{init}$ = %.3f, $\epsilon$ = %.3f.' %( learning_rate, sinkhorn_eps))
-                plt.ylabel(r'$\mathsf{Stein}$ Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize  = 20)
-  
-            plt.xlabel("Epochs", fontsize  =20)
+
             plt.legend(loc='best', prop={'size': 20}).draggable()
                     
-
         elif legend == False:
             """WITHOUT LEGEND"""							
             plot_colour = ['r', 'b', 'g']
@@ -1487,9 +1532,6 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
         x = np.arange(len(data_probs_final))
         axs.bar(x, data_probs_final.values(), width=0.2, color= 'k' , align='center')
         axs.bar(x-(0.2*(0+1)), born_final_probs.values(), width=0.2, color='b', align='center')
-
-        axs.set_xlabel("Outcomes", fontsize=20)
-        axs.set_ylabel("Probability", fontsize=20)
 
         if legend == True:
             # axs.set_title(r'\textsf{IBM} and data distribution with $\kappa_G$ vs. $\kappa_Q$ for %i qubits' %(N_qubits))
@@ -1542,7 +1584,7 @@ def PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
 # PlotAutomaticCompilation(N_epochs, learning_rate, data_type, data_circuit,
 # 							N_born_samples, N_data_samples, N_kernel_samples,
 # 							batch_size, kernel_type, cost_func, qc, score,
-# 							stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'cost', legend = True)
+# 							stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'probs', legend = True)
 
 
 def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
@@ -1555,7 +1597,7 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
 															stein_eigvecs, stein_eta, sinkhorn_eps, runs)
 
     
-    plot_colour = ['g-', 'g*-', 'b-', 'b*-']
+    plot_colour = ['g-', 'y*-', 'b-', 'c*-']
     N_trials = len(N_epochs)
     if comparison.lower() == 'probs':
 
@@ -1563,7 +1605,7 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
         data_plot_colour = 'k'
 
 
-        bar_plot_colour = ['g','b']
+        bar_plot_colour = ['g','y', 'b', 'c']
         patterns = [ "o" , ""]
 
         axs.clear()
@@ -1571,15 +1613,15 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
         x = np.arange(len(data_probs_final[0]))
         axs.bar(x, data_probs_final[0].values(), width=0.1, color= '%s' %data_plot_colour, align='center')
         #Plot MMD One
-        axs.bar(x-(0.2*(0+1)), born_final_probs[1].values(), width=0.1, color='%s' %(bar_plot_colour[0]), hatch=patterns[0],  align='center')
-        axs.bar(x-(0.2*(0+0.5)), born_final_probs[0].values(), width=0.1, color='%s' %(bar_plot_colour[0]), hatch=patterns[1], align='center')
+        axs.bar(x-(0.2*(0+1)), born_final_probs[1].values(), width=0.1, color='%s' %(bar_plot_colour[0]), align='center')
+        axs.bar(x-(0.2*(0+0.5)), born_final_probs[0].values(), width=0.1, color='%s' %(bar_plot_colour[1]), align='center')
 
         #Plot Sinkhorn
-        axs.bar(x-(0.2*(0+2)),      born_final_probs[3].values(), width=0.1, color='%s' %(bar_plot_colour[1]),    hatch=patterns[0],  align='center')
-        axs.bar(x-(0.2*(0+1.5)),    born_final_probs[2].values(), width=0.1, color='%s' %(bar_plot_colour[1]),    hatch=patterns[1],  align='center')
+        axs.bar(x-(0.2*(0+2)),      born_final_probs[3].values(), width=0.1, color='%s' %(bar_plot_colour[2]),   align='center')
+        axs.bar(x-(0.2*(0+1.5)),    born_final_probs[2].values(), width=0.1, color='%s' %(bar_plot_colour[3]),    align='center')
 
-        axs.set_xlabel("Outcomes", fontsize=20)
-        axs.set_ylabel("Probability", fontsize=20)
+        # axs.set_xlabel("Outcomes", fontsize=20)
+        # axs.set_ylabel("Probability", fontsize=20)
         if legend == True:
             # axs.set_title(r'Outcome Distributions')
             axs.legend(('Data',r'\textsf{MMD}, on %s' %qc[0], r'\textsf{MMD}, on %s' %qc[1], r'Sinkhorn, on %s' %qc[2], r'Sinkhorn, on %s' %qc[3] ), fontsize = 20).draggable()
@@ -1657,8 +1699,8 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
                 """WITHOUT LEGEND"""
                 plt.plot(loss[trial][('TV')],  '%s' %(plot_colour[trial]))
                 
-        plt.xlabel("Epochs", fontsize=20)
-        plt.ylabel("TV", fontsize=20)
+        # plt.xlabel("Epochs", fontsize=20)
+        # plt.ylabel("TV", fontsize=20)
 
 
         plt.legend(loc='best', prop={'size': 20}).draggable()
@@ -1687,32 +1729,28 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
             if cost_func[trial].lower() == 'mmd':
                 if qc[trial].lower()[8] == '3':
                     if learning_rate[trial] == 0.1:
-                        plot_colour = ['c', 'g']
+                        plot_colour = ['g', 'y']
                     elif learning_rate[trial] == 0.15:
                         plot_colour = ['c', 'r']
                     else: print('Plot colours have not been assigned for this LR choice')
                 elif qc[trial].lower()[8] == '4':
-                        plot_colour = ['c', 'g']
+                        plot_colour = ['g', 'y']
 
                 try:
 
                     x_mmd = np.arange(0, len(average_loss['MMD', 'Train']))
 
                     plt.errorbar(x_mmd, average_loss[('MMD', 'Train')], train_error, None,\
-                                                    '%sx-' %(plot_colour[trial]), label =r'MMD on %s, %i Train Samples,$\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], round(N_data_samples[trial]*0.8), learning_rate[trial]),\
-                                                    capsize=1, elinewidth=1, markeredgewidth=2)
+                                                    '%sx-' %(plot_colour[trial]), label =r'MMD on %s.' \
+                                                    %qc[trial], capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_mmd, average_loss[('MMD', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour[trial]), label =r'MMD on %s, %i Test Samples,  $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]),\
-                                                    capsize=1, elinewidth=1, markeredgewidth=2)
+                                                    '%s-' %(plot_colour[trial]), label =r'MMD on %s.' \
+                                                    %(qc[trial]),capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[trial][('MMD', 'Train')],  '%so-' %(plot_colour[trial]), label =r'MMD on %s, %i Train Samples, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], round(N_data_samples[trial]*0.8), kernel_type[trial][0], learning_rate[trial]))
-                    plt.plot(loss[trial][('MMD', 'Test')],  '%s-' %(plot_colour[trial]), label =r'MMD on %s, %i Test Samples, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial],  N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]))
+                    plt.plot(loss[trial][('MMD', 'Train')],  '%so-' %(plot_colour[trial]), label =r'MMD on %s.' %qc[trial])
+                    plt.plot(loss[trial][('MMD', 'Test')],  '%s-' %(plot_colour[trial]), label =r'MMD on %s.' %qc[trial])
     
-                plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
+                # plt.ylabel(r'MMD Loss $\mathcal{L}_{\mathsf{MMD}}$', fontsize = 20)
             
             elif cost_func[trial].lower() == 'stein':
                 if score[trial].lower() == 'exact':
@@ -1721,58 +1759,48 @@ def CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
                         x_stein = np.arange(0, len(average_loss['Stein', 'Train']))
 
                         plt.errorbar(x_stein, average_loss[('Stein', 'Train')], train_error, None,\
-                                                    '%so' %(plot_colour), label =r'Stein, on %s, %i Train Points using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], round(N_data_samples[trial]*0.8),  learning_rate[trial]),\
-                                                    capsize=1, elinewidth=1, markeredgewidth=2)
+                                                    '%so' %(plot_colour), label =r'Stein, on %s, using Exact score.' \
+                                                    %(qc[trial]),capsize=1, elinewidth=1, markeredgewidth=2)
                         plt.errorbar(x_stein, average_loss[('Stein', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour), label =r'Stein, on %s, %i Test Points using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]),\
-                                                    capsize=1, elinewidth=1, markeredgewidth=2)
+                                                    '%s-' %(plot_colour), label =r'Stein, on %s, using Exact score.' \
+                                                    %(qc[trial]),capsize=1, elinewidth=1, markeredgewidth=2)
                     except:
-                        plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, on %s, %i Train Points using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial],  round(N_data_samples[trial]*0.8), learning_rate[trial]))
-                        plt.plot(loss[trial][('Stein', 'Test')],  '%s--' %(plot_colour), label =r'Stein, on %s, %i Test Points  using Exact Score, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]))
+                        plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, on %s using Exact score.' %qc[trial])
+                        plt.plot(loss[trial][('Stein', 'Test')],  '%s--' %(plot_colour), label =r'Stein, on %s using Exact score.' %qc[trial])
                 elif score[trial].lower() == 'spectral':
                     plot_colour  = 'm'
                     
-                    plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, on %s, %i Train Points  using Spectral Score, $\eta_{init}$ = %.3f.' \
-                                                %(qc[trial], round(N_data_samples[trial]*0.8), learning_rate[trial]))
+                    plt.plot(loss[trial][('Stein', 'Train')],  '%so-' %(plot_colour), label =r'Stein, on %s using Spectral score.' %qc[trial])
+                    plt.plot(loss[trial][('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Stein, on %s using Spectral score.' %qc[trial])
 
-                    plt.plot(loss[trial][('Stein', 'Test')],  '%s-' %(plot_colour), label =r'Stein, on %s, %i Test Points using Spectral Score, $\eta_{init}$ = %.3f.' \
-                                                %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8),  learning_rate[trial]))
-
-                plt.ylabel(r'Stein Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize = 20)
+                # plt.ylabel(r'Stein Loss $\mathcal{L}_{\mathsf{SD}}$', fontsize = 20)
             elif cost_func[trial].lower() == 'sinkhorn': 
-                print(qc[trial].lower(), learning_rate[trial])        
                 if qc[trial].lower()[8] == '3':
                     if learning_rate[trial] == 0.08:
-                        plot_colour = ['c', 'b']
+                        plot_colour = ['b', 'c']
                     else: print('Plot colours have not been assigned for this LR choice')
                 elif qc[trial].lower()[8] == '4':
                     if learning_rate[trial] == 0.1:
-                        plot_colour = ['c', 'b']
+                        plot_colour = ['b', 'c']
                     else: print('Plot colours have not been assigned for this LR choice')
 
                 try:
                     x_sink = np.arange(0, len(average_loss['Sinkhorn', 'Train']))
 
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Train')], train_error, None,\
-                                                    '%sx-' %(plot_colour[trial]), label =r'Sinkhorn, on %s, %i Train Samples, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], round(N_data_samples[trial]*0.8),  learning_rate[trial]),\
+                                                    '%sx-' %(plot_colour[trial]), label =r'Sinkhorn, on %s.' \
+                                                    %(qc[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                     plt.errorbar(x_sink, average_loss[('Sinkhorn', 'Test')], test_error, None,\
-                                                    '%s-' %(plot_colour[trial]), label =r'Sinkhorn, on %s, %i Test Samples, $\eta_{init}$ = %.3f.' \
-                                                    %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]),\
+                                                    '%s-' %(plot_colour[trial]), label =r'Sinkhorn, on %s.' \
+                                                    %(qc[trial]),\
                                                     capsize=1, elinewidth=1, markeredgewidth=2)
                 except:
-                    plt.plot(loss[trial][('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, on %s, %i Train Samples, $\eta_{init}$ = %.3f.' \
-                                                %(qc[trial], round(N_data_samples[trial]*0.8),  learning_rate[trial]))
-                    plt.plot(loss[trial][('Sinkhorn', 'Test')],  '%s--' %(plot_colour), label =r'Sinkhorn, on %s, %i Test Samples, $\eta_{init}$ = %.3f.' \
-                                                %(qc[trial], N_data_samples[trial] - round(N_data_samples[trial]*0.8), learning_rate[trial]))
+                    plt.plot(loss[trial][('Sinkhorn', 'Train')],  '%so-' %(plot_colour), label =r'Sinkhorn, on %s.'%qc[trial])
+                    plt.plot(loss[trial][('Sinkhorn', 'Test')],  '%s--' %(plot_colour), label =r'Sinkhorn, on %s.'%qc[trial])
     
-                plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize = 20)
-        plt.xlabel("Epochs", fontsize = 20)
+                # plt.ylabel(r'Sinkhorn Loss $\mathcal{L}_{\mathsf{SH}}$', fontsize = 20)
+        # plt.xlabel("Epochs", fontsize = 20)
         plt.legend(loc='best', prop={'size': 20}).draggable()
 
         plt.show()
@@ -1855,6 +1883,11 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 # runs.append(0)
 
 
+# CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
+#                         N_born_samples, N_data_samples, N_kernel_samples,
+#                         batch_size, kernel_type, cost_func, qc, score,
+#                         stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'tv',  legend =True)
+
 '''#################################'''
 '''ON CHIP ASPEN-4-4Q-A'''
 '''#################################'''
@@ -1925,7 +1958,7 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 # stein_eigvecs.append(3)                 
 # stein_eta.append(0.01) 
 # sinkhorn_eps.append(0.1)
-# # runs.append(0)
+# runs.append(0)
 
 # CompareCostFunctionsonQPU(N_epochs, learning_rate, data_type, data_circuit,
 #                         N_born_samples, N_data_samples, N_kernel_samples,
