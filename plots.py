@@ -9,8 +9,8 @@ from matplotlib import rc
 rc('text', usetex=True)
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 
-matplotlib.rc('xtick', labelsize=22)     
-matplotlib.rc('ytick', labelsize=22) 
+matplotlib.rc('xtick', labelsize=30)     
+matplotlib.rc('ytick', labelsize=30) 
 import matplotlib.pyplot as plt
 from file_operations_in import ReadFromFile, AverageCostsFromFile
 from file_operations_out import MakeTrialNameFile, MakeDirectory
@@ -49,33 +49,19 @@ def CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
         axs.clear()
         x = np.arange(len(data_probs_final[0]))
 
-        if qc[0][0].lower() == '3':
-            bar_plot_colour = ['green', 'blue', 'red', 'm']
-
-             #Plot MMD
-            axs.bar(x, data_probs_final[0].values(), width=0.1, color= '%s' %data_plot_colour, align='center')
-
-            axs.bar(x-(0.2*(0+0.5)), born_final_probs[-5].values(), width=0.1, color='%s' %(bar_plot_colour[-4]), align='center')
-
-            axs.bar(x-(0.2*(0+1)), born_final_probs[-3].values(), width=0.1, color='%s' %(bar_plot_colour[-3]), align='center')
-            axs.bar(x-(0.2*(0+1.5)), born_final_probs[-2].values(), width=0.1, color='%s' %(bar_plot_colour[-2]), align='center')
-            axs.bar(x-(0.2*(0+2)), born_final_probs[-1].values(), width=0.1, color='%s' %(bar_plot_colour[-1]), align='center')
-        
-        elif qc[0][0].lower() == '4':
-            axs.bar(x, data_probs_final[0].values(), width=0.2, color= '%s' %data_plot_colour, align='center')
-
-            bar_plot_colour = ['g', 'b', 'm']
+        bar_plot_colour = ['green', 'blue', 'red', 'm']
 
             #Plot MMD
-            axs.bar(x-(0.2*(0+1)), born_final_probs[-4].values(), width=0.2, color='%s' %(bar_plot_colour[0]), align='center')
-            axs.bar(x-(0.2*(0+2)), born_final_probs[-3].values(), width=0.2, color='%s' %(bar_plot_colour[1]), align='center')
-            axs.bar(x-(0.2*(0+3)), born_final_probs[-1].values(), width=0.2, color='%s' %(bar_plot_colour[2]), align='center')
+        axs.bar(x, data_probs_final[0].values(), width=0.1, color= '%s' %data_plot_colour, align='center')
 
-        if qc[0][0].lower() == '3':
-            axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn', r'Exact Stein',  r'Spectral Stein' ), fontsize = 20)
-        elif qc[0][0].lower() == '4':
-            axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn',  r'Spectral Stein' ), fontsize = 20)
+        axs.bar(x-(0.2*(0+0.5)), born_final_probs[-5].values(), width=0.1, color='%s' %(bar_plot_colour[-4]), align='center')
 
+        axs.bar(x-(0.2*(0+1)), born_final_probs[-3].values(), width=0.1, color='%s' %(bar_plot_colour[-3]), align='center')
+        axs.bar(x-(0.2*(0+1.5)), born_final_probs[-2].values(), width=0.1, color='%s' %(bar_plot_colour[-2]), align='center')
+        axs.bar(x-(0.2*(0+2)), born_final_probs[-1].values(), width=0.1, color='%s' %(bar_plot_colour[-1]), align='center')
+        
+        axs.legend(('Data',r'\textsf{MMD}', r'Sinkhorn', r'Exact Stein',  r'Spectral Stein' ), fontsize = 20)
+      
         axs.set_xticks(range(len(data_probs_final[0])))
         axs.set_xticklabels(list(data_probs_final[0].keys()),rotation=70)
 
@@ -432,83 +418,12 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 # runs.append(0)
 
 
-'''################################'''
-'''FIVE QUBITS'''
-'''################################'''
-
-N_epochs.append(200)
-learning_rate.append(0.01)
-data_type.append('Bernoulli_Data')
-data_circuit.append('IQP')
-N_born_samples.append(500)
-N_data_samples.append(500)
-N_kernel_samples.append(2000)
-batch_size.append(250)
-kernel_type.append('Gaussian')
-cost_func.append('MMD')
-qc.append('5q-qvm')
-score.append('Approx') 
-stein_eigvecs.append(3)                 
-stein_eta.append(0.01) 
-sinkhorn_eps.append(0.05)
-runs.append(0)
-
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.05)
-# runs.append(0)
-
-N_epochs.append(200)
-learning_rate.append(0.005)
-data_type.append('Bernoulli_Data')
-data_circuit.append('IQP')
-N_born_samples.append(500)
-N_data_samples.append(500)
-N_kernel_samples.append(2000)
-batch_size.append(250)
-kernel_type.append('Gaussian')
-cost_func.append('MMD')
-qc.append('5q-qvm')
-score.append('Approx') 
-stein_eigvecs.append(3)                 
-stein_eta.append(0.01) 
-sinkhorn_eps.append(0.05)
-runs.append(0)
 
 
-N_epochs.append(200)
-learning_rate.append(0.01)
-data_type.append('Bernoulli_Data')
-data_circuit.append('IQP')
-N_born_samples.append(500)
-N_data_samples.append(500)
-N_kernel_samples.append(2000)
-batch_size.append(250)
-kernel_type.append('Gaussian')
-cost_func.append('Sinkhorn')
-qc.append('5q-qvm')
-score.append('Approx') 
-stein_eigvecs.append(3)                 
-stein_eta.append(0.01) 
-sinkhorn_eps.append(1)
-runs.append(0)
-
-CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
-                        N_born_samples, N_data_samples, N_kernel_samples,
-                        batch_size, kernel_type, cost_func, qc, score,
-                        stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'tv',  legend =True)
+# CompareCostFunctions(N_epochs, learning_rate, data_type, data_circuit,
+#                         N_born_samples, N_data_samples, N_kernel_samples,
+#                         batch_size, kernel_type, cost_func, qc, score,
+#                         stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'probs',  legend =True)
 
 ###################################################################################################################
 # #Compute MMD Averages and error bars over certain number of runs
@@ -704,90 +619,7 @@ def PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit, N_bor
 # sinkhorn_eps.append(1)
 # runs.append(4)
 
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('Stein')
-# qc.append('4q-qvm')
-# score.append('Exact') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
 
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('Stein')
-# qc.append('4q-qvm')
-# score.append('Exact') 
-# stein_eigvecs.append(3)                
-# stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.08)
-# runs.append(1)
-
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('Stein')
-# qc.append('4q-qvm')
-# score.append('Exact') 
-# stein_eigvecs.append(3)                
-# stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.08)
-# runs.append(2)
-
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('Stein')
-# qc.append('4q-qvm')
-# score.append('Exact') 
-# stein_eigvecs.append(3)                
-# stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.08)
-# runs.append(3)
-
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('Stein')
-# qc.append('4q-qvm')
-# score.append('Exact') 
-# stein_eigvecs.append(3)                
-# stein_eta.append(0.01)      
-# sinkhorn_eps.append(0.08)
-# runs.append(4)
 
 # PrintAveragesToFiles(N_epochs, learning_rate, data_type, data_circuit,N_born_samples, N_data_samples, N_kernel_samples,
 #                             batch_size, kernel_type, cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs)
@@ -935,27 +767,9 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
 # sinkhorn_eps        = 0.1
 # runs                = 0
 
-''''4 QUBIT STEIN'''
-# N_epochs            = 200
-# learning_rate       = 0.05
-# data_type           = 'Bernoulli_Data'
-# data_circuit        ='IQP'
-# N_born_samples      = 500
-# N_data_samples      = 500
-# N_kernel_samples    = 2000
-# batch_size          = 250
-# kernel_type         = 'Gaussian'
-# cost_func           = 'Stein'
-# qc                  = '4q-qvm'
-# score               = 'Exact'
-# stein_eigvecs       = 3
-# stein_eta           = 0.01
-# sinkhorn_eps        = 0.08
-# runs =0   
-
 ''''4 QUBIT SINKHORN'''
 # N_epochs            = 200
-# learning_rate       = 0.1
+# learning_rate       = 0.05
 # data_type           = 'Bernoulli_Data'
 # data_circuit        ='IQP'
 # N_born_samples      = 500
@@ -968,43 +782,7 @@ def PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit,
 # score               = 'Approx'
 # stein_eigvecs       = 3                 
 # stein_eta           = 0.01
-# sinkhorn_eps        = 0.1
-# runs                = 0
-
-''''4 QUBIT STEIN'''
-# N_epochs            = 125
-# learning_rate       = 0.08
-# data_type           = 'Bernoulli_Data'
-# data_circuit        ='IQP'
-# N_born_samples      = 30
-# N_data_samples      = 30
-# N_kernel_samples    = 2000
-# batch_size          = 20
-# kernel_type         = 'Gaussian'
-# cost_func           = 'Stein'
-# qc                  = '4q-qvm'
-# score               = 'Spectral'
-# stein_eigvecs       = 6                 
-# stein_eta           = 0.01
-# sinkhorn_eps        = 0.08
-# runs                = 0
-
-'''5 QUBIT MMD'''
-# N_epochs            = 200
-# learning_rate       = 0.08
-# data_type           = 'Bernoulli_Data'
-# data_circuit        ='IQP'
-# N_born_samples      = 500
-# N_data_samples      = 500
-# N_kernel_samples    = 2000
-# batch_size          = 250
-# kernel_type         = 'Gaussian'
-# cost_func           = 'MMD'
-# qc                  = '5q-qvm'
-# score               = 'Approx'
-# stein_eigvecs       = 3                 
-# stein_eta           = 0.01
-# sinkhorn_eps        = 0.1
+# sinkhorn_eps        = 1
 # runs                = 0
 
 # PlotSingleCostFunction(N_epochs, learning_rate, data_type, data_circuit, N_born_samples, N_data_samples, N_kernel_samples,
@@ -1059,7 +837,7 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
         axs.bar(x-(0.2*(0+1)), born_final_probs[2].values(), width=0.2, color='b', align='center')
         axs.bar(x-(0.2*(0+2)), born_final_probs[-1].values(), width=0.2, color='r', align='center')
 
-        axs.legend(('Data',r'MMD with $\kappa_G$',r'MMD with $\kappa_Q$'), fontsize=20)
+        axs.legend(('Data',r'$\mathsf{MMD}$ with $\kappa_G$',r'$\mathsf{MMD}$ with $\kappa_Q$'), fontsize=20)
 
         axs.set_xticks(range(len(data_probs_final[0])))
         axs.set_xticklabels(list(data_probs_final[0].keys()),rotation=70)
@@ -1073,11 +851,28 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
             if qc[0][0].lower() == '2':
                 plot_colour = ['rs-', 'b+-', 'ro-', 'bs-', 'b+-', 'bo-']
             elif qc[0][0].lower() == '3':
-                axins = zoomed_inset_axes(ax, 5, loc='center') 
+                axins = zoomed_inset_axes(ax, 2.5, loc='center') 
                 x1, x2, y1, y2 = 190, 200, 0.01, 0.03 # specify the limits
             elif qc[0][0].lower() == '4':
-                axins = zoomed_inset_axes(ax, 2.5, loc='center') 
+                axins = zoomed_inset_axes(ax, 2.5, loc='upper center') 
+                x1, x2, y1, y2 = 180, 200, 0.04, 0.09 # specify the limits
+            elif qc[0][0].lower() == '5':
+                axins = zoomed_inset_axes(ax, 2.5, loc='upper center') 
                 x1, x2, y1, y2 = 180, 200, 0.03, 0.09 # specify the limits
+
+            axins.set_xlim(x1, x2) # apply the x-limits
+            axins.set_ylim(y1, y2) # apply the y-limits
+            plt.xticks(visible=False)
+            mark_inset(ax, axins, loc1=3, loc2=1, fc="none", ec="0.5")
+        if comparison.lower() == 'mmd':
+            if qc[0][0].lower() == '2':
+                plot_colour = ['rs-', 'b+-', 'ro-', 'bs-', 'b+-', 'bo-']
+            elif qc[0][0].lower() == '3':
+                axins = zoomed_inset_axes(ax, 2.5, loc='center') 
+                x1, x2, y1, y2 = 180, 200, 0.00, 0.04 # specify the limits
+            elif qc[0][0].lower() == '4':
+                axins = zoomed_inset_axes(ax, 1.5, loc='center') 
+                x1, x2, y1, y2 = 180, 200, 0.00, 0.04 # specify the limits
             elif qc[0][0].lower() == '5':
                 axins = zoomed_inset_axes(ax, 2.5, loc='center') 
                 x1, x2, y1, y2 = 180, 200, 0.03, 0.09 # specify the limits
@@ -1111,22 +906,22 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
                 if kernel_type[trial][0].lower() == 'q': 
                     # ax.plot(overview_data_x, overview_data_y)
                     ax.plot(x, average_loss['TV'], 'r%s-' %plot_markers[trial], \
-                            label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
+                            label =r'$\mathsf{MMD}$ for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
 
                     ax.fill_between(x, average_loss['TV'] - lower_error['TV'], average_loss['TV'] + upper_error['TV'], alpha=0.2, facecolor='r')
                     axins.plot(x, average_loss['TV'], 'r%s-' %plot_markers[trial], \
-                            label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
+                            label =r'$\mathsf{MMD}$ for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
 
                     axins.fill_between(x, average_loss['TV'] - lower_error['TV'], average_loss['TV'] + upper_error['TV'], alpha=0.2, facecolor='r')
                 
                 elif kernel_type[trial][0].lower() == 'g': 
 
                     ax.plot(x, average_loss['TV'], 'b%s-' %plot_markers[trial], \
-                        label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
+                        label =r'$\mathsf{MMD}$ for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
                     ax.fill_between(x, average_loss['TV'] - lower_error['TV'], average_loss['TV'] + upper_error['TV'], alpha=0.2, facecolor='c')
 
                     axins.plot(x, average_loss['TV'], 'b%s-' %plot_markers[trial], \
-                        label =r'MMD for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
+                        label =r'$\mathsf{MMD}$ for $\kappa_{%s}$, $\eta_{init}$ = %.3f.' %(kernel_type[trial][0], learning_rate[trial]) )
                     axins.fill_between(x, average_loss['TV'] - lower_error['TV'], average_loss['TV'] + upper_error['TV'], alpha=0.2, facecolor='c')
                 
                 ax.legend(loc='best', prop={'size': 20})
@@ -1135,32 +930,54 @@ def CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
             
                 if kernel_type[trial][0].lower() == 'q': 
             
-                    plt.plot(x, average_loss['MMD', 'Train'], 'r%s-' %plot_markers[trial], \
-                                        label =r'MMD for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    ax.plot(x, average_loss['MMD', 'Train'], 'r%s-' %plot_markers[trial], \
+                                        label =r'$\mathsf{MMD}$ for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
 
-                    plt.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
+                    ax.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
                                     average_loss['MMD', 'Train'] + upper_error['MMD', 'Train'], alpha=0.3, facecolor='r')
 
-                    plt.plot(x, average_loss['MMD', 'Test'], 'r-', label =r'MMD for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    # plt.plot(x, average_loss['MMD', 'Test'], 'r-', label =r'MMD for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    ax.plot(x, average_loss['MMD', 'Test'], 'r-')
+                    ax.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
+                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.1, facecolor='r')
+                    axins.plot(x, average_loss['MMD', 'Train'], 'r%s-' %plot_markers[trial], \
+                                        label =r'$\mathsf{MMD}$ for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
 
-                    plt.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
-                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.3, facecolor='m')
+                    axins.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
+                                    average_loss['MMD', 'Train'] + upper_error['MMD', 'Train'], alpha=0.3, facecolor='r')
+
+                    # plt.plot(x, average_loss['MMD', 'Test'], 'r-', label =r'MMD for $\kappa_Q$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    axins.plot(x, average_loss['MMD', 'Test'], 'r-')
+                    axins.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
+                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.1, facecolor='r')
 
                 elif kernel_type[trial][0].lower() == 'g': 
                     
-                    plt.plot(x, average_loss['MMD', 'Train'], 'b%s-' %plot_markers[trial], \
-                                        label =r'MMD for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    ax.plot(x, average_loss['MMD', 'Train'], 'b%s-' %plot_markers[trial], \
+                                        label =r'$\mathsf{MMD}$ for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
 
-                    plt.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
+                    ax.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
                                     average_loss['MMD', 'Train'] + upper_error['MMD', 'Train'], alpha=0.3, facecolor='b')
 
-                    plt.plot(x, average_loss['MMD', 'Test'], 'b-', label =r'MMD for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    # plt.plot(x, average_loss['MMD', 'Test'], 'b-', label =r'$\mathsf{MMD}$ for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    ax.plot(x, average_loss['MMD', 'Test'], 'b-')
 
-                    plt.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
-                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.3, facecolor='c')
+                    ax.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
+                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.1, facecolor='b')
+                    axins.plot(x, average_loss['MMD', 'Train'], 'b%s-' %plot_markers[trial], \
+                                        label =r'$\mathsf{MMD}$ for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+
+                    axins.fill_between(x, average_loss['MMD', 'Train'] - lower_error['MMD', 'Train'],\
+                                    average_loss['MMD', 'Train'] + upper_error['MMD', 'Train'], alpha=0.3, facecolor='b')
+
+                    # plt.plot(x, average_loss['MMD', 'Test'], 'b-', label =r'$\mathsf{MMD}$ for $\kappa_G$, $\eta_{init}$ = %.3f.'%learning_rate[trial])
+                    axins.plot(x, average_loss['MMD', 'Test'], 'b-')
+
+                    axins.fill_between(x, average_loss['MMD', 'Test'] - lower_error['MMD', 'Test'],\
+                                    average_loss['MMD', 'Test'] + upper_error['MMD', 'Test'], alpha=0.1, facecolor='b')
 
 
-                plt.legend(loc='best', prop={'size': 20})
+                ax.legend(loc='best', prop={'size': 20})
 
         plt.show()
 
@@ -1299,7 +1116,7 @@ FOUR QUBITS
 
 
 # N_epochs.append(200)
-# learning_rate.append(0.002)
+# learning_rate.append(0.007)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1317,7 +1134,7 @@ FOUR QUBITS
 
 
 # N_epochs.append(200)
-# learning_rate.append(0.007)
+# learning_rate.append(0.01)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1335,23 +1152,6 @@ FOUR QUBITS
 
 # N_epochs.append(200)
 # learning_rate.append(0.005)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('MMD')
-# qc.append('4q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
-
-# N_epochs.append(200)
-# learning_rate.append(0.002)
 # data_type.append('Bernoulli_Data')
 # data_circuit.append('IQP')
 # N_born_samples.append(500)
@@ -1384,44 +1184,6 @@ FOUR QUBITS
 # sinkhorn_eps.append(0.08)
 # runs.append(0)
 
-'''
-5 qubit MMD
-'''
-# N_epochs.append(200)
-# learning_rate.append(0.005)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
-
-# N_epochs.append(200)
-# learning_rate.append(0.005)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Quantum')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
-
-
 # N_epochs.append(200)
 # learning_rate.append(0.01)
 # data_type.append('Bernoulli_Data')
@@ -1432,69 +1194,20 @@ FOUR QUBITS
 # batch_size.append(250)
 # kernel_type.append('Gaussian')
 # cost_func.append('MMD')
-# qc.append('5q-qvm')
+# qc.append('4q-qvm')
 # score.append('Approx') 
 # stein_eigvecs.append(3)                 
 # stein_eta.append(0.01) 
 # sinkhorn_eps.append(0.08)
 # runs.append(0)
 
-# N_epochs.append(200)
-# learning_rate.append(0.01)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Quantum')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
 
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Gaussian')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
-
-# N_epochs.append(200)
-# learning_rate.append(0.05)
-# data_type.append('Bernoulli_Data')
-# data_circuit.append('IQP')
-# N_born_samples.append(500)
-# N_data_samples.append(500)
-# N_kernel_samples.append(2000)
-# batch_size.append(250)
-# kernel_type.append('Quantum')
-# cost_func.append('MMD')
-# qc.append('5q-qvm')
-# score.append('Approx') 
-# stein_eigvecs.append(3)                 
-# stein_eta.append(0.01) 
-# sinkhorn_eps.append(0.08)
-# runs.append(0)
 
 
 # CompareKernelsPlot(N_epochs, learning_rate, data_type, data_circuit,
 #                         N_born_samples, N_data_samples, N_kernel_samples,
 #                         batch_size, kernel_type, cost_func, qc, score,
-#                         stein_eigvecs, stein_eta, sinkhorn_eps, 'mmd', runs,  legend = True)
+#                         stein_eigvecs, stein_eta, sinkhorn_eps, 'tv', runs,  legend = True)
 
 
 # ###################################################################################################################
@@ -1960,52 +1673,3 @@ cost_func, qc, score, stein_eigvecs, stein_eta, sinkhorn_eps, runs] = [[] for _ 
 #                         N_born_samples, N_data_samples, N_kernel_samples,
 #                         batch_size, kernel_type, cost_func, qc, score,
 #                         stein_eigvecs, stein_eta, sinkhorn_eps, runs, 'tv',  legend =True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#     if cost_func[trial].lower() == 'mmd':
-#         train_error = np.vstack((lower_error[('MMD', 'Train')], upper_error[('MMD', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-#         test_error = np.vstack((lower_error[('MMD', 'Test')], upper_error[('MMD', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-#     elif cost_func[trial].lower() == 'stein':
-#         train_error = np.vstack((lower_error[('Stein', 'Train')], upper_error[('Stein', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-#         test_error = np.vstack((lower_error[('Stein', 'Test')], upper_error[('Stein', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-#     elif cost_func[trial].lower() == 'sinkhorn':
-#         train_error = np.vstack((lower_error[('Sinkhorn', 'Train')], upper_error[('Sinkhorn', 'Train')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-#         test_error = np.vstack((lower_error[('Sinkhorn', 'Test')], upper_error[('Sinkhorn', 'Test')])) #Stack errors into (2d, N_epochs) array for numpy errorbar function
-# except:
-#     pass
-# if cost_func[trial].lower() == 'mmd':
-# plot_colour  = ['c', 'y', 'g']
-# x_mmd = np.arange(0, len(average_loss['MMD', 'Train']))
-
-# plt.errorbar(x_mmd, average_loss[('MMD', 'Train')], train_error, None,\
-#                                 '%so' %(plot_colour[trial]), label =r'MMD on training set using $\eta_{init}$ = %.3f.' \
-#                                 %(learning_rate[trial]),\
-#                                 capsize=1, elinewidth=1, markeredgewidth=2)
-# plt.errorbar(x_mmd, average_loss[('MMD', 'Test')], test_error, None,\
-#                                 '%s-' %(plot_colour[trial]), label =r'MMD on test set using $\eta_{init}$ = %.3f.' \
-#                                 %( learning_rate[trial]),\
-#                                 capsize=1, elinewidth=1, markeredgewidth=2)
