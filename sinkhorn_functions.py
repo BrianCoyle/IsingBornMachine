@@ -26,7 +26,7 @@ def FeydySink(born_samples_all, data_samples_all, epsilon):
     _, _, born_samples_tens, born_probs_tens = aux.ExtractSampleInformation(born_samples_all)
     _, _, data_samples_tens, data_probs_tens = aux.ExtractSampleInformation(data_samples_all)
 
-    sinkhorn_feydy = feydy_sink.sinkhorn_divergence(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens)
+    sinkhorn_feydy = feydy_sink.sinkhorn_divergence(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens, eps=epsilon)
 
     return sinkhorn_feydy
 
@@ -45,8 +45,8 @@ def SinkGrad(born_samples, born_samples_pm, data_samples, epsilon):
     _, _, data_samples_tens,       data_probs_tens          = aux.ExtractSampleInformation(data_samples)
 
 
-    g_data  , f_born = feydy_sink.sink(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens)# Compute optimal dual vectors between born samples and data
-    _       , s_born = feydy_sink.sym_sink(born_probs_tens, born_samples_tens)  #Compute autocorrelation vectors for Born data
+    g_data  , f_born = feydy_sink.sink(born_probs_tens, born_samples_tens,  data_probs_tens, data_samples_tens, eps=epsilon)# Compute optimal dual vectors between born samples and data
+    _       , s_born = feydy_sink.sym_sink(born_probs_tens, born_samples_tens, eps=epsilon)  #Compute autocorrelation vectors for Born data
 
  
     p=2 #Sinkhorn Cost will be Euclidean Distance squared, or l_2 norm squared. Equivalent to Hamming Distance in this case.
@@ -64,7 +64,6 @@ def SinkGrad(born_samples, born_samples_pm, data_samples, epsilon):
     s_minus = -epsilon*feydy_sink.lse((s_born + born_probs_tens.log().view(1, -1)).view(1, -1)      - cost_matrix_minus_born)
    
     feydy_sink_grad =feydy_sink.scal(born_minus_probs_tens, f_minus - s_minus) -  feydy_sink.scal(born_plus_probs_tens, f_plus - s_plus)
-
     return feydy_sink_grad
 
 

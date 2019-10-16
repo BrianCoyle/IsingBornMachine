@@ -3,6 +3,7 @@
 # Initialise some inputted variables
 
 from pyquil.quil import Program
+from pyquil.api import get_qc
 import pyquil.paulis as pl
 from pyquil.gates import H, CPHASE, PHASE, RESET, MEASURE
 import numpy as np
@@ -236,7 +237,7 @@ def StateInit(qc, circuit_params, p, q, r, s, circuit_choice, control, sign):
 				H_temp = (-float(delta[k]))*pl.sY(qubits[k])
 				prog.inst(pl.exponential_map(H_temp)(1.0))
 
-		else: raise IOError("circuit_choice must be either  \
+		else: raise ValueError("circuit_choice must be either  \
 							\'IQP\' for IQP (Final Hadamard), \
 							\'QAOA\' for QAOA (Final X rotation) or \
 							\'IQPy\' IQPy (Final Y rotation)")
@@ -247,3 +248,70 @@ def StateInit(qc, circuit_params, p, q, r, s, circuit_choice, control, sign):
 
 		return prog
 
+class IsingBornMachine:
+
+	def __init__(self, qc, circuit_params, meas_choice):
+
+		self.circuit = Program()
+		self.qubits = qc.qubits()
+		
+		self._num_qubits = len(self.qubits)
+		self._meas_choice = meas_choice
+
+	def _params(self, circuit_params):
+		#Unpack circuit parameters from dictionary
+		self.J = circuit_params['J']
+		self.b = circuit_params['b']
+		self.gamma = circuit_params['gamma']
+		self.delta = circuit_params['delta']
+
+	def _hadamard_to_all(self):
+		"""Adds Hadamard to all qubits in qubit list"""
+		self.circuit = self.circuit + [H(qubit_index) for qubit_index in self.qubits]
+		return 
+
+	# for j in range(0, N_qubits):
+	# 		for i in range(0, N_qubits):
+	# 				if (i < j): #connection is symmetric, so don't overcount entangling gates
+	# 					if (control.lower() == 'weights' and i == p and j == q):
+	# 						prog.inst(CPHASE(4*J[i, j] + (-1)**(sign)*pi/2, qubits[i], qubits[j]))
+	# 						prog.inst(PHASE(-2*J[i, j] + (-1)**(sign)*pi/2, qubits[i]))
+	# 						prog.inst(PHASE(-2*J[i, j] + (-1)**(sign)*pi/2, qubits[j]))
+		
+	# 					elif (control.lower() == 'neither' or 'bias' or 'gamma' and sign.lower() == 'neither'):
+	# 						prog.inst(CPHASE(4*J[i, j], qubits[i], qubits[j]))
+	# 						prog.inst(PHASE(-2*J[i, j], qubits[i]))
+	# 						prog.inst(PHASE(-2*J[i, j], qubits[j]))	
+	
+	def _measurement_layer(self, meas_choice):
+		self._meas_choice = meas_choice
+		#Apply final 'measurement' layer to all qubits, either all Hadamard, or X or Y rotations
+		if (self._meas_choice.lower() == 'iqp'):
+			self.circuit = self.circuit + [H(qubit_index) for qubit_index in self.qubits] 
+
+		# elif (circuit_choice =='QAOA'):
+		# 	#If the final 'measurement' layer is to be a QAOA measurement (i.e. e^(-i(pi/4)X_i)on all qubits)
+		# 	for k in range(0, N_qubits):
+		# 		# if (control == 'GAMMA' and k == s):
+		# 		# 	prog.inst(pl.exponential_map(sX(k))(-float(gamma[k])+ (-1)**(sign)*pi/2))
+	
+		# 		# elif (control == 'NEITHER' or 'WEIGHTS' or 'BIAS' and sign == 'NEITHER'):
+		# 		H_temp = (-float(gamma[k]))*pl.sX(qubits[k])
+		# 		self.circuit += pl.exponential_map(H_temp)(1.0)
+		# 		# print('GAMMA IS:',-float(gamma[k]))
+		# elif (circuit_choice == 'IQPy' ):
+		# 	#If the final 'measurement' layer is to be a IQPy measurement (i.e. e^(-i(pi/4)Y_i) on all qubits)
+		# 	for k in qubits:
+		# 		H_temp = (-float(delta[k]))*pl.sY(qubits[k])
+		# 		prog.inst(pl.exponential_map(H_temp)(1.0))
+
+# device_name = '2q-qvm'
+# as_qvm_value = True
+# qc = get_qc(device_name, as_qvm = as_qvm_value)  
+
+# params = NetworkParams(qc, 123342)
+# ibm = IsingBornMachine(qc, params)
+# ibm._hadamard_to_all()
+# print(ibm.circuit)
+# ibm._measurement_layer( 'IQP')
+# print(ibm.circuit)

@@ -38,7 +38,7 @@ def TrainBorn(qc, cost_func,initial_params,
     empirical_probs_list = []
 
     circuit_choice ='QAOA'
-    
+    print('The lattice is:', qc.name)
     #Initialize momentum vectors at 0 for Adam optimiser
     [m_bias, v_bias] = [np.zeros((N_qubits)) for _ in range(2)] 
     [m_weights, v_weights] = [np.zeros((N_qubits, N_qubits)) for _ in range(2)] 

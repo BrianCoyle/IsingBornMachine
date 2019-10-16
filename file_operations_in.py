@@ -8,8 +8,13 @@ import sys
 import json
 from auxiliary_functions import SampleListToArray
 import matplotlib
-matplotlib.rcParams['text.usetex'] = True
-matplotlib.rcParams['text.latex.unicode'] = True
+
+from matplotlib import rc
+## for Palatino and other serif fonts use:
+#rc('font',**{'family':'serif','serif':['Palatino']})
+rc('text', usetex=True)
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+
 import matplotlib.pyplot as plt
 
 
@@ -116,11 +121,14 @@ def ParamsFromFile(N_qubits, circuit_choice, device_name):
 	with np.load('data/Parameters_%iQbs_%sCircuit_%sDevice.npz' % (N_qubits, circuit_choice, device_name)) as circuit_params:
 		J = circuit_params['J']
 		b = circuit_params['b']
-		gamma = circuit_params['gamma']
-		delta = circuit_params['delta']
+		gamma = circuit_params['gamma_x']
+		delta = circuit_params['gamma_y']
 
 	
 	return J, b, gamma, delta
+# J, b, _, _ = ParamsFromFile(2, 'IQP', '2q-qvm')
+# print('\nJ', J)
+# print('\nb', b)
 
 def FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run):
 	'''This function creates the file neame to be found with the given parameters'''
@@ -277,11 +285,8 @@ def ReadFromFile(N_epochs, learning_rate, data_type, data_circuit,
 	if N_trials == 1:
 		if N_runs == 1:
 			N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
-			stein_params 	= {}
-			stein_params[0] = score      
-			stein_params[1] = stein_eigvecs      
-			stein_params[2] = stein_eta  
-			stein_params[3] = kernel_type 
+			stein_params 	= {0: score , 1 : stein_eigvecs  , 2 : stein_eta  , 3 : kernel_type }
+
 			loss, circuit_params, born_probs, data_probs = TrainingDataFromFile(cost_func,\
 																				data_type, data_circuit, N_epochs, learning_rate, \
 																				qc, kernel_type, N_samples, stein_params, sinkhorn_eps, 0)
@@ -294,11 +299,8 @@ def ReadFromFile(N_epochs, learning_rate, data_type, data_circuit,
 
 				[loss, circuit_params, born_probs_final, data_probs_final] = [[] for _ in range(4)]
 
-				stein_params 	= {}
-				stein_params[0] = score      
-				stein_params[1] = stein_eigvecs      
-				stein_params[2] = stein_eta  
-				stein_params[3] = kernel_type 
+				stein_params 	= {0: score , 1 : stein_eigvecs  , 2 : stein_eta  , 3 : kernel_type }
+
 				loss_per_run, circuit_params_per_run, born_probs_per_run, data_probs_per_run = TrainingDataFromFile(cost_func,\
 																							data_type, data_circuit, N_epochs, learning_rate, \
 																							qc, kernel_type, N_samples, stein_params, sinkhorn_eps, run)
@@ -312,11 +314,8 @@ def ReadFromFile(N_epochs, learning_rate, data_type, data_circuit,
 		if N_runs == 1:
 			for trial in range(N_trials):	
 				N_samples 		= [N_data_samples[trial], N_born_samples[trial], batch_size[trial], N_kernel_samples[trial]]
-				stein_params 	= {}
-				stein_params[0] = score[trial]       
-				stein_params[1] = stein_eigvecs[trial]        
-				stein_params[2] = stein_eta[trial]   
-				stein_params[3] = kernel_type[trial] 
+				stein_params 	= {0: score[trial] , 1 : stein_eigvecs[trial]  , 2 : stein_eta[trial]   , 3 : kernel_type[trial] }
+
 				loss_per_trial, circuit_params_per_trial, born_probs_per_trial, data_probs_per_trial = TrainingDataFromFile(cost_func[trial],\
 																									data_type[trial], data_circuit[trial], N_epochs[trial], learning_rate[trial], \
 																									qc[trial], kernel_type[trial], N_samples, stein_params, sinkhorn_eps[trial], 0)
@@ -327,13 +326,9 @@ def ReadFromFile(N_epochs, learning_rate, data_type, data_circuit,
 		else:
 			for run in range(N_runs):
 				print('Runs', run)
-				# for trial in range(N_trials):	
 				N_samples 		= [N_data_samples[run], N_born_samples[run], batch_size[run], N_kernel_samples[run]]
-				stein_params 	= {}
-				stein_params[0] = score[run]       
-				stein_params[1] = stein_eigvecs[run]        
-				stein_params[2] = stein_eta[run]   
-				stein_params[3] = kernel_type[run] 
+				stein_params 	= {0: score[run], 1: stein_eigvecs[run] , 2 : stein_eta[run] , 3 : kernel_type[run]}
+	
 				loss_per_run, circuit_params_per_run, born_probs_per_run, data_probs_per_run = TrainingDataFromFile(cost_func[run],\
 																									data_type[run], data_circuit[run], N_epochs[run], learning_rate[run], \
 																									qc[run], kernel_type[run], N_samples, stein_params, sinkhorn_eps[run], runs[run])
@@ -352,11 +347,8 @@ def AverageCostsFromFile(N_epochs, learning_rate, data_type, data_circuit,
 	This function reads the average cost functions, and upper and lower errors from fiel with given parameters
 	'''
 	N_samples 		= [N_data_samples, N_born_samples, batch_size, N_kernel_samples]
-	stein_params 	= {}
-	stein_params[0] = score      
-	stein_params[1] = stein_eigvecs      
-	stein_params[2] = stein_eta  
-	stein_params[3] = kernel_type 
+	stein_params 	= {0: score , 1 : stein_eigvecs  , 2 : stein_eta  , 3 : kernel_type }
+
 	trial_name = FindTrialNameFile(cost_func, data_type, data_circuit, N_epochs,learning_rate, qc, kernel_type, N_samples, stein_params, sinkhorn_eps, 'Average')
 
 	with open('%s/info' %trial_name, 'r') as training_data_file:

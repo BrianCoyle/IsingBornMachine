@@ -298,7 +298,6 @@ def CostGrad(qc, cost_func, data_samples, data_exact_dict,
     elif cost_func.lower() == 'sinkhorn':
         # loss_grad = shornfun.SinkhornGrad(born_samples_pm, data_samples, sinkhorn_eps)
         loss_grad = shornfun.SinkGrad(born_samples, born_samples_pm, data_samples, sinkhorn_eps)
-
     else: raise ValueError('\'cost_func\' must be either \'MMD\', \'Stein\', or \'Sinkhorn\' ')
 
     return loss_grad

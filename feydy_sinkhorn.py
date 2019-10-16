@@ -36,7 +36,6 @@ def sink(α_i, x_i, β_j, y_j, p=2, eps=.1, nits=100, **kwargs):
     α_i_log, β_j_log = α_i.log(), β_j.log() # Precompute the logs of the measures' weights
     B_i,     A_j     = torch.zeros_like(α_i) , torch.zeros_like(β_j) # Sampled influence fields
 
-
     Cxy_e = dist_matrix(x_i, y_j, p, ε)
     # print(Cxy_e.size())
     for i in range(nits):
